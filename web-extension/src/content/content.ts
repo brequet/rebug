@@ -1,17 +1,20 @@
-let isSelecting = false;
-let startX, startY, endX, endY;
-let selectionElement, overlayElement;
+let isSelecting: boolean = false;
+let startX: number, startY: number, endX: number, endY: number;
+let selectionElement: HTMLDivElement | null, overlayElement: HTMLDivElement | null;
 
-console.log('content.js');
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === 'startSelection') {
-		console.log('[content] startSelection');
-		startSelectionProcess();
+chrome.runtime.onMessage.addListener(
+	(
+		message: { action: string },
+		sender: chrome.runtime.MessageSender,
+		sendResponse: (response?: any) => void
+	) => {
+		if (message.action === 'startSelection') {
+			startSelectionProcess();
+		}
 	}
-});
+);
 
-function startSelectionProcess() {
+function startSelectionProcess(): void {
 	overlayElement = document.createElement('div');
 	overlayElement.className = 'screenshot-overlay';
 	document.body.appendChild(overlayElement);
@@ -23,7 +26,7 @@ function startSelectionProcess() {
 	document.body.style.userSelect = 'none';
 }
 
-function handleMouseDown(e) {
+function handleMouseDown(e: MouseEvent): void {
 	isSelecting = true;
 	startX = e.clientX;
 	startY = e.clientY;
@@ -35,7 +38,7 @@ function handleMouseDown(e) {
 	updateSelectionElement();
 }
 
-function handleMouseMove(e) {
+function handleMouseMove(e: MouseEvent): void {
 	if (!isSelecting) return;
 
 	endX = e.clientX;
@@ -43,7 +46,7 @@ function handleMouseMove(e) {
 	updateSelectionElement();
 }
 
-function handleMouseUp(e) {
+function handleMouseUp(e: MouseEvent): void {
 	if (!isSelecting) return;
 
 	isSelecting = false;
@@ -59,19 +62,21 @@ function handleMouseUp(e) {
 	document.body.style.userSelect = '';
 }
 
-function updateSelectionElement() {
+function updateSelectionElement(): void {
 	const left = Math.min(startX, endX || startX);
 	const top = Math.min(startY, endY || startY);
 	const width = Math.abs((endX || startX) - startX);
 	const height = Math.abs((endY || startY) - startY);
 
-	selectionElement.style.left = `${left}px`;
-	selectionElement.style.top = `${top}px`;
-	selectionElement.style.width = `${width}px`;
-	selectionElement.style.height = `${height}px`;
+	if (selectionElement) {
+		selectionElement.style.left = `${left}px`;
+		selectionElement.style.top = `${top}px`;
+		selectionElement.style.width = `${width}px`;
+		selectionElement.style.height = `${height}px`;
+	}
 }
 
-function captureSelectedRegion() {
+function captureSelectedRegion(): void {
 	const left = Math.min(startX, endX);
 	const top = Math.min(startY, endY);
 	const width = Math.abs(endX - startX);
@@ -82,22 +87,18 @@ function captureSelectedRegion() {
 		return;
 	}
 
-	// Store the selection coordinates
 	const selectionCoords = { left, top, width, height };
 
-	// Temporarily hide the selection UI
 	if (selectionElement) selectionElement.style.display = 'none';
 	if (overlayElement) overlayElement.style.display = 'none';
 
-	// Small delay to ensure UI is hidden before capture
 	setTimeout(() => {
 		chrome.runtime.sendMessage(
 			{
 				action: 'captureRegion',
 				region: selectionCoords
 			},
-			(response) => {
-				// Show UI elements again (in case cleanup hasn't happened yet)
+			(response: { dataUrl: string | ArrayBuffer | null }) => {
 				if (selectionElement) selectionElement.style.display = 'block';
 				if (overlayElement) overlayElement.style.display = 'block';
 
@@ -113,7 +114,7 @@ function captureSelectedRegion() {
 	}, 50); // Small delay to ensure the UI is hidden
 }
 
-function cleanupSelection() {
+function cleanupSelection(): void {
 	if (selectionElement) {
 		selectionElement.remove();
 		selectionElement = null;
