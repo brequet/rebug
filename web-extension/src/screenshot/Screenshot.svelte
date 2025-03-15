@@ -38,7 +38,7 @@
 	<h2 class="p-2 text-center text-xl font-bold text-gray-800">Screenshot Preview</h2>
 	<div class="flex flex-1 flex-col items-center justify-between overflow-hidden px-4 pb-4">
 		<div
-			class="relative flex flex-1 items-center justify-center overflow-hidden rounded bg-white p-2.5 shadow-md"
+			class="relative my-auto flex items-center justify-center overflow-hidden rounded bg-white p-2.5 shadow-md"
 		>
 			<img src={screenshotSrc} alt="Screenshot" class="max-h-full w-auto object-contain" />
 		</div>

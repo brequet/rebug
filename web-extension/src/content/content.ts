@@ -1,18 +1,14 @@
+import { Message } from '../lib/types/message';
+
 let isSelecting: boolean = false;
 let startX: number, startY: number, endX: number, endY: number;
 let selectionElement: HTMLDivElement | null, overlayElement: HTMLDivElement | null;
 
-chrome.runtime.onMessage.addListener(
-	(
-		message: { action: string },
-		sender: chrome.runtime.MessageSender,
-		sendResponse: (response?: any) => void
-	) => {
-		if (message.action === 'startSelection') {
-			startSelectionProcess();
-		}
+chrome.runtime.onMessage.addListener((message: Message) => {
+	if (message.action === 'startSelection') {
+		startSelectionProcess();
 	}
-);
+});
 
 function startSelectionProcess(): void {
 	overlayElement = document.createElement('div');

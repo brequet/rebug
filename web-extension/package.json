@@ -60,5 +60,8 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"vite-plugin-live-reload": "^3.0.4"
 	}
 }

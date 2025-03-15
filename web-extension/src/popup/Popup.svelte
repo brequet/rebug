@@ -30,5 +30,4 @@
 	>
 		Select Region
 	</button>
-	<span> Click for full page or use Select Region to drag and capture a specific area. </span>
 </div>
