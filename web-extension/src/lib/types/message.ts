@@ -2,7 +2,8 @@ export enum MessageType {
 	TakeFullScreenshot = 'takeFullScreenshot',
 	StartSelection = 'startSelection',
 	CaptureRegion = 'captureRegion',
-	SaveScreenshot = 'saveScreenshot'
+	SaveScreenshot = 'saveScreenshot',
+	ShowScreenshotModal = 'showScreenshotModal'
 }
 
 export interface TakeFullScreenshotMessage {
@@ -28,8 +29,14 @@ export interface SaveScreenshotMessage {
 	dataUrl: string;
 }
 
+export interface ShowScreenshotModalMessage {
+	action: MessageType.ShowScreenshotModal;
+	dataUrl: string;
+}
+
 export type Message =
 	| TakeFullScreenshotMessage
 	| StartSelectionMessage
 	| CaptureRegionMessage
-	| SaveScreenshotMessage;
+	| SaveScreenshotMessage
+	| ShowScreenshotModalMessage;

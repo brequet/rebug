@@ -4,9 +4,13 @@ let isSelecting: boolean = false;
 let startX: number, startY: number, endX: number, endY: number;
 let selectionElement: HTMLDivElement | null, overlayElement: HTMLDivElement | null;
 
+let modalInstance: { destroy: () => void } | null = null;
+
 chrome.runtime.onMessage.addListener((message: Message) => {
 	if (message.action === 'startSelection') {
 		startSelectionProcess();
+	} else if (message.action === 'showScreenshotModal') {
+		injectModalScript(message.dataUrl);
 	}
 });
 
@@ -69,8 +73,6 @@ function updateSelectionElement(): void {
 		selectionElement.style.top = `${top}px`;
 		selectionElement.style.width = `${width}px`;
 		selectionElement.style.height = `${height}px`;
-
-		console.log('updateSelectionElement:', { left, top, width, height });
 	}
 }
 
@@ -90,15 +92,13 @@ function captureSelectedRegion(): void {
 	if (selectionElement) selectionElement.style.display = 'none';
 	if (overlayElement) overlayElement.style.display = 'none';
 
-	console.log('captureSelectedRegion:', { left, top, width, height });
-
 	setTimeout(() => {
 		chrome.runtime.sendMessage(
 			{
 				action: 'captureRegion',
 				region: selectionCoords
 			},
-			(response: { dataUrl: string | ArrayBuffer | null }) => {
+			(response: { dataUrl: string }) => {
 				if (selectionElement) selectionElement.style.display = 'block';
 				if (overlayElement) overlayElement.style.display = 'block';
 
@@ -125,3 +125,30 @@ function cleanupSelection(): void {
 		overlayElement = null;
 	}
 }
+
+function injectModalScript(dataUrl) {
+	const scriptURL = chrome.runtime.getURL('content/modal-script.js');
+
+	// Check if script is already injected
+	if (!document.querySelector(`script[src="${scriptURL}"]`)) {
+		const script = document.createElement('script');
+		script.src = scriptURL;
+
+		script.onload = () => {
+			// Use postMessage instead of trying to call the function directly
+			window.postMessage({
+				type: 'SHOW_SCREENSHOT_MODAL',
+				screenshotUrl: dataUrl
+			}, '*');
+		};
+
+		document.head.appendChild(script);
+	} else {
+		// Script already exists, just send the message
+		window.postMessage({
+			type: 'SHOW_SCREENSHOT_MODAL',
+			screenshotUrl: dataUrl
+		}, '*');
+	}
+}
+

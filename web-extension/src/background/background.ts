@@ -72,8 +72,15 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
 		return true; // Indicates async response
 	} else if (message.action === 'saveScreenshot') {
 		console.log('[background] saveScreenshot');
-		chrome.storage.local.set({ screenshot: message.dataUrl }, () => {
-			chrome.tabs.create({ url: 'screenshot/screenshot.html' });
+		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+			if (!tabs[0].id) {
+				throw new Error('Failed to get active tab');
+			}
+
+			chrome.tabs.sendMessage(tabs[0].id, {
+				action: 'showScreenshotModal',
+				dataUrl: message.dataUrl
+			});
 		});
 	}
 });

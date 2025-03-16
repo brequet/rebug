@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="flex h-screen w-full flex-col bg-gray-100">
+<div class="fixed top-0 left-0 z-1000000 flex h-screen w-full flex-col bg-gray-100 p-4">
 	<h2 class="p-2 text-center text-xl font-bold text-gray-800">Screenshot Preview</h2>
 	<div class="flex flex-1 flex-col items-center justify-between overflow-hidden px-4 pb-4">
 		<div
