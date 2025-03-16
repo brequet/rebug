@@ -69,6 +69,8 @@ function updateSelectionElement(): void {
 		selectionElement.style.top = `${top}px`;
 		selectionElement.style.width = `${width}px`;
 		selectionElement.style.height = `${height}px`;
+
+		console.log('updateSelectionElement:', { left, top, width, height });
 	}
 }
 
@@ -87,6 +89,8 @@ function captureSelectedRegion(): void {
 
 	if (selectionElement) selectionElement.style.display = 'none';
 	if (overlayElement) overlayElement.style.display = 'none';
+
+	console.log('captureSelectedRegion:', { left, top, width, height });
 
 	setTimeout(() => {
 		chrome.runtime.sendMessage(

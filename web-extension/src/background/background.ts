@@ -10,42 +10,65 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
 		});
 	} else if (message.action === 'captureRegion') {
 		console.log('[background] captureRegion');
-		chrome.tabs.captureVisibleTab({ format: 'png' }, async (dataUrl) => {
-			// Convert dataUrl to blob
-			const response = await fetch(dataUrl);
-			const blob = await response.blob();
 
-			// Create bitmap from blob
-			const imageBitmap = await createImageBitmap(blob);
-
-			// Create offscreen canvas
-			const canvas = new OffscreenCanvas(message.region.width, message.region.height);
-			const ctx = canvas.getContext('2d');
-			if (!ctx) {
-				throw new Error('Failed to get 2D context');
+		chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+			const activeTab = tabs[0];
+			if (!activeTab || !activeTab.id) {
+				throw new Error('Failed to get active tab');
 			}
 
-			// Draw the cropped region
-			ctx.drawImage(
-				imageBitmap,
-				message.region.left,
-				message.region.top,
-				message.region.width,
-				message.region.height,
-				0,
-				0,
-				message.region.width,
-				message.region.height
-			);
+			// Execute script to get device pixel ratio (important for high-DPI displays)
+			const results = await chrome.scripting.executeScript({
+				target: { tabId: activeTab.id },
+				func: () => window.devicePixelRatio
+			});
 
-			// Convert to blob and then to dataURL
-			const croppedBlob = await canvas.convertToBlob({ type: 'image/png' });
-			const reader = new FileReader();
-			reader.readAsDataURL(croppedBlob);
-			reader.onloadend = () => {
-				sendResponse({ dataUrl: reader.result });
-			};
+			const devicePixelRatio = results[0].result || 1;
+			console.log('Device pixel ratio:', devicePixelRatio);
+
+			chrome.tabs.captureVisibleTab({ format: 'png' }, async (dataUrl) => {
+				const response = await fetch(dataUrl);
+				const blob = await response.blob();
+
+				const imageBitmap = await createImageBitmap(blob);
+
+				// Create offscreen canvas - adjust for device pixel ratio
+				const canvas = new OffscreenCanvas(message.region.width, message.region.height);
+				const ctx = canvas.getContext('2d');
+				if (!ctx) {
+					throw new Error('Failed to get 2D context');
+				}
+
+				const scaledRegion = {
+					left: message.region.left * devicePixelRatio,
+					top: message.region.top * devicePixelRatio,
+					width: message.region.width * devicePixelRatio,
+					height: message.region.height * devicePixelRatio
+				};
+
+				console.log('captureRegion (scaled):', scaledRegion);
+
+				ctx.drawImage(
+					imageBitmap,
+					scaledRegion.left,
+					scaledRegion.top,
+					scaledRegion.width,
+					scaledRegion.height,
+					0,
+					0,
+					message.region.width,
+					message.region.height
+				);
+
+				const croppedBlob = await canvas.convertToBlob({ type: 'image/png' });
+				const reader = new FileReader();
+				reader.readAsDataURL(croppedBlob);
+				reader.onloadend = () => {
+					sendResponse({ dataUrl: reader.result });
+				};
+			});
 		});
+
 		return true; // Indicates async response
 	} else if (message.action === 'saveScreenshot') {
 		console.log('[background] saveScreenshot');
