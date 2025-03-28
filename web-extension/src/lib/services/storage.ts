@@ -1,0 +1,1 @@
+export const screenshot = storage.defineItem<string>('local:screenshot');
