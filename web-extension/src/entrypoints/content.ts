@@ -1,6 +1,9 @@
+import ScreenshotOverlay from "$lib/components/ScreenshotOverlay.svelte";
+import { initiateRegionScreenshot } from "$lib/services/messaging";
 import { screenshot } from "$lib/services/storage";
 import { modalStore } from "$lib/stores/modal.store";
 import { TabMessage, TabMessageType } from "$lib/types/messages";
+import { SelectionArea } from "$lib/types/screenshot";
 import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import "~/assets/tailwind.css";
@@ -15,11 +18,11 @@ export default defineContentScript({
     const rebugResultModalUi = await createRebugResultModalUi(ctx);
     rebugResultModalUi.mount();
 
-    initializeMessageListener();
+    initializeMessageListener(ctx);
   },
 });
 
-function initializeMessageListener() {
+function initializeMessageListener(ctx: ContentScriptContext) {
   browser.runtime.onMessage.addListener(async (message: TabMessage, _sender, sendResponse) => {
     console.log('Received message:', message);
 
@@ -29,7 +32,7 @@ function initializeMessageListener() {
           handleShowResultModal();
           break;
         case TabMessageType.START_SELECTION:
-          handleStartScreenshotSelection();
+          handleStartScreenshotSelection(ctx);
           break;
       }
     })();
@@ -66,7 +69,42 @@ async function createRebugResultModalUi(ctx: ContentScriptContext): Promise<Shad
   });
 }
 
-async function handleStartScreenshotSelection() {
+async function handleStartScreenshotSelection(ctx: ContentScriptContext): Promise<unknown> {
   console.log('Starting screenshot selection...');
-  throw new Error('Not implemented');
+
+  return new Promise<SelectionArea>((resolve, reject) => {
+    let ui: ShadowRootContentScriptUi<{}>;
+
+    const onComplete = (selectionArea: SelectionArea) => {
+      ui.remove();
+      resolve(selectionArea);
+    };
+
+    const onCancel = () => {
+      ui.remove();
+      reject(new Error('Screenshot selection cancelled'));
+    };
+
+    createShadowRootUi(ctx, {
+      name: 'rebug-screenshot-overlay-ui',
+      position: 'inline',
+      anchor: 'body',
+      onMount: (container) => {
+        return mount(ScreenshotOverlay, {
+          target: container,
+          props: { onComplete, onCancel }
+        });
+      },
+    }).then(createdUi => {
+      ui = createdUi;
+      ui.mount();
+    });
+  }).then(async (selectionArea) => {
+    console.log('Screenshot selection area:', selectionArea);
+    await initiateRegionScreenshot(selectionArea)
+  }
+  ).catch((error) => {
+    console.error('Error during screenshot selection:', error);
+    throw error;
+  });
 }

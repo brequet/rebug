@@ -1,4 +1,5 @@
 import { RuntimeMessage, RuntimeMessages, TabMessage, TabMessages } from "$lib/types/messages";
+import { SelectionArea } from "$lib/types/screenshot";
 
 /**
  * Sends a message to the active tab's content script
@@ -45,4 +46,11 @@ export function sendRuntimeMessage(message: RuntimeMessage): Promise<unknown> {
  */
 export function initiateFullScreenshot(): Promise<unknown> {
     return sendRuntimeMessage(RuntimeMessages.takeFullScreenshot());
+}
+
+/**
+ * Initiates region screenshot by sending message to background
+ */
+export function initiateRegionScreenshot(region: SelectionArea): Promise<unknown> {
+    return sendRuntimeMessage(RuntimeMessages.takeRegionScreenshot(region));
 }

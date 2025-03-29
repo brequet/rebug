@@ -1,3 +1,5 @@
+import { SelectionArea } from "./screenshot";
+
 interface MessageBase<T> {
     readonly type: T;
 }
@@ -8,15 +10,20 @@ interface MessageBase<T> {
 
 export const enum RuntimeMessageType {
     FULL_SCREENSHOT = 'FULL_SCREENSHOT',
-    SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
+    REGION_SCREENSHOT = 'REGION_SCREENSHOT',
 }
 
 interface RuntimeMessageBase<T extends RuntimeMessageType> extends MessageBase<T> { }
 
 export type TakeFullScreenshotMessage = RuntimeMessageBase<RuntimeMessageType.FULL_SCREENSHOT>;
 
+export interface RegionScreenshotMessage extends RuntimeMessageBase<RuntimeMessageType.REGION_SCREENSHOT> {
+    region: SelectionArea;
+}
+
 export type RuntimeMessage =
-    | TakeFullScreenshotMessage;
+    | TakeFullScreenshotMessage
+    | RegionScreenshotMessage;
 
 export const RuntimeMessages = {
     takeFullScreenshot(): TakeFullScreenshotMessage {
@@ -24,6 +31,12 @@ export const RuntimeMessages = {
             type: RuntimeMessageType.FULL_SCREENSHOT
         };
     },
+    takeRegionScreenshot(region: SelectionArea): RegionScreenshotMessage {
+        return {
+            type: RuntimeMessageType.REGION_SCREENSHOT,
+            region
+        };
+    }
 };
 
 /**
@@ -57,21 +70,6 @@ export const TabMessages = {
         };
     }
 };
-
-// export interface CaptureRegionMessage {
-// 	action: MessageType.CaptureRegion;
-// 	region: {
-// 		left: number;
-// 		top: number;
-// 		width: number;
-// 		height: number;
-// 	};
-// }
-
-// export interface SaveScreenshotMessage {
-// 	action: MessageType.SaveScreenshot;
-// 	dataUrl: string;
-// }
 
 export type Message =
     | RuntimeMessage

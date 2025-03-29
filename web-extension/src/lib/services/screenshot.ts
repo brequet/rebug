@@ -1,4 +1,3 @@
-import { screenshot } from "./storage";
 
 export const RESTRICTED_SCHEMES = [
     'chrome:',
@@ -23,8 +22,4 @@ export async function isScreenshotAllowed(): Promise<boolean> {
     } catch (error) {
         return false;
     }
-}
-export async function saveFullScreenshotIntoStorage(): Promise<void> {
-    const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
-    await screenshot.setValue(dataUrl);
 }
