@@ -1,52 +1,51 @@
 <script lang="ts">
-import { Button } from '$lib/components/ui/button';
-import { Card } from '$lib/components/ui/card';
-import X from '@lucide/svelte/icons/x';
-import CardContent from './ui/card/card-content.svelte';
-import CardFooter from './ui/card/card-footer.svelte';
-import CardHeader from './ui/card/card-header.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Card } from '$lib/components/ui/card';
+	import Copy from '@lucide/svelte/icons/copy';
+	import CopyCheck from '@lucide/svelte/icons/copy-check';
+	import Download from '@lucide/svelte/icons/download';
+	import X from '@lucide/svelte/icons/x';
+	import CardContent from './ui/card/card-content.svelte';
+	import CardFooter from './ui/card/card-footer.svelte';
+	import CardHeader from './ui/card/card-header.svelte';
 
-// TODO: sonner toast
+	// TODO: sonner toast
 
-interface Props {
-	imageString: string;
-	close: () => void;
-}
-
-let { imageString, close }: Props = $props();
-
-let copyButtonText = $state('Copy to Clipboard');
-
-const downloadImage = () => {
-	if (!imageString) return;
-
-	const link = document.createElement('a');
-	link.href = imageString;
-	link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.png`;
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-};
-
-const copyToClipboard = async () => {
-	if (!imageString) return;
-
-	try {
-		const blob = await fetch(imageString).then((res) => res.blob());
-		await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-
-		copyButtonText = 'Copied!';
-		setTimeout(() => {
-			copyButtonText = 'Copy to Clipboard';
-		}, 2000);
-	} catch (error) {
-		console.error('Failed to copy image to clipboard:', error);
-		copyButtonText = 'Copy Failed';
-		setTimeout(() => {
-			copyButtonText = 'Copy to Clipboard';
-		}, 2000);
+	interface Props {
+		imageString: string;
+		close: () => void;
 	}
-};
+
+	let { imageString, close }: Props = $props();
+
+	let copyButtonState = $state(false);
+
+	const downloadImage = () => {
+		if (!imageString) return;
+
+		const link = document.createElement('a');
+		link.href = imageString;
+		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.png`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
+
+	const copyToClipboard = async () => {
+		if (!imageString) return;
+
+		try {
+			const blob = await fetch(imageString).then((res) => res.blob());
+			await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+
+			copyButtonState = true;
+			setTimeout(() => {
+				copyButtonState = false;
+			}, 2000);
+		} catch (error) {
+			console.error('Failed to copy image to clipboard:', error);
+		}
+	};
 </script>
 
 <Card class="flex max-h-[90vh] max-w-[95vw] flex-col">
@@ -69,8 +68,17 @@ const copyToClipboard = async () => {
 
 	<CardFooter class="flex h-20 shrink-0 justify-end gap-2 border-t p-4">
 		<Button onclick={copyToClipboard} variant="outline">
-			{copyButtonText}
+			{#if copyButtonState}
+				<CopyCheck class="size-4" />
+				Copied!
+			{:else}
+				<Copy class="size-4" />
+				Copy to Clipboard
+			{/if}
 		</Button>
-		<Button onclick={downloadImage}>Download</Button>
+		<Button onclick={downloadImage}>
+			<Download class="size-4" />
+			Download
+		</Button>
 	</CardFooter>
 </Card>
