@@ -7,7 +7,7 @@ import { SelectionArea } from "$lib/types/screenshot";
 import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import "~/assets/tailwind.css";
-import ResultModal from "./content/ResultModal.svelte";
+import ResultModal from "./ResultModal.svelte";
 
 export default defineContentScript({
   cssInjectionMode: "ui",
