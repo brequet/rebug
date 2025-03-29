@@ -1,10 +1,10 @@
 import { mount } from 'svelte';
-import App from './App.svelte';
-import './app.css';
+import Popup from './Popup.svelte';
+import './popup.css';
 
 
-const app = mount(App, {
+const popup = mount(Popup, {
   target: document.getElementById('app')!,
 });
 
-export default app;
+export default popup;

@@ -42,7 +42,7 @@
 </script>
 
 <main class="flex h-50 w-100 flex-col gap-2 bg-white p-2">
-  <h1 class="text-4xl font-bold text-center text-primary">Rebug</h1>
+  <h1 class="text-4xl font-bold text-center text-primary pb-2">Rebug</h1>
 
   <div class="flex flex-row gap-1 [&>*]:flex-1/2">
     <Button onclick={handleFullScreenshot} disabled={isScreenshotDisabled}>

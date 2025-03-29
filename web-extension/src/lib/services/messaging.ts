@@ -3,7 +3,7 @@ import { RuntimeMessage, RuntimeMessages, TabMessage, TabMessages } from "$lib/t
 /**
  * Sends a message to the active tab's content script
  */
-export async function sendMessageToActiveTab(message: TabMessage): Promise<any> {
+export async function sendMessageToActiveTab(message: TabMessage): Promise<unknown> {
     try {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         const activeTab = tabs[0];
@@ -22,27 +22,27 @@ export async function sendMessageToActiveTab(message: TabMessage): Promise<any> 
 /**
  * Initiates selective screenshot by sending message to content script
  */
-export async function initiateSelectiveScreenshot(): Promise<void> {
-    await sendMessageToActiveTab(TabMessages.startSelection());
+export async function initiateSelectiveScreenshot(): Promise<unknown> {
+    return sendMessageToActiveTab(TabMessages.startSelection());
 }
 
 /**
  * Shows the result modal by sending message to content script
  */
-export function showResultModal(): Promise<any> {
+export function showResultModal(): Promise<unknown> {
     return sendMessageToActiveTab(TabMessages.showResultModal());
 }
 
 /**
  * Sends a message to the background script
  */
-export function sendRuntimeMessage(message: RuntimeMessage): Promise<any> {
+export function sendRuntimeMessage(message: RuntimeMessage): Promise<unknown> {
     return browser.runtime.sendMessage(message);
 }
 
 /**
  * Initiates full page screenshot by sending message to background
  */
-export function initiateFullScreenshot(): Promise<any> {
+export function initiateFullScreenshot(): Promise<unknown> {
     return sendRuntimeMessage(RuntimeMessages.takeFullScreenshot());
 }

@@ -1,18 +1,19 @@
+interface MessageBase<T> {
+    readonly type: T;
+}
+
 /**
  * Message types for browser.runtime API
  */
+
 export const enum RuntimeMessageType {
     FULL_SCREENSHOT = 'FULL_SCREENSHOT',
     SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
 }
 
-interface RuntimeMessageBase<T extends RuntimeMessageType> {
-    readonly type: T;
-}
+interface RuntimeMessageBase<T extends RuntimeMessageType> extends MessageBase<T> { }
 
-export interface TakeFullScreenshotMessage extends RuntimeMessageBase<
-    RuntimeMessageType.FULL_SCREENSHOT
-> { }
+export type TakeFullScreenshotMessage = RuntimeMessageBase<RuntimeMessageType.FULL_SCREENSHOT>;
 
 export type RuntimeMessage =
     | TakeFullScreenshotMessage;
@@ -28,20 +29,17 @@ export const RuntimeMessages = {
 /**
  * Message types for browser.tabs API
  */
+
 export const enum TabMessageType {
     START_SELECTION = 'START_SELECTION',
     SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL'
 }
 
-export interface TabMessageBase<T extends TabMessageType> {
-    readonly type: T;
-}
+export interface TabMessageBase<T extends TabMessageType> extends MessageBase<T> { }
 
-export interface StartSelectionMessage extends TabMessageBase<TabMessageType.START_SELECTION> { }
+export type StartSelectionMessage = TabMessageBase<TabMessageType.START_SELECTION>;
 
-export interface ShowResultModalMessage extends TabMessageBase<
-    TabMessageType.SHOW_RESULT_MODAL
-> { }
+export type ShowResultModalMessage = TabMessageBase<TabMessageType.SHOW_RESULT_MODAL>;
 
 export type TabMessage =
     | StartSelectionMessage
