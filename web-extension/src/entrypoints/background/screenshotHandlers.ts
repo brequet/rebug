@@ -1,28 +1,30 @@
+import { blobToBase64 } from "$lib/services/capture";
 import { showResultModal } from "$lib/services/messaging";
 import { screenshot } from "$lib/services/storage";
-import { SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/screenshot";
+import { SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/capture";
+import { MessageProcessingResponse, ResultModalType } from "$lib/types/messages";
 
-export async function handleFullScreenshot(): Promise<boolean> {
+export async function handleFullScreenshot(): Promise<MessageProcessingResponse> {
     console.log('Taking full screenshot...');
     try {
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         await screenshot.setValue(dataUrl);
-        await showResultModal();
-        return true;
+        await showResultModal(ResultModalType.IMAGE);
+        return { success: true };
     } catch (error) {
-        console.error('Error taking screenshot:', error);
+        const errorMessage = (error as Error).message || 'Unknown error';
+        console.error('Error taking screenshot:', errorMessage);
 
-        return false;
+        return { success: false, error: errorMessage };
     }
 }
 
-export async function handleRegionScreenshot(region: SelectionArea): Promise<boolean> {
+export async function handleRegionScreenshot(region: SelectionArea): Promise<MessageProcessingResponse> {
     console.log('Taking region screenshot...', { region });
-
     try {
+        // TODO: get active tab id from sender at messages listener
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         const activeTab = tabs[0];
-
         if (!activeTab?.id) {
             throw new Error('No active tab found');
         }
@@ -62,18 +64,16 @@ export async function handleRegionScreenshot(region: SelectionArea): Promise<boo
         );
 
         const croppedBlob = await canvas.convertToBlob({ type: SCREENSHOT_MIME_TYPE });
-        const reader = new FileReader();
-        const croppedDataUrl = await new Promise<string>((resolve, reject) => {
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(croppedBlob);
-        });
+        const croppedDataUrl = await blobToBase64(croppedBlob);
 
         await screenshot.setValue(croppedDataUrl);
-        await showResultModal();
-        return true;
+        await showResultModal(ResultModalType.IMAGE);
+        return { success: true };
     } catch (error) {
-        console.error('Error taking region screenshot:', error);
-        return false;
+        const errorMessage = (error as Error).message || 'Unknown error';
+
+        console.error('Error taking region screenshot:', errorMessage);
+
+        return { success: false, error: errorMessage };
     }
 }

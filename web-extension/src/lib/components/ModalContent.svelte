@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
+	import { ResultModalProps } from '$lib/stores/modal.store';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
@@ -12,19 +13,19 @@
 	// TODO: sonner toast
 
 	interface Props {
-		imageString: string;
+		resultModalProps: ResultModalProps;
 		close: () => void;
 	}
 
-	let { imageString, close }: Props = $props();
+	let { resultModalProps, close }: Props = $props();
 
 	let copyButtonState = $state(false);
 
 	const downloadImage = () => {
-		if (!imageString) return;
+		if (!resultModalProps.imageString) return;
 
 		const link = document.createElement('a');
-		link.href = imageString;
+		link.href = resultModalProps.imageString;
 		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.png`;
 		document.body.appendChild(link);
 		link.click();
@@ -32,10 +33,10 @@
 	};
 
 	const copyToClipboard = async () => {
-		if (!imageString) return;
+		if (!resultModalProps.imageString) return;
 
 		try {
-			const blob = await fetch(imageString).then((res) => res.blob());
+			const blob = await fetch(resultModalProps.imageString).then((res) => res.blob());
 			await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
 
 			copyButtonState = true;
@@ -57,12 +58,23 @@
 	</CardHeader>
 
 	<CardContent class="flex min-h-0 flex-1 p-4">
-		{#if imageString}
+		{#if resultModalProps.imageString}
 			<img
-				src={imageString}
+				src={resultModalProps.imageString}
 				alt="Screenshot preview"
 				class="mx-auto max-h-[calc(90vh-160px)] w-auto max-w-full border border-dashed object-contain"
 			/>
+		{:else if resultModalProps.videoBlob}
+			<div class="flex w-full flex-col items-center">
+				<video
+					src={URL.createObjectURL(resultModalProps.videoBlob)}
+					controls
+					autoplay
+					class="max-h-[calc(90vh-160px)] max-w-full border border-dashed"
+				>
+					Your browser does not support the video tag.
+				</video>
+			</div>
 		{/if}
 	</CardContent>
 

@@ -1,7 +1,8 @@
 import { writable, type Writable } from "svelte/store";
 
-interface ResultModalProps {
+export interface ResultModalProps {
     imageString?: string;
+    videoBlob?: Blob;
 }
 
 type ModalState = {
@@ -15,15 +16,12 @@ const initialState: ModalState = {
 };
 
 function createModalStore() {
-    const { subscribe, set, update }: Writable<ModalState> = writable(initialState);
+    const { subscribe, set }: Writable<ModalState> = writable(initialState);
 
     return {
         subscribe,
         open: (props: ResultModalProps) => set({ isOpen: true, props }),
         close: () => set({ isOpen: false, props: {} }),
-        updateProps: (newProps: Partial<ResultModalProps>) => update(current =>
-            current ? { ...current, props: { ...current.props, ...newProps } } : initialState
-        )
     };
 }
 

@@ -1,5 +1,5 @@
-import { RuntimeMessage, RuntimeMessages, TabMessage, TabMessages } from "$lib/types/messages";
-import { SelectionArea } from "$lib/types/screenshot";
+import { SelectionArea } from "$lib/types/capture";
+import { ResultModalType, RuntimeMessage, RuntimeMessages, TabMessage, TabMessages } from "$lib/types/messages";
 
 /**
  * Sends a message to the active tab's content script
@@ -30,9 +30,23 @@ export async function initiateSelectiveScreenshot(): Promise<unknown> {
 /**
  * Shows the result modal by sending message to content script
  */
-export function showResultModal(): Promise<unknown> {
-    return sendMessageToActiveTab(TabMessages.showResultModal());
+export function showResultModal(resultModalType: ResultModalType): Promise<unknown> {
+    return sendMessageToActiveTab(TabMessages.showResultModal(resultModalType));
 }
+
+// stream id received message sending
+export function receiveStreamId(streamId: string): Promise<unknown> {
+    console.log('Received stream ID:', streamId);
+    return sendMessageToActiveTab(TabMessages.streamIdReceived(streamId));
+}
+
+export function showRecordingControls(): Promise<unknown> {
+    return sendMessageToActiveTab(TabMessages.showRecordingControls());
+}
+
+/*
+ * ====================================================================================
+ */
 
 /**
  * Sends a message to the background script
@@ -53,4 +67,23 @@ export function initiateFullScreenshot(): Promise<unknown> {
  */
 export function initiateRegionScreenshot(region: SelectionArea): Promise<unknown> {
     return sendRuntimeMessage(RuntimeMessages.takeRegionScreenshot(region));
+}
+
+export async function initiateVideoRecording(): Promise<unknown> {
+    console.log('Starting tab recording...');
+    try {
+        return sendRuntimeMessage(RuntimeMessages.startVideoCapture());
+    } catch (error) {
+        console.error("Error starting tab capture:", error);
+        throw error;
+    }
+}
+
+export async function stopVideoCapture(): Promise<unknown> {
+    try {
+        return sendRuntimeMessage(RuntimeMessages.stopVideoCapture());
+    } catch (error) {
+        console.error("Error stopping tab capture:", error);
+        throw error;
+    }
 }

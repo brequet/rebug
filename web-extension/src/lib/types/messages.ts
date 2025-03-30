@@ -1,4 +1,4 @@
-import { SelectionArea } from "./screenshot";
+import { SelectionArea } from "./capture";
 
 interface MessageBase<T> {
     readonly type: T;
@@ -11,6 +11,8 @@ interface MessageBase<T> {
 export const enum RuntimeMessageType {
     FULL_SCREENSHOT = 'FULL_SCREENSHOT',
     REGION_SCREENSHOT = 'REGION_SCREENSHOT',
+    START_VIDEO_CAPTURE = 'START_TAB_CAPTURE',
+    STOP_VIDEO_CAPTURE = 'STOP_TAB_CAPTURE'
 }
 
 interface RuntimeMessageBase<T extends RuntimeMessageType> extends MessageBase<T> { }
@@ -21,9 +23,15 @@ export interface RegionScreenshotMessage extends RuntimeMessageBase<RuntimeMessa
     region: SelectionArea;
 }
 
+export type StartVideoCaptureMessage = RuntimeMessageBase<RuntimeMessageType.START_VIDEO_CAPTURE>;
+
+export type StopVideoCaptureMessage = RuntimeMessageBase<RuntimeMessageType.STOP_VIDEO_CAPTURE>;
+
 export type RuntimeMessage =
     | TakeFullScreenshotMessage
-    | RegionScreenshotMessage;
+    | RegionScreenshotMessage
+    | StartVideoCaptureMessage
+    | StopVideoCaptureMessage;
 
 export const RuntimeMessages = {
     takeFullScreenshot(): TakeFullScreenshotMessage {
@@ -36,6 +44,16 @@ export const RuntimeMessages = {
             type: RuntimeMessageType.REGION_SCREENSHOT,
             region
         };
+    },
+    startVideoCapture(): StartVideoCaptureMessage {
+        return {
+            type: RuntimeMessageType.START_VIDEO_CAPTURE,
+        };
+    },
+    stopVideoCapture(): StopVideoCaptureMessage {
+        return {
+            type: RuntimeMessageType.STOP_VIDEO_CAPTURE
+        };
     }
 };
 
@@ -45,18 +63,35 @@ export const RuntimeMessages = {
 
 export const enum TabMessageType {
     START_SELECTION = 'START_SELECTION',
-    SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL'
+    SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
+    STREAM_ID_RECEIVED = 'STREAM_ID_RECEIVED',
+    SHOW_RECORDING_CONTROLS = 'SHOW_RECORDING_CONTROLS',
 }
 
 export interface TabMessageBase<T extends TabMessageType> extends MessageBase<T> { }
 
 export type StartSelectionMessage = TabMessageBase<TabMessageType.START_SELECTION>;
 
-export type ShowResultModalMessage = TabMessageBase<TabMessageType.SHOW_RESULT_MODAL>;
+export const enum ResultModalType {
+    IMAGE = 'IMAGE',
+    VIDEO = 'VIDEO',
+}
+
+export interface ShowResultModalMessage extends TabMessageBase<TabMessageType.SHOW_RESULT_MODAL> {
+    resultModalType: ResultModalType;
+}
+
+export interface StreamIdReceivedMessage extends TabMessageBase<TabMessageType.STREAM_ID_RECEIVED> {
+    streamId: string;
+}
+
+export type ShowRecordingControlsMessage = TabMessageBase<TabMessageType.SHOW_RECORDING_CONTROLS>;
 
 export type TabMessage =
     | StartSelectionMessage
-    | ShowResultModalMessage;
+    | ShowResultModalMessage
+    | StreamIdReceivedMessage
+    | ShowRecordingControlsMessage;
 
 export const TabMessages = {
     startSelection(): StartSelectionMessage {
@@ -64,9 +99,21 @@ export const TabMessages = {
             type: TabMessageType.START_SELECTION,
         };
     },
-    showResultModal(): ShowResultModalMessage {
+    showResultModal(resultModalType: ResultModalType): ShowResultModalMessage {
         return {
             type: TabMessageType.SHOW_RESULT_MODAL,
+            resultModalType
+        };
+    },
+    streamIdReceived(streamId: string): StreamIdReceivedMessage {
+        return {
+            type: TabMessageType.STREAM_ID_RECEIVED,
+            streamId
+        };
+    },
+    showRecordingControls(): ShowRecordingControlsMessage {
+        return {
+            type: TabMessageType.SHOW_RECORDING_CONTROLS,
         };
     }
 };
@@ -74,3 +121,9 @@ export const TabMessages = {
 export type Message =
     | RuntimeMessage
     | TabMessage;
+
+export interface MessageProcessingResponse {
+    success: boolean;
+    error?: string;
+    data?: unknown;
+}

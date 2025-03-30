@@ -8,3 +8,5 @@ export interface SelectionArea {
     height: number;
     devicePixelRatio: number;
 }
+
+export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
