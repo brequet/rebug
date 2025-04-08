@@ -85,13 +85,10 @@ export interface StreamIdReceivedMessage extends TabMessageBase<TabMessageType.S
     streamId: string;
 }
 
-export type ShowRecordingControlsMessage = TabMessageBase<TabMessageType.SHOW_RECORDING_CONTROLS>;
-
 export type TabMessage =
     | StartSelectionMessage
     | ShowResultModalMessage
-    | StreamIdReceivedMessage
-    | ShowRecordingControlsMessage;
+    | StreamIdReceivedMessage;
 
 export const TabMessages = {
     startSelection(): StartSelectionMessage {
@@ -111,11 +108,6 @@ export const TabMessages = {
             streamId
         };
     },
-    showRecordingControls(): ShowRecordingControlsMessage {
-        return {
-            type: TabMessageType.SHOW_RECORDING_CONTROLS,
-        };
-    }
 };
 
 export type Message =

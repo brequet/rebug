@@ -40,10 +40,6 @@ export function receiveStreamId(streamId: string): Promise<unknown> {
     return sendMessageToActiveTab(TabMessages.streamIdReceived(streamId));
 }
 
-export function showRecordingControls(): Promise<unknown> {
-    return sendMessageToActiveTab(TabMessages.showRecordingControls());
-}
-
 /*
  * ====================================================================================
  */

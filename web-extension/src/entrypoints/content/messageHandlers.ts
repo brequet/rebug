@@ -156,10 +156,11 @@ function stopRecordingAndSendData() {
 
         const videoBlob = new Blob(recordedChunks, { type: VIDEO_CAPTURE_MIME_TYPE });
 
-        modalStore.open({ videoBlob });
-
-        // Reset recording state
+        const blobToSend = videoBlob; // Create a reference before resetting
         recordedChunks = [];
         mediaRecorder = null;
+
+        // Then open the modal with the saved reference
+        modalStore.open({ videoBlob: blobToSend });
     }
 }

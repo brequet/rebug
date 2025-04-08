@@ -1,6 +1,22 @@
 <script lang="ts">
 	let { onClose }: { onClose: () => void } = $props();
 
+	let secondSinceStart = $state(0);
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			secondSinceStart++;
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
+
+	function prettyPrintTime(seconds: number): string {
+		const minutes = Math.floor(seconds / 60);
+		const remainingSeconds = seconds % 60;
+		return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+	}
+
 	async function handleStop() {
 		console.log('Stopping tab capture...');
 		onClose();
@@ -10,7 +26,7 @@
 <div class="recording-controls">
 	<div class="recording-indicator">
 		<span class="recording-dot"></span>
-		Recording...
+		<span>{prettyPrintTime(secondSinceStart)}</span>
 	</div>
 	<button class="stop-button" onclick={handleStop}> Stop Recording </button>
 </div>
