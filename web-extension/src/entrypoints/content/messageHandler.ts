@@ -1,15 +1,15 @@
-import { ResultModalType, TabMessage, TabMessageType } from "$lib/types/messages";
+import { MessageProcessingResponse, TabMessage, TabMessageType } from "$lib/types/messages";
 import { ContentScriptContext } from "wxt/client";
+import { handleShowResultModal } from "./handlers/resultModalHandler";
 import { handleStartScreenshotSelection } from "./handlers/screenshotHandler";
 import { startRecording } from "./handlers/videoCaptureHandler";
-import { openRebugResultModal } from "./ui/resultModal";
 
 export function initializeMessageListener(ctx: ContentScriptContext) {
     browser.runtime.onMessage.addListener(async (message: TabMessage, _sender, sendResponse) => {
         console.log('Received message:', message);
 
         handleMessage(ctx, message)
-            .then(result => sendResponse({ success: result }))
+            .then(sendResponse)
             .catch(error => {
                 console.error('Error handling message:', error);
                 sendResponse({ success: false, error: error.message });
@@ -19,7 +19,7 @@ export function initializeMessageListener(ctx: ContentScriptContext) {
     });
 }
 
-async function handleMessage(ctx: ContentScriptContext, message: TabMessage): Promise<boolean> {
+async function handleMessage(ctx: ContentScriptContext, message: TabMessage): Promise<MessageProcessingResponse> {
     switch (message.type) {
         case TabMessageType.SHOW_RESULT_MODAL:
             return handleShowResultModal(message.resultModalType);
@@ -30,19 +30,8 @@ async function handleMessage(ctx: ContentScriptContext, message: TabMessage): Pr
         // case TabMessageType.SHOW_RECORDING_CONTROLS:
         //     return handleShowRecordingControlsOverlay(ctx);
         default:
-            console.warn(`Unknown message type: ${(message as any).type}`);
-            return false;
+            const errorMessage = `Unknown message type: ${(message as any).type}`
+            console.warn(errorMessage);
+            return { success: false, error: errorMessage };
     }
 }
-
-async function handleShowResultModal(resultModalType: ResultModalType): Promise<boolean> {
-    console.log('Showing result modal...');
-    try {
-        openRebugResultModal(resultModalType);
-        return true
-    } catch (error) {
-        console.error('Error opening result modal:', error);
-        return false;
-    }
-}
-

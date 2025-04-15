@@ -7,7 +7,7 @@ export function initializeMessageListener() {
         console.log('Received message:', message);
 
         handleMessage(message)
-            .then(result => sendResponse(result))
+            .then(sendResponse)
             .catch(error => {
                 console.error('Error handling message:', error);
                 sendResponse({ success: false, error: error.message });

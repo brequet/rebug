@@ -2,7 +2,7 @@ import { blobToBase64 } from "$lib/services/capture";
 import { showResultModal } from "$lib/services/messaging";
 import { screenshot } from "$lib/services/storage";
 import { SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/capture";
-import { MessageProcessingResponse, ResultModalType } from "$lib/types/messages";
+import { createMessageProcessingResponse, MessageProcessingResponse, ResultModalType } from "$lib/types/messages";
 
 export async function handleFullScreenshot(): Promise<MessageProcessingResponse> {
     console.log('Taking full screenshot...');
@@ -10,12 +10,11 @@ export async function handleFullScreenshot(): Promise<MessageProcessingResponse>
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         await screenshot.setValue(dataUrl);
         await showResultModal(ResultModalType.IMAGE);
-        return { success: true };
+        return createMessageProcessingResponse(true);
     } catch (error) {
         const errorMessage = (error as Error).message || 'Unknown error';
-        console.error('Error taking screenshot:', errorMessage);
-
         return { success: false, error: errorMessage };
+        return createMessageProcessingResponse(false, errorMessage);
     }
 }
 
@@ -68,12 +67,9 @@ export async function handleRegionScreenshot(region: SelectionArea): Promise<Mes
 
         await screenshot.setValue(croppedDataUrl);
         await showResultModal(ResultModalType.IMAGE);
-        return { success: true };
+        return createMessageProcessingResponse(true);
     } catch (error) {
         const errorMessage = (error as Error).message || 'Unknown error';
-
-        console.error('Error taking region screenshot:', errorMessage);
-
-        return { success: false, error: errorMessage };
+        return createMessageProcessingResponse(false, errorMessage);
     }
 }

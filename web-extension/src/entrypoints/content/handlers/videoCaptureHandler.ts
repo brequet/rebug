@@ -1,5 +1,6 @@
 import { modalStore } from "$lib/stores/modal.store";
 import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
+import { createMessageProcessingResponse, MessageProcessingResponse } from "$lib/types/messages";
 import { ContentScriptContext } from "wxt/client";
 import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
 
@@ -7,7 +8,7 @@ let mediaRecorder: MediaRecorder | null = null;
 let recordedChunks: Blob[] = [];
 let recordingStream: MediaStream | null = null;
 
-export async function startRecording(ctx: ContentScriptContext, streamId: string): Promise<boolean> {
+export async function startRecording(ctx: ContentScriptContext, streamId: string): Promise<MessageProcessingResponse> {
     console.log('Starting tab recording...');
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -43,10 +44,10 @@ export async function startRecording(ctx: ContentScriptContext, streamId: string
         // Start the recorder
         mediaRecorder.start(100); // Collect data every 100ms
 
-        return true;
+        return createMessageProcessingResponse(true);
     } catch (error) {
-        console.error("Error starting tab capture:", error);
-        return false;
+        const errorMessage = (error as Error).message || 'Unknown error';
+        return createMessageProcessingResponse(false, errorMessage);
     }
 }
 

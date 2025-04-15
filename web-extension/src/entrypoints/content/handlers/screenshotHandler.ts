@@ -1,9 +1,10 @@
 import { initiateRegionScreenshot } from "$lib/services/messaging";
 import { SelectionArea } from "$lib/types/capture";
+import { createMessageProcessingResponse, MessageProcessingResponse } from "$lib/types/messages";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import { createRecordingControlsOverlay } from "../ui/screenshotSelectionOverlay";
 
-export async function handleStartScreenshotSelection(ctx: ContentScriptContext): Promise<boolean> {
+export async function handleStartScreenshotSelection(ctx: ContentScriptContext): Promise<MessageProcessingResponse> {
     console.log('Starting screenshot selection...');
 
     return new Promise<SelectionArea>((resolve, reject) => {
@@ -27,7 +28,7 @@ export async function handleStartScreenshotSelection(ctx: ContentScriptContext):
     }).then(async (selectionArea) => {
         console.log('Screenshot selection area:', selectionArea);
         await initiateRegionScreenshot(selectionArea)
-        return true;
+        return createMessageProcessingResponse(true);
     }
     ).catch((error) => {
         console.error('Error during screenshot selection:', error);

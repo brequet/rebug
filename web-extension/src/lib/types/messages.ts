@@ -119,3 +119,10 @@ export interface MessageProcessingResponse {
     error?: string;
     data?: unknown;
 }
+
+export function createMessageProcessingResponse(success: boolean, error?: string, data?: unknown): MessageProcessingResponse {
+    if (error) {
+        console.error('Error:', error);
+    }
+    return { success, error, data };
+}
