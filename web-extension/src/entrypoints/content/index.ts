@@ -1,6 +1,6 @@
 import "~/assets/tailwind.css";
-import { initializeMessageListener } from "./messageHandlers";
-import { injectRebugResultModal } from "./resultModal";
+import { initializeMessageListener } from "./messageHandler";
+import { injectRebugResultModal } from "./ui/resultModal";
 
 export default defineContentScript({
   cssInjectionMode: "ui",

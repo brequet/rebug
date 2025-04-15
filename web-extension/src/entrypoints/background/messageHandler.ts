@@ -1,6 +1,6 @@
 import { MessageProcessingResponse, RuntimeMessage, RuntimeMessageType } from "$lib/types/messages";
-import { handleFullScreenshot, handleRegionScreenshot } from './screenshotHandlers';
-import { handleStartCapture, handleStopCapture } from "./videoCaptureHandlers";
+import { handleFullScreenshot, handleRegionScreenshot } from './handlers/screenshotHandler';
+import { handleStartCapture, handleStopCapture } from "./handlers/videoCaptureHandler";
 
 export function initializeMessageListener() {
     browser.runtime.onMessage.addListener(async (message: RuntimeMessage, _sender, sendResponse: (response: MessageProcessingResponse) => void) => {
@@ -13,7 +13,6 @@ export function initializeMessageListener() {
                 sendResponse({ success: false, error: error.message });
             });
 
-        // Return true to indicate we'll send a response asynchronously
         return true;
     });
 }
