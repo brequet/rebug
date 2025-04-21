@@ -88,7 +88,7 @@ export async function getRecordingStartDate(): Promise<GetRecordingStartDateMess
   }
 
   console.log('Offscreen: Recording in progress:', startDate);
-  return createSuccessResponse({ recordStartDate: startDate });
+  return createSuccessResponse({ recordStartDate: startDate.toISOString() });
 }
 
 async function processRecordedData() {
