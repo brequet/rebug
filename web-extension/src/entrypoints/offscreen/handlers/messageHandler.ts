@@ -1,6 +1,6 @@
 import { createErrorResponse, MessageProcessingResponse } from '$lib/types/messaging/base';
 import { RuntimeMessage, RuntimeMessageTarget, RuntimeMessageType } from '$lib/types/messaging/runtime';
-import { startRecording, stopRecording } from './videoCaptureHandler';
+import { getRecordingStartDate, startRecording, stopRecording } from './videoCaptureHandler';
 
 export function initializeMessageListener() {
     browser.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse: (response: MessageProcessingResponse) => void) => {
@@ -33,6 +33,8 @@ async function handleMessage(message: RuntimeMessage): Promise<MessageProcessing
             return startRecording();
         case RuntimeMessageType.STOP_VIDEO_CAPTURE:
             return stopRecording();
+        case RuntimeMessageType.GET_RECORDING_START_DATE:
+            return getRecordingStartDate();
         default:
             return createErrorResponse(`Unknown message type: ${(message as any).type}`);
     }

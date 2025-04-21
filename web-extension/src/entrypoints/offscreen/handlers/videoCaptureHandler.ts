@@ -2,6 +2,7 @@ import { blobToBase64 } from "$lib/services/capture";
 import { runtimeMessagingService } from "$lib/services/messaging";
 import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
 import { createErrorResponse, createSuccessResponse, MessageProcessingResponse } from "$lib/types/messaging/base";
+import { GetRecordingStartDateMessageResponse } from "$lib/types/messaging/runtime";
 
 let startDate: Date | null = null;
 let mediaRecorder: MediaRecorder | null = null;
@@ -78,6 +79,16 @@ export async function stopRecording(): Promise<MessageProcessingResponse> {
   mediaRecorder.stop();
 
   return createSuccessResponse();
+}
+
+export async function getRecordingStartDate(): Promise<GetRecordingStartDateMessageResponse> {
+  if (!startDate) {
+    console.log('Offscreen: No recording in progress.');
+    return createSuccessResponse({ recordStartDate: null });
+  }
+
+  console.log('Offscreen: Recording in progress:', startDate);
+  return createSuccessResponse({ recordStartDate: startDate });
 }
 
 async function processRecordedData() {

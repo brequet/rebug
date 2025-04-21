@@ -4,8 +4,8 @@ import RecordingControlsOverlay from "./RecordingControlsOverlay.svelte";
 
 let recordingControlsOverlay: ShadowRootContentScriptUi<void> | null = null;
 
-export async function openRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void): Promise<void> {
-    recordingControlsOverlay = await createRecordingControlsOverlay(ctx, onCloseCallback);
+export async function openRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate?: Date): Promise<void> {
+    recordingControlsOverlay = await createRecordingControlsOverlay(ctx, onCloseCallback, recordStartDate);
     recordingControlsOverlay.mount();
 }
 
@@ -16,7 +16,7 @@ export async function closeRecordingControlsOverlay(): Promise<void> {
     }
 }
 
-async function createRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void): Promise<ShadowRootContentScriptUi<void>> {
+async function createRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate: Date | undefined): Promise<ShadowRootContentScriptUi<void>> {
     return createShadowRootUi(ctx, {
         name: 'rebug-recording-controls-overlay-ui',
         position: 'inline',
@@ -25,7 +25,8 @@ async function createRecordingControlsOverlay(ctx: ContentScriptContext, onClose
             mount(RecordingControlsOverlay, {
                 target: container,
                 props: {
-                    onClose: onCloseCallback
+                    onClose: onCloseCallback,
+                    recordStartDate
                 }
             });
         },

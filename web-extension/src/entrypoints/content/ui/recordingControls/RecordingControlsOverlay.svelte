@@ -1,7 +1,13 @@
 <script lang="ts">
-	let { onClose }: { onClose: () => void } = $props();
+	let {
+		onClose,
+		recordStartDate
+	}: {
+		onClose: () => void;
+		recordStartDate: Date | undefined;
+	} = $props();
 
-	let secondSinceStart = $state(0);
+	let secondSinceStart = $state(computeSecondSinceStart());
 
 	onMount(() => {
 		const interval = setInterval(() => {
@@ -10,6 +16,12 @@
 
 		return () => clearInterval(interval);
 	});
+
+	function computeSecondSinceStart(): number {
+		if (!recordStartDate) return 0;
+		const now = new Date();
+		return Math.floor((now.getTime() - recordStartDate.getTime()) / 1000);
+	}
 
 	function prettyPrintTime(seconds: number): string {
 		const minutes = Math.floor(seconds / 60);

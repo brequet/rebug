@@ -1,5 +1,5 @@
 import { SelectionArea } from "../capture";
-import { MessageBase } from "./base";
+import { MessageBase, MessageProcessingResponse } from "./base";
 
 /**
  * Enum defining the types for runtime messages (background <-> popup/content/etc.).
@@ -10,7 +10,9 @@ export const enum RuntimeMessageType {
     SETUP_VIDEO_CAPTURE = 'RUNTIME_SETUP_VIDEO_CAPTURE',
     START_VIDEO_CAPTURE = 'RUNTIME_START_VIDEO_CAPTURE',
     STOP_VIDEO_CAPTURE = 'RUNTIME_STOP_VIDEO_CAPTURE',
-    RECORDING_STOPPED_DATA_READY = 'RUNTIME_RECORDING_STOPPED_DATA_READY'
+    RECORDING_STOPPED_DATA_READY = 'RUNTIME_RECORDING_STOPPED_DATA_READY',
+    IS_RECORDING_IN_PROGRESS = 'RUNTIME_IS_RECORDING_IN_PROGRESS',
+    GET_RECORDING_START_DATE = 'RUNTIME_GET_RECORDING_START_DATE',
 }
 
 export const enum RuntimeMessageTarget {
@@ -44,6 +46,10 @@ export interface RecordingStoppedDataReadyMessage extends RuntimeMessageBase<Run
     videoBlobAsBase64: string;
 }
 
+export interface IsRecordingInProgressMessage extends RuntimeMessageBase<RuntimeMessageType.IS_RECORDING_IN_PROGRESS> { }
+
+export interface GetRecordingStartDateMessage extends RuntimeMessageBase<RuntimeMessageType.GET_RECORDING_START_DATE> { }
+
 // --- Union Type for all Runtime Messages ---
 
 /**
@@ -55,7 +61,9 @@ export type RuntimeMessage =
     | SetupVideoCaptureMessage
     | StartVideoCaptureMessage
     | StopVideoCaptureMessage
-    | RecordingStoppedDataReadyMessage;
+    | RecordingStoppedDataReadyMessage
+    | IsRecordingInProgressMessage
+    | GetRecordingStartDateMessage;
 
 // --- Factory Object for Creating Runtime Messages ---
 
@@ -101,5 +109,26 @@ export const RuntimeMessages = {
             type: RuntimeMessageType.RECORDING_STOPPED_DATA_READY,
             videoBlobAsBase64
         };
+    },
+    isRecordingInProgress(): IsRecordingInProgressMessage {
+        return {
+            target: RuntimeMessageTarget.BACKGROUND,
+            type: RuntimeMessageType.IS_RECORDING_IN_PROGRESS
+        };
+    },
+    getRecordingStartDate(): GetRecordingStartDateMessage {
+        return {
+            target: RuntimeMessageTarget.OFFSCREEN,
+            type: RuntimeMessageType.GET_RECORDING_START_DATE
+        };
     }
 };
+
+export interface IsRecordingInProgressMessageResponse extends MessageProcessingResponse<{
+    inProgress: boolean;
+    recordStartDate?: string;
+}> { };
+
+export interface GetRecordingStartDateMessageResponse extends MessageProcessingResponse<{
+    recordStartDate: string | null;
+}> { };

@@ -1,13 +1,13 @@
 import { SelectionArea } from "$lib/types/capture";
 import { MessageProcessingResponse } from "$lib/types/messaging/base";
-import { RuntimeMessage, RuntimeMessages } from "$lib/types/messaging/runtime";
+import { GetRecordingStartDateMessageResponse, IsRecordingInProgressMessageResponse, RuntimeMessage, RuntimeMessages } from "$lib/types/messaging/runtime";
 import { BaseMessagingService } from "./base-messaging.service";
 
 export class RuntimeMessagingService extends BaseMessagingService {
     /**
      * Sends a message to the background script
      */
-    private sendRuntimeMessage(message: RuntimeMessage): Promise<MessageProcessingResponse> {
+    private sendRuntimeMessage<T extends MessageProcessingResponse>(message: RuntimeMessage): Promise<T> {
         try {
             console.debug(`Sending runtime message:`, message.type);
             return browser.runtime.sendMessage(message);
@@ -71,6 +71,28 @@ export class RuntimeMessagingService extends BaseMessagingService {
             return this.sendRuntimeMessage(RuntimeMessages.recordingStoppedDataReady(videoBlobAsBase64));
         } catch (error) {
             return this.handleError('notifying recording stopped', error);
+        }
+    }
+
+    /**
+     * Checks if recording is in progress
+     */
+    isRecordingInProgress(): Promise<IsRecordingInProgressMessageResponse> {
+        try {
+            return this.sendRuntimeMessage(RuntimeMessages.isRecordingInProgress());
+        } catch (error) {
+            return this.handleError('checking recording status', error);
+        }
+    }
+
+    /**
+     * Gets the recording start date from offscreen
+     */
+    getRecordingStartDate(): Promise<GetRecordingStartDateMessageResponse> {
+        try {
+            return this.sendRuntimeMessage(RuntimeMessages.getRecordingStartDate());
+        } catch (error) {
+            return this.handleError('getting recording start date', error);
         }
     }
 }

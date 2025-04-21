@@ -1,6 +1,6 @@
 import { runtimeMessagingService, tabMessagingService } from "$lib/services/messaging";
 import { createErrorResponse, createSuccessResponse, MessageProcessingResponse } from "$lib/types/messaging/base";
-import { RecordingStoppedDataReadyMessage } from "$lib/types/messaging/runtime";
+import { IsRecordingInProgressMessageResponse, RecordingStoppedDataReadyMessage } from "$lib/types/messaging/runtime";
 import { ResultModalType } from "$lib/types/messaging/tab";
 import { PublicPath } from "wxt/browser";
 
@@ -21,57 +21,6 @@ export async function handleSetupVideoCapture(tabId: number): Promise<MessagePro
 
         return createSuccessResponse();
 
-        // return new Promise((resolve, reject) => {
-        //     browser.desktopCapture.chooseDesktopMedia(
-        //         ['screen', 'window', 'tab'],
-        //         activeTab,
-        //         async (streamId, options) => {
-        //             if (browser.runtime.lastError) {
-        //                 console.error('Error in chooseDesktopMedia:', browser.runtime.lastError.message);
-        //                 reject(createErrorResponse(`Capture cancelled or failed: ${browser.runtime.lastError.message}`));
-        //                 return;
-        //             }
-
-        //             if (!streamId) {
-        //                 console.error('Permission denied or no stream ID received.');
-        //                 reject(createErrorResponse('Permission denied or no stream selected.'));
-        //                 return;
-        //             }
-
-        //             console.log(`Background: Stream ID ${streamId} obtained. Options:`, options);
-
-        //             await setupOffscreenDocument(OFFSCREEN_DOCUMENT_PATH);
-
-        //             runtimeMessagingService.startVideoCapture(streamId);
-
-        // Send the streamId to the offscreen document to start recording
-        // browser.runtime.sendMessage({
-        //     type: 'start-recording',
-        //     target: 'offscreen',
-        //     data: {
-        //         streamId,
-        //         // Determine if audio should be recorded based on options
-        //         // Note: getDisplayMedia might be better if you need fine-grained audio control
-        //         recordAudio: options?.canRequestAudioTrack ?? false
-        //     }
-        // }, (response) => {
-        //      if (browser.runtime.lastError) {
-        //         console.error("Error sending start message:", browser.runtime.lastError.message);
-        //         reject(createErrorResponse(`Failed to communicate with offscreen document: ${browser.runtime.lastError.message}`));
-        //      } else if (response?.success) {
-        //          console.log("Background: Start recording message acknowledged by offscreen.");
-        //          resolve(createSuccessResponse()); 
-        //      } else {
-        //          console.error("Background: Offscreen document failed to start recording.", response?.error);
-        //          reject(createErrorResponse(`Offscreen document error: ${response?.error || 'Unknown error'}`));
-        //      }
-        // });
-        //         }
-        //     );
-        //     // Note: chooseDesktopMedia itself doesn't return a request ID you can cancel easily here.
-        //     // Cancellation happens via the user closing the picker dialog.
-        // });
-
     } catch (error) {
         const errorMessage = (error as Error).message || 'Unknown error';
         console.error('Error initiating video capture:', errorMessage);
@@ -90,6 +39,18 @@ export async function handleRecordingStoppedDataReady(message: RecordingStoppedD
         console.error('Error processing recording data:', error);
         return createErrorResponse((error as Error).message || 'Unknown error');
     }
+}
+
+export async function isRecordingInProgress(): Promise<IsRecordingInProgressMessageResponse> {
+    if (!(await hasOffscreenDocument(OFFSCREEN_DOCUMENT_PATH))) {
+        console.log('No offscreen document found. Recording is not in progress.');
+        return createSuccessResponse({ inProgress: false });
+    }
+
+    const recordingStartDate = (await runtimeMessagingService.getRecordingStartDate()).data?.recordStartDate
+
+    console.log('Is recording in progress:', recordingStartDate);
+    return createSuccessResponse({ inProgress: true, recordStartDate: recordingStartDate || undefined });
 }
 
 async function hasOffscreenDocument(path: PublicPath): Promise<boolean> {
