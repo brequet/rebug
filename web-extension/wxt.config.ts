@@ -6,7 +6,7 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   manifest: {
     host_permissions: ['<all_urls>'],
-    permissions: ['storage', 'activeTab', "desktopCapture"],
+    permissions: ['storage', 'activeTab', "desktopCapture", "offscreen"],
   },
   vite: () => ({
     plugins: [tailwindcss()],

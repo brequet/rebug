@@ -1,4 +1,3 @@
-
 export const RESTRICTED_SCHEMES = [
     'chrome:',
     'edge:',
@@ -11,9 +10,9 @@ export const RESTRICTED_SCHEMES = [
 
 export async function isCaptureAllowed(): Promise<boolean> {
     try {
-        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-
+        const tab = await getCurrentTab();
         if (tab?.url == undefined) return false;
+
         const tabUrl = tab.url;
 
         return !RESTRICTED_SCHEMES.some(scheme =>
@@ -21,6 +20,16 @@ export async function isCaptureAllowed(): Promise<boolean> {
         );
     } catch (error) {
         return false;
+    }
+}
+
+export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
+    try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        return tab;
+    } catch (error) {
+        console.error('Error getting current tab:', error);
+        return undefined;
     }
 }
 

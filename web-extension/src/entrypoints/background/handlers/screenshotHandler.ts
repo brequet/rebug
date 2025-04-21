@@ -1,33 +1,25 @@
 import { blobToBase64 } from "$lib/services/capture";
-import { showResultModal } from "$lib/services/messaging";
+import { tabMessagingService } from "$lib/services/messaging";
 import { screenshot } from "$lib/services/storage";
 import { SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/capture";
-import { createMessageProcessingResponse, MessageProcessingResponse, ResultModalType } from "$lib/types/messages";
+import { createErrorResponse, createSuccessResponse, MessageProcessingResponse } from "$lib/types/messaging/base";
+import { ResultModalType } from "$lib/types/messaging/tab";
 
 export async function handleFullScreenshot(): Promise<MessageProcessingResponse> {
     console.log('Taking full screenshot...');
     try {
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         await screenshot.setValue(dataUrl);
-        await showResultModal(ResultModalType.IMAGE);
-        return createMessageProcessingResponse(true);
+        await tabMessagingService.showResultModal(ResultModalType.IMAGE);
+        return createSuccessResponse();
     } catch (error) {
-        const errorMessage = (error as Error).message || 'Unknown error';
-        return { success: false, error: errorMessage };
-        return createMessageProcessingResponse(false, errorMessage);
+        return createErrorResponse((error as Error).message || 'Unknown error');
     }
 }
 
 export async function handleRegionScreenshot(region: SelectionArea): Promise<MessageProcessingResponse> {
     console.log('Taking region screenshot...', { region });
     try {
-        // TODO: get active tab id from sender at messages listener
-        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-        const activeTab = tabs[0];
-        if (!activeTab?.id) {
-            throw new Error('No active tab found');
-        }
-
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         const response = await fetch(dataUrl);
         const blob = await response.blob();
@@ -66,10 +58,9 @@ export async function handleRegionScreenshot(region: SelectionArea): Promise<Mes
         const croppedDataUrl = await blobToBase64(croppedBlob);
 
         await screenshot.setValue(croppedDataUrl);
-        await showResultModal(ResultModalType.IMAGE);
-        return createMessageProcessingResponse(true);
+        await tabMessagingService.showResultModal(ResultModalType.IMAGE);
+        return createSuccessResponse();
     } catch (error) {
-        const errorMessage = (error as Error).message || 'Unknown error';
-        return createMessageProcessingResponse(false, errorMessage);
+        return createErrorResponse((error as Error).message || 'Unknown error');
     }
 }

@@ -1,11 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { isCaptureAllowed } from '$lib/services/capture';
-	import {
-		initiateFullScreenshot,
-		initiateSelectiveScreenshot,
-		initiateVideoRecording
-	} from '$lib/services/messaging';
+	import { getCurrentTab, isCaptureAllowed } from '$lib/services/capture';
+	import { runtimeMessagingService, tabMessagingService } from '$lib/services/messaging';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
@@ -17,38 +13,51 @@
 	});
 
 	async function handleFullScreenshot() {
-		try {
-			const response = await initiateFullScreenshot();
-			console.log('Response from background:', response);
-		} catch (error) {
-			console.error('Error taking full screenshot:', error);
-		} finally {
-			closePopup();
-		}
+		runtimeMessagingService
+			.initiateFullScreenshot()
+			.catch((error) => {
+				console.error('Error taking full screenshot:', error);
+			})
+			.finally(() => {
+				closePopup();
+			});
 	}
 
 	async function handleSelectiveScreenshot() {
-		try {
-			const response = await initiateSelectiveScreenshot();
-			console.log('Response from background:', response);
-		} catch (error) {
-			console.error('Error taking selective screenshot:', error);
-		} finally {
-			closePopup();
-		}
+		tabMessagingService
+			.initiateSelectiveScreenshot()
+			.catch((error) => {
+				console.error('Error taking selective screenshot:', error);
+			})
+			.finally(() => {
+				closePopup();
+			});
 	}
 
-	async function handleTabRecording() {
-		try {
-			const response = await initiateVideoRecording();
-			console.log('Response from background:', response);
-		} catch (error) {
-			console.error('Error starting video capture:', error);
+	async function handleVideoRecording() {
+		const currentTab = await getCurrentTab();
+		if (!currentTab?.id) {
+			console.error('No active tab found');
+			return;
 		}
+
+		runtimeMessagingService
+			.setupVideoCapture(currentTab.id)
+			.catch((error) => {
+				console.error('Error starting video capture:', error);
+			})
+			.finally(() => {
+				closePopup();
+			});
 	}
 
 	function closePopup() {
-		// window.close();
+		window.close();
+	}
+
+	function isResultModalOpened(): boolean {
+		// TODO: implement isResultModalOpened
+		return false;
 	}
 </script>
 
@@ -57,6 +66,8 @@
 
 	{#if isCaptureDisabled}
 		<p class="text-center text-sm text-gray-500">To use Rebug, please begin browsing websites</p>
+	{:else if isResultModalOpened()}
+		<p class="text-center text-sm text-gray-500">A capture is already in progress</p>
 	{:else}
 		<div class="[&>*]:flex-1/2 flex flex-row gap-1">
 			<Button onclick={handleFullScreenshot}>
@@ -69,7 +80,7 @@
 			</Button>
 		</div>
 
-		<Button onclick={handleTabRecording}>
+		<Button onclick={handleVideoRecording}>
 			<Video class="mr-2 size-4" />
 			Record
 		</Button>

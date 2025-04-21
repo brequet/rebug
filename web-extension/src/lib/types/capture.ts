@@ -10,3 +10,5 @@ export interface SelectionArea {
 }
 
 export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
+
+export const DEFAULT_RECORDING_ID = 'DEFAULT_RECORDING_ID'

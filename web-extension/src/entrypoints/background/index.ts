@@ -1,8 +1,7 @@
-import { initializeMessageListener } from "./messageHandler";
+import { initializeMessageListener } from "./handlers/messageHandler";
 
 export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id });
+  console.log('[BACKGROUND] Background running', { id: browser.runtime.id });
 
   initializeMessageListener();
 });
-
