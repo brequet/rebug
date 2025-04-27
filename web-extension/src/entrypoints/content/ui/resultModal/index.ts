@@ -1,8 +1,8 @@
+import { ResultModalType, ShowResultModalMessage } from "$lib/messaging/types";
 import { base64ToBlob } from "$lib/services/capture";
-import { screenshot } from "$lib/services/storage";
+import { screenshotStorage } from "$lib/services/storage";
 import { modalStore, ResultModalProps } from "$lib/stores/modal.store";
 import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
-import { ResultModalType, ShowResultModalMessage } from "$lib/types/messaging/tab";
 import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import ResultModal from "./ResultModal.svelte";
@@ -30,20 +30,19 @@ async function createRebugResultModalUi(ctx: ContentScriptContext): Promise<Shad
 }
 
 async function getResultModalProps(message: ShowResultModalMessage): Promise<ResultModalProps> {
-    if (message.resultModalType === ResultModalType.IMAGE) {
-        const imageString = await screenshot.getValue();
+    if (message.payload.resultType === ResultModalType.IMAGE) {
+        const imageString = await screenshotStorage.getValue();
         if (!imageString) {
             throw new Error('No screenshot found in storage');
         }
         return { imageString };
-    } else if (message.resultModalType === ResultModalType.VIDEO) {
-        if (!message.videoBlobAsBase64) {
+    } else if (message.payload.resultType === ResultModalType.VIDEO) {
+        if (!message.payload.videoBlobAsBase64) {
             throw new Error('No blob URL provided for video result modal');
         }
-        // console.log('Video blob URL:', message.blobUrl);
-        const videoBlob = base64ToBlob(message.videoBlobAsBase64, VIDEO_CAPTURE_MIME_TYPE)
+        const videoBlob = base64ToBlob(message.payload.videoBlobAsBase64, VIDEO_CAPTURE_MIME_TYPE)
         return { videoBlob };
     }
 
-    throw new Error(`Unsupported result modal type: ${message.resultModalType}`);
+    throw new Error(`Unsupported result modal type: ${message.payload.resultType}`);
 }

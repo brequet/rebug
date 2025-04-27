@@ -39,7 +39,6 @@
 		}
 	}
 
-	// Call this function whenever resultModalProps changes
 	$effect(() => {
 		if (resultModalProps.videoBlob) {
 			updateVideoUrl();

@@ -30,7 +30,6 @@
 	}
 
 	async function handleStop() {
-		console.log('Stopping tab capture...');
 		onClose();
 	}
 </script>

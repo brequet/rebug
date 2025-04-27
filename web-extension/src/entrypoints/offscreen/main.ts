@@ -1,7 +1,10 @@
-import { initializeMessageListener } from "./handlers/messageHandler";
+import { logger } from "$lib/utils/logger";
+import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+
+const log = logger.getLogger('Offscreen');
 
 function main(): void {
-    console.log("[OFFSCREEN] Offscreen document is working!", window);
+    log.info("Offscreen document is working!", window);
 
     initializeMessageListener();
 }

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { getCurrentTab, isCaptureAllowed } from '$lib/services/capture';
-	import { runtimeMessagingService, tabMessagingService } from '$lib/services/messaging';
+	import { isCaptureAllowed } from '$lib/services/capture';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
+	import { popupMessagingService } from './popup-messaging.service';
 
 	let isCaptureDisabled = $state(false);
 
@@ -13,8 +13,8 @@
 	});
 
 	async function handleFullScreenshot() {
-		runtimeMessagingService
-			.initiateFullScreenshot()
+		popupMessagingService
+			.requestCaptureVisibleTab()
 			.catch((error) => {
 				console.error('Error taking full screenshot:', error);
 			})
@@ -24,8 +24,8 @@
 	}
 
 	async function handleSelectiveScreenshot() {
-		tabMessagingService
-			.initiateSelectiveScreenshot()
+		popupMessagingService
+			.requestStartSelection()
 			.catch((error) => {
 				console.error('Error taking selective screenshot:', error);
 			})
@@ -35,14 +35,8 @@
 	}
 
 	async function handleVideoRecording() {
-		const currentTab = await getCurrentTab();
-		if (!currentTab?.id) {
-			console.error('No active tab found');
-			return;
-		}
-
-		runtimeMessagingService
-			.setupVideoCapture(currentTab.id)
+		popupMessagingService
+			.requestSetupVideoCapture()
 			.catch((error) => {
 				console.error('Error starting video capture:', error);
 			})

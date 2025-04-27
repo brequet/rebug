@@ -1,0 +1,6 @@
+export enum MessageContext {
+    BACKGROUND = 'BACKGROUND',
+    CONTENT_SCRIPT = 'CONTENT_SCRIPT',
+    OFFSCREEN = 'OFFSCREEN',
+    POPUP = 'POPUP',
+}

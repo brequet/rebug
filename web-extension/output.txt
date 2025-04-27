@@ -1,0 +1,3411 @@
+Folder Structure
+--------------------------------------------------
+src/
+    assets/
+        svelte.svg
+        tailwind.css
+    entrypoints/
+        background/
+            index.ts
+            messaging/
+                handlers/
+                    messageHandler.ts
+                    screenshotHandler.ts
+                    videoCaptureHandler.ts
+                services/
+                    background-messaging.service.ts
+        content/
+            index.ts
+            messaging/
+                handlers/
+                    messageHandler.ts
+                    screenshotHandler.ts
+                    uiHandler.ts
+                    videoCaptureHandler.ts
+                services/
+                    content-messaging.service.ts
+            ui/
+                recordingControls/
+                    index.ts
+                    RecordingControlsOverlay.svelte
+                resultModal/
+                    index.ts
+                    ResultModal.svelte
+                screenshotSelectionOverlay/
+                    index.ts
+                    ScreenshotOverlay.svelte
+        offscreen/
+            index.html
+            main.ts
+            messaging/
+                handlers/
+                    messageHandler.ts
+                    videoCaptureHandler.ts
+                services/
+                    offscreen-messaging.service.ts
+        popup/
+            index.html
+            main.ts
+            popup-messaging.service.ts
+            popup.css
+            Popup.svelte
+    lib/
+        utils.ts
+        components/
+            ModalContent.svelte
+            ui/
+                button/
+                    button.svelte
+                    index.ts
+                card/
+                    card-content.svelte
+                    card-description.svelte
+                    card-footer.svelte
+                    card-header.svelte
+                    card-title.svelte
+                    card.svelte
+                    index.ts
+        messaging/
+            bus/
+                message-bus.ts
+            config/
+                context.ts
+                domain.ts
+            factories/
+                index.ts
+                screenshot.factory.ts
+                ui.factory.ts
+                video.factory.ts
+            handlers/
+                base-messaging.service.ts
+                handler.types.ts
+                message-dispatcher.ts
+            types/
+                base.ts
+                index.ts
+                screenshot.types.ts
+                ui.types.ts
+                video.types.ts
+            utils/
+                tab-utils.ts
+        services/
+            capture.ts
+            storage/
+                index.ts
+                indexedDBService.ts
+        stores/
+            modal.store.ts
+        types/
+            capture.ts
+        utils/
+            logger.ts
+    public/
+        wxt.svg
+        icon/
+            128.png
+            16.png
+            32.png
+            48.png
+            96.png
+
+
+File Contents
+--------------------------------------------------
+
+
+./src\assets\svelte.svg
+File type: .svg
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="26.6" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 308"><path fill="#FF3E00" d="M239.682 40.707C211.113-.182 154.69-12.301 113.895 13.69L42.247 59.356a82.198 82.198 0 0 0-37.135 55.056a86.566 86.566 0 0 0 8.536 55.576a82.425 82.425 0 0 0-12.296 30.719a87.596 87.596 0 0 0 14.964 66.244c28.574 40.893 84.997 53.007 125.787 27.016l71.648-45.664a82.182 82.182 0 0 0 37.135-55.057a86.601 86.601 0 0 0-8.53-55.577a82.409 82.409 0 0 0 12.29-30.718a87.573 87.573 0 0 0-14.963-66.244"></path><path fill="#FFF" d="M106.889 270.841c-23.102 6.007-47.497-3.036-61.103-22.648a52.685 52.685 0 0 1-9.003-39.85a49.978 49.978 0 0 1 1.713-6.693l1.35-4.115l3.671 2.697a92.447 92.447 0 0 0 28.036 14.007l2.663.808l-.245 2.659a16.067 16.067 0 0 0 2.89 10.656a17.143 17.143 0 0 0 18.397 6.828a15.786 15.786 0 0 0 4.403-1.935l71.67-45.672a14.922 14.922 0 0 0 6.734-9.977a15.923 15.923 0 0 0-2.713-12.011a17.156 17.156 0 0 0-18.404-6.832a15.78 15.78 0 0 0-4.396 1.933l-27.35 17.434a52.298 52.298 0 0 1-14.553 6.391c-23.101 6.007-47.497-3.036-61.101-22.649a52.681 52.681 0 0 1-9.004-39.849a49.428 49.428 0 0 1 22.34-33.114l71.664-45.677a52.218 52.218 0 0 1 14.563-6.398c23.101-6.007 47.497 3.036 61.101 22.648a52.685 52.685 0 0 1 9.004 39.85a50.559 50.559 0 0 1-1.713 6.692l-1.35 4.116l-3.67-2.693a92.373 92.373 0 0 0-28.037-14.013l-2.664-.809l.246-2.658a16.099 16.099 0 0 0-2.89-10.656a17.143 17.143 0 0 0-18.398-6.828a15.786 15.786 0 0 0-4.402 1.935l-71.67 45.674a14.898 14.898 0 0 0-6.73 9.975a15.9 15.9 0 0 0 2.709 12.012a17.156 17.156 0 0 0 18.404 6.832a15.841 15.841 0 0 0 4.402-1.935l27.345-17.427a52.147 52.147 0 0 1 14.552-6.397c23.101-6.006 47.497 3.037 61.102 22.65a52.681 52.681 0 0 1 9.003 39.848a49.453 49.453 0 0 1-22.34 33.12l-71.664 45.673a52.218 52.218 0 0 1-14.563 6.398"></path></svg>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\assets\tailwind.css
+File type: .css
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 20 14.3% 4.1%;
+        --card: 0 0% 100%;
+        --card-foreground: 20 14.3% 4.1%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 20 14.3% 4.1%;
+        --primary: 47.9 95.8% 53.1%;
+        --primary-foreground: 26 83.3% 14.1%;
+        --secondary: 60 4.8% 95.9%;
+        --secondary-foreground: 24 9.8% 10%;
+        --muted: 60 4.8% 95.9%;
+        --muted-foreground: 25 5.3% 44.7%;
+        --accent: 60 4.8% 95.9%;
+        --accent-foreground: 24 9.8% 10%;
+        --destructive: 0 72.22% 50.59%;
+        --destructive-foreground: 60 9.1% 97.8%;
+        --border: 20 5.9% 90%;
+        --input: 20 5.9% 90%;
+        --ring: 20 14.3% 4.1%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 20 14.3% 4.1%;
+        --foreground: 60 9.1% 97.8%;
+        --card: 20 14.3% 4.1%;
+        --card-foreground: 60 9.1% 97.8%;
+        --popover: 20 14.3% 4.1%;
+        --popover-foreground: 60 9.1% 97.8%;
+        --primary: 47.9 95.8% 53.1%;
+        --primary-foreground: 26 83.3% 14.1%;
+        --secondary: 12 6.5% 15.1%;
+        --secondary-foreground: 60 9.1% 97.8%;
+        --muted: 12 6.5% 15.1%;
+        --muted-foreground: 24 5.4% 63.9%;
+        --accent: 12 6.5% 15.1%;
+        --accent-foreground: 60 9.1% 97.8%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 60 9.1% 97.8%;
+        --border: 12 6.5% 15.1%;
+        --input: 12 6.5% 15.1%;
+        --ring: 35.5 91.7% 32.9%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings:
+            "rlig" 1,
+            "calt" 1;
+    }
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\background\index.ts
+File type: .ts
+import { logger } from "$lib/utils/logger";
+import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+
+const log = logger.getLogger('Background');
+
+export default defineBackground(() => {
+  log.info('Background running', { id: browser.runtime.id });
+
+  initializeMessageListener();
+});
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\background\messaging\handlers\messageHandler.ts
+File type: .ts
+import { MessageDomain, ScreenshotAction, VideoAction } from '$lib/messaging/types';
+import { logger } from '$lib/utils/logger';
+import { backgroundMessagingService } from '../services/background-messaging.service';
+import { handleCaptureRegion, handleCaptureVisibleTab } from './screenshotHandler';
+import { handleRecordingInProgress, handleRecordingStoppedDataReady, handleSetupVideoCapture } from "./videoCaptureHandler";
+
+const log = logger.getLogger('Background:MessageHandler');
+
+export function initializeMessageListener() {
+    log.info('Registering background handlers...');
+
+    backgroundMessagingService.registerHandler(
+        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
+        handleCaptureVisibleTab
+    );
+
+    backgroundMessagingService.registerHandler(
+        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.CAPTURE_REGION}`,
+        handleCaptureRegion
+    );
+
+
+    backgroundMessagingService.registerHandler(
+        `${MessageDomain.VIDEO}:${VideoAction.SETUP_CAPTURE}`,
+        handleSetupVideoCapture
+    );
+
+    backgroundMessagingService.registerHandler(
+        `${MessageDomain.VIDEO}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
+        handleRecordingStoppedDataReady
+    );
+
+    backgroundMessagingService.registerHandler(
+        `${MessageDomain.VIDEO}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+        handleRecordingInProgress
+    );
+}
+
+
+
+// async function handleMessage(message: RuntimeMessage): Promise<MessageProcessingResponse> {
+//     switch (message.type) {
+//         case RuntimeMessageType.SETUP_VIDEO_CAPTURE:
+//             return handleSetupVideoCapture(message.tabId);
+//         case RuntimeMessageType.RECORDING_STOPPED_DATA_READY:
+//             return handleRecordingStoppedDataReady(message);
+//         case RuntimeMessageType.IS_RECORDING_IN_PROGRESS:
+//             return isRecordingInProgress();
+//         default:
+//             return createErrorResponse(`Unknown message type: ${(message as any).type}`);
+//     }
+// }
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\background\messaging\handlers\screenshotHandler.ts
+File type: .ts
+import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType } from "$lib/messaging/types";
+import { blobToBase64 } from "$lib/services/capture";
+import { screenshotStorage } from "$lib/services/storage";
+import { SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/capture";
+import { logger } from "$lib/utils/logger";
+import { backgroundMessagingService } from '../services/background-messaging.service';
+
+const log = logger.getLogger('Background:ScreenshotHandler');
+
+export async function handleCaptureVisibleTab(
+    message: CaptureVisibleTabScreenshotMessage
+): Promise<MessageResponse<{ screenshotDataUrl: string }>> {
+    log.info(`Handling ${message.type}`);
+    try {
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
+        await screenshotStorage.setValue(dataUrl); // TODO Needed ?
+        await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE);
+        return createSuccessResponse({ screenshotDataUrl: dataUrl });
+    } catch (error: any) {
+        log.error(`Error capturing visible tab: ${error.message}`, error);
+        return createErrorResponse(error.message || 'Failed to capture visible tab');
+    }
+}
+
+export async function handleCaptureRegion(
+    message: CaptureRegionScreenshotMessage
+): Promise<MessageResponse<{ screenshotDataUrl: string }>> {
+    log.info(`Handling ${message.type}`, message.payload);
+    const { region } = message.payload;
+    try {
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
+        const base64Cropped = await cropImage(dataUrl, region);
+
+        await screenshotStorage.setValue(base64Cropped);
+        await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE); // TODO: maybe not use screenshot storage nor notify, just use response
+        return createSuccessResponse({ screenshotDataUrl: base64Cropped });
+    } catch (error: any) {
+        log.error(`Error capturing region: ${error.message}`, error);
+        return createErrorResponse(error.message || 'Failed to capture region');
+    }
+}
+
+async function cropImage(dataUrl: string, region: SelectionArea): Promise<string> {
+    log.debug('Cropping image for region:', region);
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+
+    const imageBitmap = await createImageBitmap(blob);
+
+    // Create offscreen canvas - adjust for device pixel ratio
+    const canvas = new OffscreenCanvas(region.width, region.height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        throw new Error('Failed to get 2D context');
+    }
+
+    const scaledRegion = {
+        left: region.x * region.devicePixelRatio,
+        top: region.y * region.devicePixelRatio,
+        width: region.width * region.devicePixelRatio,
+        height: region.height * region.devicePixelRatio
+    };
+
+    ctx.drawImage(
+        imageBitmap,
+        scaledRegion.left,
+        scaledRegion.top,
+        scaledRegion.width,
+        scaledRegion.height,
+        0,
+        0,
+        region.width,
+        region.height
+    );
+
+    const croppedBlob = await canvas.convertToBlob({ type: SCREENSHOT_MIME_TYPE });
+    return await blobToBase64(croppedBlob);
+}
+
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\background\messaging\handlers\videoCaptureHandler.ts
+File type: .ts
+import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, isErrorResponse, MessageResponse, RecordingState, RecordingStoppedDataReadyMessage, ResultModalType, SetupVideoCaptureMessage } from "$lib/messaging/types";
+import { logger } from "$lib/utils/logger";
+import { PublicPath } from "wxt/browser";
+import { backgroundMessagingService } from '../services/background-messaging.service';
+
+const OFFSCREEN_DOCUMENT_PATH = '/offscreen.html';
+
+const log = logger.getLogger('Background:VideoCaptureHandler');
+
+export async function handleSetupVideoCapture(message: SetupVideoCaptureMessage): Promise<MessageResponse<void>> {
+    log.info(`Handling ${message.type}`, message.payload);
+
+    const { tabId } = message.payload;
+    try {
+        await setupOffscreenDocument(OFFSCREEN_DOCUMENT_PATH);
+
+        const recordingStartResult = await backgroundMessagingService.requestRecordingStart(tabId)
+        if (isErrorResponse(recordingStartResult)) {
+            log.error('Failed to start recording:', recordingStartResult.error);
+            return createErrorResponse(recordingStartResult.error || 'Failed to start recording');
+        }
+
+        await backgroundMessagingService.requestShowRecordingControls(new Date());
+
+        return createSuccessResponse();
+
+    } catch (error) {
+        log.error('Error setting up video capture:', error);
+        return createErrorResponse((error as Error).message || 'Failed to setup video capture');
+    }
+}
+
+export async function handleRecordingStoppedDataReady(message: RecordingStoppedDataReadyMessage): Promise<MessageResponse<void>> {
+    log.info(`Handling ${message.type}`, message.payload);
+
+    const { videoBlobAsBase64 } = message.payload;
+    try {
+        backgroundMessagingService.notifyContentToShowResult(ResultModalType.VIDEO, videoBlobAsBase64);
+
+        closeOffscreenDocument().catch(console.error);
+        return createSuccessResponse()
+    } catch (error) {
+        console.error('Error processing recording data:', error);
+        return createErrorResponse((error as Error).message || 'Unknown error');
+    }
+}
+
+export async function handleRecordingInProgress(message: GetRecordingInProgressMessage): Promise<MessageResponse<RecordingState>> {
+    log.info(`Handling ${message.type}`);
+
+    if (!(await hasOffscreenDocument(OFFSCREEN_DOCUMENT_PATH))) {
+        log.debug('No offscreen document found. Recording is not in progress.');
+        return createSuccessResponse({ inProgress: false })
+    }
+
+    const response = await backgroundMessagingService.requestRecordingInProgress();
+    if (isErrorResponse(response)) {
+        log.error('Failed to get recording in progress status:', response.error);
+        return createErrorResponse(response.error || 'Failed to get recording in progress status');
+    }
+
+    return response;
+}
+
+async function hasOffscreenDocument(path: PublicPath): Promise<boolean> {
+    const offscreenUrl = browser.runtime.getURL(path);
+    const existingContexts = await browser.runtime.getContexts({
+        contextTypes: [browser.runtime.ContextType.OFFSCREEN_DOCUMENT],
+        documentUrls: [offscreenUrl]
+    });
+    return existingContexts.length > 0;
+}
+
+let creatingOffscreenPromise: Promise<void> | null = null;
+
+async function setupOffscreenDocument(path: PublicPath): Promise<void> {
+    if (await hasOffscreenDocument(path)) {
+        log.info('Offscreen document already exists. No need to create a new one.');
+        return;
+    }
+
+    if (creatingOffscreenPromise) {
+        log.info('Offscreen document creation in progress. Waiting for it to finish...');
+        await creatingOffscreenPromise;
+        return;
+    }
+
+    log.info('Creating offscreen document...');
+    creatingOffscreenPromise = browser.offscreen.createDocument({
+        url: path,
+        reasons: [browser.offscreen.Reason.DISPLAY_MEDIA],
+        justification: 'To record screen/tab/window across navigations.',
+    });
+
+    try {
+        await creatingOffscreenPromise;
+        log.info('Offscreen document created successfully.');
+    } catch (error) {
+        log.error('Error creating offscreen document:', error);
+        throw new Error('Failed to create offscreen document: ' + (error as Error).message);
+    } finally {
+        creatingOffscreenPromise = null;
+    }
+}
+
+async function closeOffscreenDocument() {
+    if (!(await hasOffscreenDocument(OFFSCREEN_DOCUMENT_PATH))) {
+        log.info('No offscreen document found. Nothing to close.');
+        return;
+    }
+    log.info('Closing offscreen document...');
+    await browser.offscreen.closeDocument();
+    log.info('Offscreen document closed successfully.');
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\background\messaging\services\background-messaging.service.ts
+File type: .ts
+import * as Factories from '$lib/messaging/factories';
+import { BaseMessagingService } from '$lib/messaging/handlers/base-messaging.service';
+import {
+    isErrorResponse,
+    MessageContext,
+    MessageResponse,
+    RecordingState,
+    ResultModalType
+} from '$lib/messaging/types';
+import { logger } from '$lib/utils/logger';
+
+const log = logger.getLogger('BackgroundMessagingService');
+
+export class BackgroundMessagingService extends BaseMessagingService<MessageContext.BACKGROUND> {
+    constructor() {
+        super(MessageContext.BACKGROUND);
+    }
+
+    async notifyContentToShowResult(
+        resultType: ResultModalType,
+        videoBlobAsBase64?: string
+    ): Promise<MessageResponse<unknown>> {
+        log.debug(`Notifying content script to show result modal: ${resultType}`, videoBlobAsBase64);
+        const response = await this.send(
+            Factories.uiMessageFactory.showResultModal(resultType, videoBlobAsBase64)
+        );
+        if (isErrorResponse(response)) {
+            log.error(`Failed to notify content script to show result modal: ${response.error}`);
+        }
+        return response;
+    }
+
+    async requestRecordingStart(tabId: number): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting video capture start...');
+        const response = await this.send(
+            Factories.videoMessageFactory.startRecordingRequest({ tabId })
+        );
+        if (isErrorResponse(response)) {
+            log.error(`Failed to start video capture: ${response.error}`);
+        }
+        return response;
+    }
+
+    async requestShowRecordingControls(startDate: Date): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting to show recording controls...');
+        const response = await this.send(
+            Factories.uiMessageFactory.showRecordingControls(startDate)
+        );
+        if (isErrorResponse(response)) {
+            log.error(`Failed to show recording controls: ${response.error}`);
+        }
+        return response
+    }
+
+    async requestRecordingInProgress(): Promise<MessageResponse<RecordingState>> {
+        log.debug('Requesting recording in progress status...');
+        const response = await this.send<RecordingState>(Factories.videoMessageFactory.getRecordingInProgress(this.context, MessageContext.OFFSCREEN));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+}
+
+export const backgroundMessagingService = new BackgroundMessagingService();
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\index.ts
+File type: .ts
+import "~/assets/tailwind.css";
+import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+import { handleRecordingInProgress } from "./messaging/handlers/videoCaptureHandler";
+import { injectRebugResultModal } from "./ui/resultModal";
+
+export default defineContentScript({
+  cssInjectionMode: "ui",
+  matches: ["*://*/*"],
+  async main(ctx) {
+    injectRebugResultModal(ctx);
+
+    initializeMessageListener(ctx);
+
+    handleRecordingInProgress(ctx);
+  },
+});
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\messaging\handlers\messageHandler.ts
+File type: .ts
+import { MessageDomain, ScreenshotAction, ShowRecordingControlsMessage, StartScreenshotSelectionMessage, UIAction } from "$lib/messaging/types";
+import { logger } from "$lib/utils/logger";
+import { ContentScriptContext } from "wxt/client";
+import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { handleStartScreenshotSelection } from "./screenshotHandler";
+import { handleShowRecordingControlsOverlay, handleShowResultModal } from "./uiHandler";
+
+const log = logger.getLogger('ContentScript:MessageHandler');
+
+export function initializeMessageListener(ctx: ContentScriptContext) {
+    log.info('Registering content script handlers...');
+
+    contentScriptMessagingService.registerHandler(
+        `${MessageDomain.UI}:${UIAction.SHOW_RESULT_MODAL}`,
+        handleShowResultModal
+    )
+
+    contentScriptMessagingService.registerHandler(
+        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.START_SELECTION}`,
+        (message: StartScreenshotSelectionMessage) => handleStartScreenshotSelection(message, ctx)
+    )
+
+    contentScriptMessagingService.registerHandler(
+        `${MessageDomain.UI}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+        (message: ShowRecordingControlsMessage) => handleShowRecordingControlsOverlay(message, ctx)
+    )
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\messaging\handlers\screenshotHandler.ts
+File type: .ts
+import { createErrorResponse, createSuccessResponse, MessageResponse, StartScreenshotSelectionMessage } from "$lib/messaging/types";
+import { SelectionArea } from "$lib/types/capture";
+import { logger } from "$lib/utils/logger";
+import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import { createRecordingControlsOverlay } from "../../ui/screenshotSelectionOverlay";
+import { contentScriptMessagingService } from "../services/content-messaging.service";
+
+const log = logger.getLogger('ContentScript:ScreenshotHandler');
+
+export async function handleStartScreenshotSelection(message: StartScreenshotSelectionMessage, ctx: ContentScriptContext): Promise<MessageResponse<unknown>> {
+    log.info(`Handling ${message.type}`);
+
+    return new Promise<SelectionArea>((resolve, reject) => {
+        let ui: ShadowRootContentScriptUi<void>;
+
+        const onComplete = (selectionArea: SelectionArea) => {
+            ui.remove();
+            resolve(selectionArea);
+        };
+
+        const onCancel = () => {
+            ui.remove();
+            reject(new Error('Screenshot selection cancelled'));
+        };
+
+        createRecordingControlsOverlay(ctx, onComplete, onCancel).then(createdUi => {
+            ui = createdUi;
+            ui.mount();
+        });
+    }).then(async (selectionArea) => {
+        await contentScriptMessagingService.requestRegionScreenshot(selectionArea);
+        return createSuccessResponse();
+    }
+    ).catch((error) => {
+        log.error('Error during screenshot selection:', error);
+        return createErrorResponse(error.message || 'Unknown error during screenshot selection');
+    });
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\messaging\handlers\uiHandler.ts
+File type: .ts
+import { createErrorResponse, createSuccessResponse, MessageResponse, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
+import { logger } from "$lib/utils/logger";
+import { ContentScriptContext } from "wxt/client";
+import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../../ui/recordingControls";
+import { openRebugResultModal } from "../../ui/resultModal";
+import { contentScriptMessagingService } from "../services/content-messaging.service";
+
+const log = logger.getLogger('ContentScript:UiHandler');
+
+export async function handleShowResultModal(message: ShowResultModalMessage): Promise<MessageResponse<void>> {
+    log.info(`Handling ${message.type}`, message.payload);
+    try {
+        openRebugResultModal(message);
+        return createSuccessResponse();
+    } catch (error) {
+        return createErrorResponse((error as Error).message || 'Unknown error');
+    }
+}
+
+export async function handleShowRecordingControlsOverlay(
+    showRecordingControlsMessage: ShowRecordingControlsMessage,
+    ctx: ContentScriptContext
+): Promise<MessageResponse<void>> {
+    log.info(`Handling ${showRecordingControlsMessage.type}`, showRecordingControlsMessage.payload);
+    try {
+        await openRecordingControlsOverlay(ctx, async () => {
+            await closeRecordingControlsOverlay()
+            log.debug('Requesting video recording stop...');
+            contentScriptMessagingService.requestStopVideoRecording();
+        });
+        return createSuccessResponse();
+    } catch (error) {
+        return createErrorResponse((error as Error).message || 'Unknown error');
+    }
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\messaging\handlers\videoCaptureHandler.ts
+File type: .ts
+import { isErrorResponse } from "$lib/messaging/types";
+import { logger } from "$lib/utils/logger";
+import { ContentScriptContext } from "wxt/client";
+import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../../ui/recordingControls";
+import { contentScriptMessagingService } from "../services/content-messaging.service";
+
+const log = logger.getLogger('ContentScript:VideoCaptureHandler');
+
+export async function handleRecordingInProgress(ctx: ContentScriptContext): Promise<void> {
+    const messageResponse = await contentScriptMessagingService.requestRecordingInProgress();
+    if (isErrorResponse(messageResponse)) {
+        log.error(`Failed to get recording in progress status: ${messageResponse.error}`);
+        return;
+    }
+
+    if (!messageResponse.data?.inProgress) {
+        return;
+    }
+
+    // TODO identify if current tab is tab that started the recording
+    // const currentTabId = await getCurrentTabId();
+    // if (currentTabId !== messageResponse.data.tabId) {
+    //     return;
+    // }
+
+    log.info("Recording in progress, showing controls overlay...", messageResponse.data);
+
+    openRecordingControlsOverlay(
+        ctx,
+        async () => {
+            await closeRecordingControlsOverlay();
+            log.debug('Recording controls closed');
+            contentScriptMessagingService.requestStopVideoRecording();
+        },
+        new Date(messageResponse.data.startDate)
+    );
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\messaging\services\content-messaging.service.ts
+File type: .ts
+import * as Factories from "$lib/messaging/factories";
+import { BaseMessagingService } from "$lib/messaging/handlers/base-messaging.service";
+import { isErrorResponse, MessageContext, MessageResponse, RecordingState } from "$lib/messaging/types";
+import { SelectionArea } from "$lib/types/capture";
+import { logger } from "$lib/utils/logger";
+
+const log = logger.getLogger('ContentScriptMessagingService');
+
+export class ContentScriptMessagingService extends BaseMessagingService<MessageContext.CONTENT_SCRIPT> {
+    constructor() {
+        super(MessageContext.CONTENT_SCRIPT);
+    }
+
+    async requestRegionScreenshot(region: SelectionArea): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting region screenshot...');
+        const response = await this.send(Factories.screenshotMessageFactory.captureRegion({ region }));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+
+    async requestStopVideoRecording(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting video recording stop...');
+        const response = await this.send(Factories.videoMessageFactory.stopRecordingRequest(this.context));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response
+    }
+
+    async requestRecordingInProgress(): Promise<MessageResponse<RecordingState>> {
+        log.debug('Requesting recording in progress status...');
+        const response = await this.send<RecordingState>(Factories.videoMessageFactory.getRecordingInProgress(this.context, MessageContext.BACKGROUND));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+}
+
+export const contentScriptMessagingService = new ContentScriptMessagingService();
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\recordingControls\index.ts
+File type: .ts
+import { mount } from "svelte";
+import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import RecordingControlsOverlay from "./RecordingControlsOverlay.svelte";
+
+let recordingControlsOverlay: ShadowRootContentScriptUi<void> | null = null;
+
+export async function openRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate?: Date): Promise<void> {
+    recordingControlsOverlay = await createRecordingControlsOverlay(ctx, onCloseCallback, recordStartDate);
+    recordingControlsOverlay.mount();
+}
+
+export async function closeRecordingControlsOverlay(): Promise<void> {
+    if (recordingControlsOverlay) {
+        recordingControlsOverlay.remove();
+        recordingControlsOverlay = null;
+    }
+}
+
+async function createRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate: Date | undefined): Promise<ShadowRootContentScriptUi<void>> {
+    return createShadowRootUi(ctx, {
+        name: 'rebug-recording-controls-overlay-ui',
+        position: 'inline',
+        anchor: 'body',
+        onMount: (container) => {
+            mount(RecordingControlsOverlay, {
+                target: container,
+                props: {
+                    onClose: onCloseCallback,
+                    recordStartDate
+                }
+            });
+        },
+    });
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\recordingControls\RecordingControlsOverlay.svelte
+File type: .svelte
+<script lang="ts">
+	let {
+		onClose,
+		recordStartDate
+	}: {
+		onClose: () => void;
+		recordStartDate: Date | undefined;
+	} = $props();
+
+	let secondSinceStart = $state(computeSecondSinceStart());
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			secondSinceStart++;
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
+
+	function computeSecondSinceStart(): number {
+		if (!recordStartDate) return 0;
+		const now = new Date();
+		return Math.floor((now.getTime() - recordStartDate.getTime()) / 1000);
+	}
+
+	function prettyPrintTime(seconds: number): string {
+		const minutes = Math.floor(seconds / 60);
+		const remainingSeconds = seconds % 60;
+		return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+	}
+
+	async function handleStop() {
+		onClose();
+	}
+</script>
+
+<div class="recording-controls">
+	<div class="recording-indicator">
+		<span class="recording-dot"></span>
+		<span>{prettyPrintTime(secondSinceStart)}</span>
+	</div>
+	<button class="stop-button" onclick={handleStop}> Stop Recording </button>
+</div>
+
+<style>
+	.recording-controls {
+		position: fixed;
+		top: 20px;
+		right: 20px;
+		background: #333;
+		color: white;
+		padding: 10px 15px;
+		border-radius: 8px;
+		display: flex;
+		align-items: center;
+		gap: 15px;
+		z-index: 10000;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	}
+
+	.recording-indicator {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.recording-dot {
+		width: 12px;
+		height: 12px;
+		background: red;
+		border-radius: 50%;
+		animation: pulse 1.5s infinite;
+	}
+
+	.stop-button {
+		background: #ff3e3e;
+		border: none;
+		color: white;
+		padding: 5px 10px;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: bold;
+	}
+
+	@keyframes pulse {
+		0% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+		100% {
+			opacity: 1;
+		}
+	}
+</style>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\resultModal\index.ts
+File type: .ts
+import { ResultModalType, ShowResultModalMessage } from "$lib/messaging/types";
+import { base64ToBlob } from "$lib/services/capture";
+import { screenshotStorage } from "$lib/services/storage";
+import { modalStore, ResultModalProps } from "$lib/stores/modal.store";
+import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
+import { mount } from "svelte";
+import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import ResultModal from "./ResultModal.svelte";
+
+export async function injectRebugResultModal(ctx: ContentScriptContext): Promise<void> {
+    (await createRebugResultModalUi(ctx)).mount();
+}
+
+export async function openRebugResultModal(message: ShowResultModalMessage): Promise<void> {
+    const props = await getResultModalProps(message);
+    modalStore.open(props);
+}
+
+async function createRebugResultModalUi(ctx: ContentScriptContext): Promise<ShadowRootContentScriptUi<void>> {
+    return createShadowRootUi(ctx, {
+        name: 'rebug-result-modal-ui',
+        position: 'inline',
+        anchor: 'body',
+        onMount: (container) => {
+            mount(ResultModal, {
+                target: container,
+            });
+        },
+    });
+}
+
+async function getResultModalProps(message: ShowResultModalMessage): Promise<ResultModalProps> {
+    if (message.payload.resultType === ResultModalType.IMAGE) {
+        const imageString = await screenshotStorage.getValue();
+        if (!imageString) {
+            throw new Error('No screenshot found in storage');
+        }
+        return { imageString };
+    } else if (message.payload.resultType === ResultModalType.VIDEO) {
+        if (!message.payload.videoBlobAsBase64) {
+            throw new Error('No blob URL provided for video result modal');
+        }
+        const videoBlob = base64ToBlob(message.payload.videoBlobAsBase64, VIDEO_CAPTURE_MIME_TYPE)
+        return { videoBlob };
+    }
+
+    throw new Error(`Unsupported result modal type: ${message.payload.resultType}`);
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\resultModal\ResultModal.svelte
+File type: .svelte
+<script lang="ts">
+	import ModalContent from '$lib/components/ModalContent.svelte';
+	import { modalStore } from '$lib/stores/modal.store';
+
+	function close() {
+		modalStore.close();
+	}
+</script>
+
+{#if $modalStore.isOpen}
+	<div
+		class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		onkeydown={(event) => event.key === 'Escape' && close()}
+		role="dialog"
+		tabindex="0"
+	>
+		<ModalContent resultModalProps={$modalStore.props} {close} />
+	</div>
+{/if}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\screenshotSelectionOverlay\index.ts
+File type: .ts
+import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import ScreenshotOverlay from "./ScreenshotOverlay.svelte";
+import { mount } from "svelte";
+import { SelectionArea } from "$lib/types/capture";
+
+export async function createRecordingControlsOverlay(
+    ctx: ContentScriptContext,
+    onCompleteCallback: (selectionArea: SelectionArea) => void,
+    onCancelCallback: () => void
+): Promise<ShadowRootContentScriptUi<void>> {
+    return createShadowRootUi(ctx, {
+        name: 'rebug-recording-controls-overlay-ui',
+        position: 'inline',
+        anchor: 'body',
+        onMount: (container) => {
+            mount(ScreenshotOverlay, {
+                target: container,
+                props: {
+                    onComplete: onCompleteCallback,
+                    onCancel: onCancelCallback
+                }
+            });
+        },
+    });
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\screenshotSelectionOverlay\ScreenshotOverlay.svelte
+File type: .svelte
+<script lang="ts">
+	import { Button } from '$lib/components/ui/button';
+	import { SelectionArea } from '$lib/types/capture';
+	import { cn } from '$lib/utils';
+
+	interface Props {
+		onComplete: (selectionArea: SelectionArea) => void;
+		onCancel: () => void;
+	}
+
+	let { onComplete, onCancel }: Props = $props();
+
+	let startX = $state(0);
+	let startY = $state(0);
+	let endX = $state(0);
+	let endY = $state(0);
+	let isSelecting = $state(false);
+
+	let selection = $state<HTMLDivElement | null>(null);
+
+	let selectionStyle = $derived({
+		left: `${Math.min(startX, endX)}px`,
+		top: `${Math.min(startY, endY)}px`,
+		width: `${Math.abs(endX - startX)}px`,
+		height: `${Math.abs(endY - startY)}px`
+	});
+
+	function handleMouseDown(e: MouseEvent) {
+		isSelecting = true;
+		startX = e.clientX;
+		startY = e.clientY;
+		endX = e.clientX;
+		endY = e.clientY;
+	}
+
+	function handleMouseMove(e: MouseEvent) {
+		if (!isSelecting) return;
+		endX = e.clientX;
+		endY = e.clientY;
+	}
+
+	async function handleMouseUp() {
+		if (!isSelecting) return;
+		isSelecting = false;
+
+		if (Math.abs(endX - startX) < 10 || Math.abs(endY - startY) < 10) {
+			// Selection too small, ignore
+			return;
+		}
+
+		try {
+			if (!selection) return;
+
+			selection.style.visibility = 'hidden';
+
+			const devicePixelRatio = window.devicePixelRatio || 1;
+
+			onComplete({
+				x: Math.min(startX, endX),
+				y: Math.min(startY, endY),
+				width: Math.abs(endX - startX),
+				height: Math.abs(endY - startY),
+				devicePixelRatio
+			});
+		} catch (error) {
+			console.error('Screenshot capture failed:', error);
+		}
+	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			isSelecting = false;
+			onCancel();
+		}
+	}
+
+	onMount(() => {
+		document.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown);
+		};
+	});
+</script>
+
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div
+	class="fixed inset-0 z-[2147483647] cursor-crosshair"
+	onmousedown={handleMouseDown}
+	onmousemove={handleMouseMove}
+	onmouseup={handleMouseUp}
+	role="application"
+	aria-label="Screenshot selection area"
+>
+	<!-- Background with hole -->
+	<div
+		class="background-with-hole"
+		style:--selection-left={selectionStyle.left}
+		style:--selection-top={selectionStyle.top}
+		style:--selection-width={selectionStyle.width}
+		style:--selection-height={selectionStyle.height}
+	></div>
+
+	<!-- Selection border -->
+	<div
+		class="border-primary pointer-events-none absolute border border-dashed bg-transparent"
+		bind:this={selection}
+		style:left={selectionStyle.left}
+		style:top={selectionStyle.top}
+		style:width={selectionStyle.width}
+		style:height={selectionStyle.height}
+	></div>
+
+	<div class={cn('fixed bottom-5 right-5', isSelecting ? 'hidden' : '')}>
+		<Button variant="destructive" onclick={onCancel} class="px-4 py-2">Cancel</Button>
+	</div>
+</div>
+
+<style>
+	.background-with-hole {
+		position: absolute;
+		inset: 0;
+		background-color: rgba(0, 0, 0, 0.3);
+		clip-path: polygon(
+			0% 0%,
+			100% 0%,
+			100% 100%,
+			0% 100%,
+			0% 0%,
+			var(--selection-left) var(--selection-top),
+			var(--selection-left) calc(var(--selection-top) + var(--selection-height)),
+			calc(var(--selection-left) + var(--selection-width))
+				calc(var(--selection-top) + var(--selection-height)),
+			calc(var(--selection-left) + var(--selection-width)) var(--selection-top),
+			var(--selection-left) var(--selection-top)
+		);
+	}
+</style>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\offscreen\index.html
+File type: .html
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offscreen Recording</title>
+</head>
+
+<body>
+    <script type="module" src="./main.ts"></script>
+</body>
+
+</html>
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\offscreen\main.ts
+File type: .ts
+import { logger } from "$lib/utils/logger";
+import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+
+const log = logger.getLogger('Offscreen');
+
+function main(): void {
+    log.info("Offscreen document is working!", window);
+
+    initializeMessageListener();
+}
+
+main();
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\offscreen\messaging\handlers\messageHandler.ts
+File type: .ts
+import { MessageDomain, VideoAction } from '$lib/messaging/types';
+import { logger } from '$lib/utils/logger';
+import { offscreenMessagingService } from '../services/offscreen-messaging.service';
+import { handleRecordingInProgress, handleStartRecording, handleStopRecording } from './videoCaptureHandler';
+
+const log = logger.getLogger('Offscreen:MessageHandler');
+
+export function initializeMessageListener() {
+    log.info('Registering offscreen script handlers...');
+
+    offscreenMessagingService.registerHandler(
+        `${MessageDomain.VIDEO}:${VideoAction.START_RECORDING_REQUEST}`,
+        handleStartRecording
+    )
+
+    offscreenMessagingService.registerHandler(
+        `${MessageDomain.VIDEO}:${VideoAction.STOP_RECORDING_REQUEST}`,
+        handleStopRecording
+    )
+
+    offscreenMessagingService.registerHandler(
+        `${MessageDomain.VIDEO}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+        handleRecordingInProgress
+    );
+
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\offscreen\messaging\handlers\videoCaptureHandler.ts
+File type: .ts
+import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, MessageResponse, RecordingState, StartRecordingRequestMessage, StopRecordingRequestMessage } from "$lib/messaging/types";
+import { blobToBase64 } from "$lib/services/capture";
+import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
+import { logger } from "$lib/utils/logger";
+import { offscreenMessagingService } from '../services/offscreen-messaging.service';
+
+const log = logger.getLogger('OffscreenScript:VideoCaptureHandler');
+
+let tabId: number | null = null;
+let startDate: Date | null = null;
+let mediaRecorder: MediaRecorder | null = null;
+let recordedChunks: Blob[] = [];
+let recordingStream: MediaStream | null = null;
+
+export async function handleStartRecording(message: StartRecordingRequestMessage): Promise<MessageResponse<void>> {
+  log.info(`Handling ${message.type}`, message.payload);
+  tabId = message.payload.tabId;
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    log.warn('MediaRecorder is already active. Ignoring start request.');
+    return createErrorResponse('MediaRecorder is already active.');
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+    });
+
+    startDate = new Date();
+    recordingStream = stream;
+    recordedChunks = [];
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType: VIDEO_CAPTURE_MIME_TYPE });
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordedChunks.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      log.info('MediaRecorder stopped.');
+      processRecordedData();
+      cleanupStream();
+    }
+
+    mediaRecorder.onerror = (event) => {
+      log.error('MediaRecorder error:', event.error);
+      // TODO: message to the background ?
+      stopRecording();
+    }
+
+    mediaRecorder.start(100); // Collect data every 100ms
+
+    return createSuccessResponse();
+  } catch (error) {
+    log.error('Failed to start recording:', error);
+
+    cleanupStream();
+    self.close();
+    return createErrorResponse(`Failed to start recording: ${(error as Error).message || 'Unknown error'}`);
+  }
+}
+
+export async function handleStopRecording(message: StopRecordingRequestMessage): Promise<MessageResponse<void>> {
+  log.info(`Handling ${message.type}`);
+
+  return stopRecording();
+}
+
+export async function handleRecordingInProgress(message: GetRecordingInProgressMessage): Promise<MessageResponse<RecordingState>> {
+  log.info(`Handling ${message.type}`);
+
+  if (!startDate || !tabId) {
+    log.debug('No recording in progress. Returning inactive state.');
+    return createSuccessResponse({ inProgress: false });
+  }
+
+  return createSuccessResponse({
+    inProgress: true,
+    startDate: startDate.toISOString(),
+    tabId
+  });
+}
+
+async function stopRecording(): Promise<MessageResponse<void>> {
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+    await cleanupStream();
+    return createErrorResponse('MediaRecorder is not active or already stopped.');
+  }
+
+  log.info('Stopping MediaRecorder...');
+
+  mediaRecorder.stop();
+
+  return createSuccessResponse();
+}
+
+async function processRecordedData() {
+  if (recordedChunks.length === 0) {
+    log.warn('No recorded data available.');
+    return;
+  }
+
+  log.info(`Processing ${recordedChunks.length} chunks.`);
+  const videoBlob = new Blob(recordedChunks, { type: VIDEO_CAPTURE_MIME_TYPE });
+  recordedChunks = [];
+
+  await offscreenMessagingService.notifyRecordingStoppedDataReady(await blobToBase64(videoBlob));
+}
+
+function cleanupStream() {
+  if (recordingStream) {
+    log.info('Stopping recording stream...');
+    recordingStream.getTracks().forEach(track => track.stop());
+    recordingStream = null;
+  }
+  mediaRecorder = null;
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\offscreen\messaging\services\offscreen-messaging.service.ts
+File type: .ts
+import * as Factories from '$lib/messaging/factories';
+import { BaseMessagingService } from '$lib/messaging/handlers/base-messaging.service';
+import {
+    isErrorResponse,
+    MessageContext,
+    MessageResponse
+} from '$lib/messaging/types';
+import { logger } from '$lib/utils/logger';
+
+const log = logger.getLogger('OffscreenMessagingService');
+
+export class OffscreenMessagingService extends BaseMessagingService<MessageContext.OFFSCREEN> {
+    constructor() {
+        super(MessageContext.OFFSCREEN);
+    }
+
+    async notifyRecordingStoppedDataReady(videoBlobAsBase64: string): Promise<MessageResponse<unknown>> {
+        log.debug('Notifying recording stopped data ready...');
+        const response = await this.send(Factories.videoMessageFactory.recordingStoppedDataReady({ videoBlobAsBase64 }));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+}
+
+export const offscreenMessagingService = new OffscreenMessagingService();
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\popup\index.html
+File type: .html
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Default Popup Title</title>
+  <meta name="manifest.type" content="browser_action" />
+  <link rel="stylesheet" href="~/assets/tailwind.css" />
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="./main.ts"></script>
+</body>
+
+</html>
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\popup\main.ts
+File type: .ts
+import { mount } from 'svelte';
+import Popup from './Popup.svelte';
+import './popup.css';
+
+
+const popup = mount(Popup, {
+  target: document.getElementById('app')!,
+});
+
+export default popup;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\popup\popup-messaging.service.ts
+File type: .ts
+import { logger } from "$lib/utils/logger";
+import * as Factories from "../../lib/messaging/factories";
+import { BaseMessagingService } from "../../lib/messaging/handlers/base-messaging.service";
+import { createErrorResponse, isErrorResponse, MessageContext, MessageResponse } from "../../lib/messaging/types";
+import { getCurrentTabId } from "../../lib/messaging/utils/tab-utils";
+
+const log = logger.getLogger('PopupMessagingService');
+
+export class PopupMessagingService extends BaseMessagingService<MessageContext.POPUP> {
+    constructor() {
+        super(MessageContext.POPUP);
+    }
+
+    async requestCaptureVisibleTab(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting visible tab screenshot...');
+        const response = await this.send(Factories.screenshotMessageFactory.captureVisibleTab());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+            // TODO: Show error to user?
+        }
+        return response;
+    }
+
+    async requestStartSelection(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting screenshot selection start...');
+        const response = await this.send(Factories.screenshotMessageFactory.startSelection());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+
+    async requestSetupVideoCapture(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting video capture setup...');
+        const tabId = await getCurrentTabId();
+        if (tabId === undefined) {
+            log.error('Cannot start video recording: No active tab ID found.');
+            // TODO: Show error to user
+            return createErrorResponse('No active tab ID found.');
+        }
+        const response = await this.send(Factories.videoMessageFactory.setupCaptureRequest({ tabId }));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+}
+
+export const popupMessagingService = new PopupMessagingService();
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\popup\popup.css
+File type: .css
+/* :root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+} */
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\popup\Popup.svelte
+File type: .svelte
+<script lang="ts">
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { isCaptureAllowed } from '$lib/services/capture';
+	import Monitor from '@lucide/svelte/icons/monitor';
+	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
+	import Video from '@lucide/svelte/icons/video';
+	import { popupMessagingService } from './popup-messaging.service';
+
+	let isCaptureDisabled = $state(false);
+
+	onMount(async () => {
+		isCaptureDisabled = !(await isCaptureAllowed());
+	});
+
+	async function handleFullScreenshot() {
+		popupMessagingService
+			.requestCaptureVisibleTab()
+			.catch((error) => {
+				console.error('Error taking full screenshot:', error);
+			})
+			.finally(() => {
+				closePopup();
+			});
+	}
+
+	async function handleSelectiveScreenshot() {
+		popupMessagingService
+			.requestStartSelection()
+			.catch((error) => {
+				console.error('Error taking selective screenshot:', error);
+			})
+			.finally(() => {
+				closePopup();
+			});
+	}
+
+	async function handleVideoRecording() {
+		popupMessagingService
+			.requestSetupVideoCapture()
+			.catch((error) => {
+				console.error('Error starting video capture:', error);
+			})
+			.finally(() => {
+				closePopup();
+			});
+	}
+
+	function closePopup() {
+		window.close();
+	}
+
+	function isResultModalOpened(): boolean {
+		// TODO: implement isResultModalOpened
+		return false;
+	}
+</script>
+
+<main class="h-50 w-100 flex flex-col gap-2 bg-white p-2">
+	<h1 class="pb-2 text-center text-4xl font-bold">Rebug</h1>
+
+	{#if isCaptureDisabled}
+		<p class="text-center text-sm text-gray-500">To use Rebug, please begin browsing websites</p>
+	{:else if isResultModalOpened()}
+		<p class="text-center text-sm text-gray-500">A capture is already in progress</p>
+	{:else}
+		<div class="[&>*]:flex-1/2 flex flex-row gap-1">
+			<Button onclick={handleFullScreenshot}>
+				<Monitor class="mr-2 size-4" />
+				Full Page Screenshot
+			</Button>
+			<Button onclick={handleSelectiveScreenshot}>
+				<SquareDashedMousePointer class="mr-2 size-4" />
+				Select Region
+			</Button>
+		</div>
+
+		<Button onclick={handleVideoRecording}>
+			<Video class="mr-2 size-4" />
+			Record
+		</Button>
+	{/if}
+</main>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\utils.ts
+File type: .ts
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+	return twMerge(clsx(inputs));
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ModalContent.svelte
+File type: .svelte
+<script lang="ts">
+	import { Button } from '$lib/components/ui/button';
+	import { Card } from '$lib/components/ui/card';
+	import { ResultModalProps } from '$lib/stores/modal.store';
+	import Copy from '@lucide/svelte/icons/copy';
+	import CopyCheck from '@lucide/svelte/icons/copy-check';
+	import Download from '@lucide/svelte/icons/download';
+	import X from '@lucide/svelte/icons/x';
+	import CardContent from './ui/card/card-content.svelte';
+	import CardFooter from './ui/card/card-footer.svelte';
+	import CardHeader from './ui/card/card-header.svelte';
+
+	// TODO: sonner toast
+
+	interface Props {
+		resultModalProps: ResultModalProps;
+		close: () => void;
+	}
+
+	let { resultModalProps, close }: Props = $props();
+
+	let copyButtonState = $state(false);
+
+	let lastNonNullVideoUrl: string | null = null;
+	let videoUrl: string | null = $state(null);
+
+	function updateVideoUrl() {
+		if (lastNonNullVideoUrl) {
+			URL.revokeObjectURL(lastNonNullVideoUrl);
+			lastNonNullVideoUrl = null;
+		}
+		if (resultModalProps.videoBlob) {
+			console.log('Creating video URL...', resultModalProps.videoBlob);
+			const url = URL.createObjectURL(resultModalProps.videoBlob);
+			lastNonNullVideoUrl = url;
+			videoUrl = url;
+		} else {
+			videoUrl = null;
+		}
+	}
+
+	$effect(() => {
+		if (resultModalProps.videoBlob) {
+			updateVideoUrl();
+		} else {
+			videoUrl = null;
+		}
+	});
+
+	onDestroy(() => {
+		if (lastNonNullVideoUrl) {
+			URL.revokeObjectURL(lastNonNullVideoUrl);
+		}
+	});
+
+	const downloadImage = () => {
+		if (!resultModalProps.imageString) return;
+
+		const link = document.createElement('a');
+		link.href = resultModalProps.imageString;
+		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.png`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
+
+	const downloadVideo = () => {
+		if (!videoUrl) return;
+
+		const link = document.createElement('a');
+		link.href = videoUrl;
+		link.download = `recording_${new Date().toISOString().replace(/:/g, '-')}.webm`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
+
+	const handleDownload = () => {
+		if (resultModalProps.imageString) {
+			downloadImage();
+		} else if (resultModalProps.videoBlob) {
+			downloadVideo();
+		}
+	};
+
+	const copyToClipboard = async () => {
+		if (!resultModalProps.imageString) return;
+
+		try {
+			const blob = await fetch(resultModalProps.imageString).then((res) => res.blob());
+			await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+
+			copyButtonState = true;
+			setTimeout(() => {
+				copyButtonState = false;
+			}, 2000);
+		} catch (error) {
+			console.error('Failed to copy image to clipboard:', error);
+		}
+	};
+</script>
+
+<Card class="flex max-h-[90vh] max-w-[95vw] flex-col">
+	<CardHeader class="flex h-16 shrink-0 flex-row items-center justify-between border-b p-4">
+		<h2 class="text-lg font-semibold">Screenshot Preview</h2>
+		<Button variant="ghost" onclick={close}>
+			<X class="size-4" />
+		</Button>
+	</CardHeader>
+
+	<CardContent class="flex min-h-0 flex-1 p-4">
+		{#if resultModalProps.imageString}
+			<img
+				src={resultModalProps.imageString}
+				alt="Screenshot preview"
+				class="mx-auto max-h-[calc(90vh-160px)] w-auto max-w-full border border-dashed object-contain"
+			/>
+		{:else if resultModalProps.videoBlob}
+			<div class="flex w-full flex-col items-center">
+				<!-- svelte-ignore a11y_media_has_caption -->
+				<video
+					src={videoUrl}
+					controls
+					autoplay
+					class="max-h-[calc(90vh-160px)] max-w-full border border-dashed"
+				>
+					Your browser does not support the video tag.
+				</video>
+			</div>
+		{/if}
+	</CardContent>
+
+	<CardFooter class="flex h-20 shrink-0 justify-end gap-2 border-t p-4">
+		{#if resultModalProps.imageString}
+			<Button onclick={copyToClipboard} variant="outline">
+				{#if copyButtonState}
+					<CopyCheck class="size-4" />
+					Copied!
+				{:else}
+					<Copy class="size-4" />
+					Copy to Clipboard
+				{/if}
+			</Button>
+		{/if}
+		<Button onclick={handleDownload}>
+			<Download class="size-4" />
+			Download {resultModalProps.videoBlob ? 'Video' : 'Image'}
+		</Button>
+	</CardFooter>
+</Card>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\button\button.svelte
+File type: .svelte
+<script lang="ts" module>
+	import type { WithElementRef } from "bits-ui";
+	import type {
+		HTMLAnchorAttributes,
+		HTMLButtonAttributes,
+	} from "svelte/elements";
+	import { type VariantProps, tv } from "tailwind-variants";
+
+	export const buttonVariants = tv({
+		base: "ring-offset-background cursor-pointer focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+		variants: {
+			variant: {
+				default:
+					"bg-primary text-primary-foreground hover:bg-primary/90",
+				destructive:
+					"bg-destructive text-destructive-foreground hover:bg-destructive/90",
+				outline:
+					"border-input bg-background hover:bg-accent hover:text-accent-foreground border",
+				secondary:
+					"bg-secondary text-secondary-foreground hover:bg-secondary/80",
+				ghost: "hover:bg-accent hover:text-accent-foreground",
+				link: "text-primary underline-offset-4 hover:underline",
+			},
+			size: {
+				default: "h-10 px-4 py-2",
+				sm: "h-9 rounded-md px-3",
+				lg: "h-11 rounded-md px-8",
+				icon: "h-10 w-10",
+			},
+		},
+		defaultVariants: {
+			variant: "default",
+			size: "default",
+		},
+	});
+
+	export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
+	export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
+
+	export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
+		WithElementRef<HTMLAnchorAttributes> & {
+			variant?: ButtonVariant;
+			size?: ButtonSize;
+		};
+</script>
+
+<script lang="ts">
+	import { cn } from "$lib/utils.js";
+
+	let {
+		class: className,
+		variant = "default",
+		size = "default",
+		ref = $bindable(null),
+		href = undefined,
+		type = "button",
+		children,
+		...restProps
+	}: ButtonProps = $props();
+</script>
+
+{#if href}
+	<a
+		bind:this={ref}
+		class={cn(buttonVariants({ variant, size }), className)}
+		{href}
+		{...restProps}
+	>
+		{@render children?.()}
+	</a>
+{:else}
+	<button
+		bind:this={ref}
+		class={cn(buttonVariants({ variant, size }), className)}
+		{type}
+		{...restProps}
+	>
+		{@render children?.()}
+	</button>
+{/if}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\button\index.ts
+File type: .ts
+import Root, {
+	type ButtonProps,
+	type ButtonSize,
+	type ButtonVariant,
+	buttonVariants,
+} from "./button.svelte";
+
+export {
+	Root,
+	type ButtonProps as Props,
+	//
+	Root as Button,
+	buttonVariants,
+	type ButtonProps,
+	type ButtonSize,
+	type ButtonVariant,
+};
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\card-content.svelte
+File type: .svelte
+<script lang="ts">
+	import type { WithElementRef } from "bits-ui";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from "$lib/utils.js";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
+</script>
+
+<div bind:this={ref} class={cn("p-6", className)} {...restProps}>
+	{@render children?.()}
+</div>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\card-description.svelte
+File type: .svelte
+<script lang="ts">
+	import type { WithElementRef } from "bits-ui";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from "$lib/utils.js";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLParagraphElement>> = $props();
+</script>
+
+<p bind:this={ref} class={cn("text-muted-foreground text-sm", className)} {...restProps}>
+	{@render children?.()}
+</p>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\card-footer.svelte
+File type: .svelte
+<script lang="ts">
+	import type { WithElementRef } from "bits-ui";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from "$lib/utils.js";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
+</script>
+
+<div bind:this={ref} class={cn("flex items-center p-6 pt-0", className)} {...restProps}>
+	{@render children?.()}
+</div>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\card-header.svelte
+File type: .svelte
+<script lang="ts">
+	import type { WithElementRef } from "bits-ui";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from "$lib/utils.js";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
+</script>
+
+<div bind:this={ref} class={cn("flex flex-col space-y-1.5 p-6 pb-0", className)} {...restProps}>
+	{@render children?.()}
+</div>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\card-title.svelte
+File type: .svelte
+<script lang="ts">
+	import type { WithElementRef } from "bits-ui";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from "$lib/utils.js";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		level = 3,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
+		level?: 1 | 2 | 3 | 4 | 5 | 6;
+	} = $props();
+</script>
+
+<div
+	role="heading"
+	aria-level={level}
+	bind:this={ref}
+	class={cn("text-2xl font-semibold leading-none tracking-tight", className)}
+	{...restProps}
+>
+	{@render children?.()}
+</div>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\card.svelte
+File type: .svelte
+<script lang="ts">
+	import type { WithElementRef } from "bits-ui";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from "$lib/utils.js";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
+</script>
+
+<div
+	bind:this={ref}
+	class={cn("bg-card text-card-foreground rounded-lg border shadow-sm", className)}
+	{...restProps}
+>
+	{@render children?.()}
+</div>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\components\ui\card\index.ts
+File type: .ts
+import Root from "./card.svelte";
+import Content from "./card-content.svelte";
+import Description from "./card-description.svelte";
+import Footer from "./card-footer.svelte";
+import Header from "./card-header.svelte";
+import Title from "./card-title.svelte";
+
+export {
+	Root,
+	Content,
+	Description,
+	Footer,
+	Header,
+	Title,
+	//
+	Root as Card,
+	Content as CardContent,
+	Description as CardDescription,
+	Footer as CardFooter,
+	Header as CardHeader,
+	Title as CardTitle,
+};
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\bus\message-bus.ts
+File type: .ts
+import { getCurrentTabId } from '$lib/messaging/utils/tab-utils';
+import { logger } from '$lib/utils/logger';
+import { AppMessage, MessageContext, MessageResponse, createErrorResponse, isSuccessResponse } from '../types';
+
+const log = logger.getLogger('MessageBus');
+
+export class MessageBus {
+    /**
+     * Sends a message using the appropriate browser API based on the target context.
+     * Automatically determines the target tab ID for content script messages.
+     */
+    async send<TResponseData = unknown>(
+        message: AppMessage
+    ): Promise<MessageResponse<TResponseData>> {
+        log.debug(`Sending ${message.type} from ${message.source} to ${message.target}`, message.payload);
+
+        try {
+            let response: any;
+            switch (message.target) {
+                case MessageContext.BACKGROUND:
+                case MessageContext.OFFSCREEN:
+                    response = await browser.runtime.sendMessage(message);
+                    break;
+
+                case MessageContext.CONTENT_SCRIPT:
+                    const tabId = await getCurrentTabId();
+                    if (tabId === undefined) {
+                        throw new Error('Cannot send message to content script: No active tab found.');
+                    }
+                    log.debug(`Targeting tab ID: ${tabId} for content script message`);
+                    response = await browser.tabs.sendMessage(tabId, message);
+                    break;
+
+
+                default:
+                    throw new Error(`Unsupported message target context: ${(message as AppMessage).target}`);
+            }
+
+            // Basic validation of the response structure
+            if (typeof response?.success !== 'boolean') {
+                log.warn(`Received malformed response for ${message.type}:`, response);
+                throw new Error(`Received malformed response from ${message.target}`);
+            }
+
+            if (isSuccessResponse(response)) {
+                log.debug(`Success response for ${message.type} from ${message.target}`, response.data);
+            } else {
+                log.warn(`Error response for ${message.type} from ${message.target}: ${response.error}`);
+            }
+
+            return response as MessageResponse<TResponseData>;
+
+        } catch (error: any) {
+            log.error(`Error sending message ${message.type} to ${message.target}:`, error);
+            return createErrorResponse(
+                error?.message || `Failed to send message to ${message.target}`
+            );
+        }
+    }
+}
+
+export const messageBus = new MessageBus();
+
+
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\config\context.ts
+File type: .ts
+export enum MessageContext {
+    BACKGROUND = 'BACKGROUND',
+    CONTENT_SCRIPT = 'CONTENT_SCRIPT',
+    OFFSCREEN = 'OFFSCREEN',
+    POPUP = 'POPUP',
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\config\domain.ts
+File type: .ts
+export enum MessageDomain {
+    SCREENSHOT = 'SCREENSHOT',
+    VIDEO = 'VIDEO',
+    UI = 'UI', // For general UI interactions not tied to specific capture
+    INTERNAL = 'INTERNAL', // For internal state/checks
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\factories\index.ts
+File type: .ts
+export { screenshotMessageFactory } from './screenshot.factory';
+export { uiMessageFactory } from './ui.factory';
+export { videoMessageFactory } from './video.factory';
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\factories\screenshot.factory.ts
+File type: .ts
+import { SelectionArea } from '../../types/capture';
+import { MessageContext } from '../config/context';
+import { MessageDomain } from '../config/domain';
+import {
+    CaptureRegionScreenshotMessage,
+    CaptureVisibleTabScreenshotMessage,
+    ScreenshotAction,
+    StartScreenshotSelectionMessage
+} from '../types/screenshot.types';
+
+const domain = MessageDomain.SCREENSHOT;
+
+export const screenshotMessageFactory = {
+    startSelection(): StartScreenshotSelectionMessage {
+        return {
+            type: `${domain}:${ScreenshotAction.START_SELECTION}`,
+            source: MessageContext.POPUP,
+            target: MessageContext.CONTENT_SCRIPT,
+            payload: undefined,
+        };
+    },
+
+    captureRegion(
+        payload: { region: SelectionArea }
+    ): CaptureRegionScreenshotMessage {
+        return {
+            type: `${domain}:${ScreenshotAction.CAPTURE_REGION}`,
+            source: MessageContext.CONTENT_SCRIPT,
+            target: MessageContext.BACKGROUND,
+            payload,
+        };
+    },
+
+    captureVisibleTab(): CaptureVisibleTabScreenshotMessage {
+        return {
+            type: `${domain}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
+            source: MessageContext.POPUP,
+            target: MessageContext.BACKGROUND,
+            payload: undefined,
+        };
+    },
+};
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\factories\ui.factory.ts
+File type: .ts
+import { MessageContext } from '../config/context';
+import { MessageDomain } from '../config/domain';
+import {
+    CloseRecordingControlsMessage,
+    ResultModalType,
+    ShowRecordingControlsMessage,
+    ShowResultModalMessage,
+    UIAction,
+} from '../types/ui.types';
+
+const domain = MessageDomain.UI;
+
+export const uiMessageFactory = {
+    showResultModal(
+        resultType: ResultModalType,
+        videoBlobAsBase64?: string
+    ): ShowResultModalMessage {
+        return {
+            type: `${domain}:${UIAction.SHOW_RESULT_MODAL}`,
+            source: MessageContext.BACKGROUND,
+            target: MessageContext.CONTENT_SCRIPT,
+            payload: {
+                resultType,
+                videoBlobAsBase64,
+            },
+        };
+    },
+
+    showRecordingControls(
+        startDate: Date
+    ): ShowRecordingControlsMessage {
+        return {
+            type: `${domain}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+            source: MessageContext.BACKGROUND,
+            target: MessageContext.CONTENT_SCRIPT,
+            payload: { startDate: startDate.toISOString() },
+        };
+    },
+
+    closeRecordingControls(
+    ): CloseRecordingControlsMessage {
+        return {
+            type: `${domain}:${UIAction.CLOSE_RECORDING_CONTROLS}`,
+            source: MessageContext.BACKGROUND,
+            target: MessageContext.CONTENT_SCRIPT,
+            payload: undefined,
+        };
+    },
+};
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\factories\video.factory.ts
+File type: .ts
+import { MessageContext } from '../config/context';
+import { MessageDomain } from '../config/domain';
+import {
+    GetRecordingInProgressMessage,
+    RecordingFailedMessage,
+    RecordingStartedMessage,
+    RecordingStoppedDataReadyMessage,
+    SetupVideoCaptureMessage,
+    StartRecordingRequestMessage,
+    StopRecordingRequestMessage,
+    VideoAction
+} from '../types/video.types';
+
+const domain = MessageDomain.VIDEO;
+
+export const videoMessageFactory = {
+    // --- Requests ---
+    setupCaptureRequest(
+        payload: { tabId: number }
+    ): SetupVideoCaptureMessage {
+        return {
+            type: `${domain}:${VideoAction.SETUP_CAPTURE}`,
+            source: MessageContext.POPUP,
+            target: MessageContext.BACKGROUND,
+            payload,
+        };
+    },
+
+    startRecordingRequest(payload: { tabId: number }): StartRecordingRequestMessage {
+        return {
+            type: `${domain}:${VideoAction.START_RECORDING_REQUEST}`,
+            source: MessageContext.BACKGROUND,
+            target: MessageContext.OFFSCREEN,
+            payload,
+        };
+    },
+
+    stopRecordingRequest(
+        source: MessageContext.CONTENT_SCRIPT
+    ): StopRecordingRequestMessage {
+        return {
+            type: `${domain}:${VideoAction.STOP_RECORDING_REQUEST}`,
+            source,
+            target: MessageContext.OFFSCREEN,
+            payload: undefined,
+        };
+    },
+
+    getRecordingInProgress(
+        source: MessageContext.CONTENT_SCRIPT | MessageContext.BACKGROUND,
+        target: MessageContext.BACKGROUND | MessageContext.OFFSCREEN
+    ): GetRecordingInProgressMessage {
+        return {
+            type: `${domain}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+            source: source,
+            target: target,
+            payload: undefined,
+        };
+    },
+
+    // --- Notifications / Data ---
+    recordingStarted(
+        payload: { startDate: string }
+    ): RecordingStartedMessage {
+        return {
+            type: `${domain}:${VideoAction.RECORDING_STARTED}`,
+            source: MessageContext.OFFSCREEN,
+            target: MessageContext.BACKGROUND,
+            payload,
+        };
+    },
+
+    recordingStoppedDataReady(
+        payload: { videoBlobAsBase64: string }
+    ): RecordingStoppedDataReadyMessage {
+        return {
+            type: `${domain}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
+            source: MessageContext.OFFSCREEN,
+            target: MessageContext.BACKGROUND,
+            payload,
+        };
+    },
+
+    recordingFailed(
+        payload: { error: string }
+    ): RecordingFailedMessage {
+        return {
+            type: `${domain}:${VideoAction.RECORDING_FAILED}`,
+            source: MessageContext.OFFSCREEN,
+            target: MessageContext.BACKGROUND,
+            payload,
+        };
+    },
+};
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\handlers\base-messaging.service.ts
+File type: .ts
+import { logger } from '../../utils/logger';
+import { messageBus } from '../bus/message-bus';
+import { MessageHandler } from '../handlers/handler.types';
+import { MessageDispatcher } from '../handlers/message-dispatcher';
+import { AppMessage, MessageContext, MessageResponse } from '../types';
+
+const log = logger.getLogger('BaseMessagingService');
+
+export abstract class BaseMessagingService<TContext extends MessageContext> {
+  protected readonly context: TContext;
+  protected readonly dispatcher: MessageDispatcher;
+  protected readonly messageBus = messageBus;
+
+  constructor(context: TContext) {
+    this.context = context;
+    this.dispatcher = new MessageDispatcher(context);
+    log.info(`Service initialized for context: ${this.context}`);
+  }
+
+  /** Helper method for subclasses to register handlers */
+  public registerHandler<T extends AppMessage>(
+    type: T['type'],
+    handler: MessageHandler<T>
+  ): void {
+    // Bind the handler to 'this' context of the specific service instance
+    log.debug(`[${this.context}] Registering handler for ${type}`);
+    this.dispatcher.register(type, handler.bind(this));
+  }
+
+  /**
+   * Sends a message using the central message bus.
+   * Ensures the 'source' property of the message is correctly set to this service's context.
+   */
+  protected async send<TResponseData = unknown>(
+    message: Omit<AppMessage, 'source'>
+  ): Promise<MessageResponse<TResponseData>> {
+    const messageWithSource: AppMessage = {
+      ...message,
+      source: this.context,
+    } as AppMessage;
+
+    return this.messageBus.send<TResponseData>(messageWithSource);
+  }
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\handlers\handler.types.ts
+File type: .ts
+
+import { AppMessage, MessageResponse } from '../types';
+
+// Generic handler function type, constrained by the message type it handles
+export type MessageHandler<T extends AppMessage = AppMessage> = (
+  message: T
+) => Promise<MessageResponse<any>> | MessageResponse<any>;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\handlers\message-dispatcher.ts
+File type: .ts
+import { logger } from '../../utils/logger';
+import { AppMessage, AppMessageType, MessageContext, createErrorResponse } from '../types';
+import { MessageHandler } from './handler.types';
+
+const log = logger.getLogger('MessageDispatcher');
+
+export class MessageDispatcher {
+  private readonly handlers = new Map<AppMessageType, MessageHandler<any>>();
+  private readonly currentContext: MessageContext;
+
+  constructor(context: MessageContext) {
+    this.currentContext = context;
+    this.registerListener();
+    log.info(`Initialized for context: ${this.currentContext}`);
+  }
+
+  /** Registers a handler for a specific message type */
+  register<T extends AppMessage>(
+    type: T['type'],
+    handler: MessageHandler<T>
+  ): void {
+    if (this.handlers.has(type)) {
+      log.warn(`Overwriting handler for message type: ${type}`);
+    }
+    this.handlers.set(type, handler);
+    log.debug(`Registered handler for ${type}`);
+  }
+
+  /** Sets up the main browser message listener */
+  private registerListener(): void {
+    browser.runtime.onMessage.addListener(
+      (message: unknown, sender, sendResponse) => {
+        // 1. Basic Validation & Context Check
+        if (!this.isValidAppMessage(message) || message.target !== this.currentContext) {
+          // Ignore messages not for this context or malformed
+          return false; // Important: Indicates we are not handling this message asynchronously
+        }
+
+        log.debug(`Received ${message.type} from ${message.source} (tabId: ${sender.tab?.id})`);
+
+        // 2. Find Handler
+        const handler = this.handlers.get(message.type);
+        if (!handler) {
+          const errorMsg = `No handler registered for message type ${message.type} in ${this.currentContext}`;
+          log.error(errorMsg);
+          sendResponse(createErrorResponse(errorMsg));
+          return false; // No async response needed
+        }
+
+        // 3. Execute Handler (Async)
+        Promise.resolve()
+          .then(() => handler(message))
+          .then((response) => {
+            log.debug(`Sending response for ${message.type}:`, response);
+            sendResponse(response);
+          })
+          .catch((error) => {
+            const errorMsg = `Handler for ${message.type} threw an error: ${error?.message || error}`;
+            log.error(errorMsg, error);
+            sendResponse(createErrorResponse(errorMsg));
+          });
+
+        // 4. Indicate Asynchronous Response
+        // Crucial: Tells Chrome to keep the message channel open for the async response
+        return true;
+      }
+    );
+  }
+
+  /** Type guard to validate incoming messages */
+  private isValidAppMessage(message: any): message is AppMessage {
+    return (
+      typeof message === 'object' &&
+      message !== null &&
+      typeof message.type === 'string' &&
+      typeof message.source === 'string' &&
+      typeof message.target === 'string' &&
+      Object.values(MessageContext).includes(message.target as MessageContext) &&
+      Object.values(MessageContext).includes(message.source as MessageContext)
+    );
+  }
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\types\base.ts
+File type: .ts
+import { MessageContext } from '../config/context';
+
+/** Base structure for all messages */
+export interface BaseMessage<
+    TType extends string,
+    TSource extends MessageContext,
+    TTarget extends MessageContext,
+    TPayload = void, // Use void for messages without payload
+> {
+    readonly type: TType;
+    readonly source: TSource;
+    readonly target: TTarget;
+    // Conditionally add payload if TPayload is not void
+    readonly payload: TPayload;
+}
+
+/** Standardized response structure */
+export type MessageResponse<TData = unknown> =
+    | { success: true; data?: TData }
+    | { success: false; error: string };
+
+/** Type guard for success response */
+export function isSuccessResponse<T>(
+    response: MessageResponse<T>
+): response is { success: true; data?: T } {
+    return response.success;
+}
+
+/** Type guard for error response */
+export function isErrorResponse<T>(
+    response: MessageResponse<T>
+): response is { success: false; error: string } {
+    return !response.success;
+}
+
+/** Factory for success responses */
+export function createSuccessResponse<TData = unknown>(
+    data?: TData
+): MessageResponse<TData> {
+    return { success: true, data };
+}
+
+/** Factory for error responses */
+export function createErrorResponse(error: string): MessageResponse<never> {
+    return { success: false, error };
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\types\index.ts
+File type: .ts
+import { ScreenshotMessage } from './screenshot.types';
+import { UIMessage } from './ui.types';
+import { VideoMessage } from './video.types';
+
+// Export core types/enums for easier access
+export * from '../config/context';
+export * from '../config/domain';
+export * from './base';
+
+// Export domain-specific types and actions
+export * from './screenshot.types';
+export * from './ui.types';
+export * from './video.types';
+
+export type AppMessage =
+    | ScreenshotMessage
+    | VideoMessage
+    | UIMessage;
+
+export type AppMessageType = AppMessage['type'];
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\types\screenshot.types.ts
+File type: .ts
+import { SelectionArea } from '../../types/capture';
+import { MessageContext } from '../config/context';
+import { MessageDomain } from '../config/domain';
+import { BaseMessage } from './base';
+
+export enum ScreenshotAction {
+    START_SELECTION = 'START_SELECTION',
+    CAPTURE_REGION = 'CAPTURE_REGION',
+    CAPTURE_VISIBLE_TAB = 'CAPTURE_VISIBLE_TAB',
+}
+
+type SDomain = MessageDomain.SCREENSHOT;
+
+// --- Message Definitions ---
+
+export type StartScreenshotSelectionMessage = BaseMessage<
+    `${SDomain}:${ScreenshotAction.START_SELECTION}`,
+    MessageContext.POPUP | MessageContext.BACKGROUND,
+    MessageContext.CONTENT_SCRIPT
+>;
+
+export type CaptureRegionScreenshotMessage = BaseMessage<
+    `${SDomain}:${ScreenshotAction.CAPTURE_REGION}`,
+    MessageContext.CONTENT_SCRIPT,
+    MessageContext.BACKGROUND,
+    { region: SelectionArea }
+>;
+
+export type CaptureVisibleTabScreenshotMessage = BaseMessage<
+    `${SDomain}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
+    MessageContext.POPUP | MessageContext.CONTENT_SCRIPT,
+    MessageContext.BACKGROUND
+>;
+
+export type ScreenshotMessage =
+    | StartScreenshotSelectionMessage
+    | CaptureRegionScreenshotMessage
+    | CaptureVisibleTabScreenshotMessage;
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\types\ui.types.ts
+File type: .ts
+import { MessageContext } from '../config/context';
+import { MessageDomain } from '../config/domain';
+import { BaseMessage } from './base';
+
+export enum ResultModalType {
+    IMAGE = 'IMAGE',
+    VIDEO = 'VIDEO',
+}
+
+export enum UIAction {
+    SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
+    SHOW_RECORDING_CONTROLS = 'SHOW_RECORDING_CONTROLS',
+    CLOSE_RECORDING_CONTROLS = 'CLOSE_RECORDING_CONTROLS',
+    SHOW_SCREENSHOT_SELECTION_UI = 'SHOW_SCREENSHOT_SELECTION_UI',
+}
+
+type UIDomain = MessageDomain.UI;
+
+// --- Message Definitions ---
+
+export type ShowResultModalMessage = BaseMessage<
+    `${UIDomain}:${UIAction.SHOW_RESULT_MODAL}`,
+    MessageContext.BACKGROUND,
+    MessageContext.CONTENT_SCRIPT,
+    {
+        resultType: ResultModalType;
+        videoBlobAsBase64?: string;
+    }
+>;
+
+export type ShowRecordingControlsMessage = BaseMessage<
+    `${UIDomain}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+    MessageContext.BACKGROUND,
+    MessageContext.CONTENT_SCRIPT,
+    { startDate: string }
+>;
+
+export type CloseRecordingControlsMessage = BaseMessage<
+    `${UIDomain}:${UIAction.CLOSE_RECORDING_CONTROLS}`,
+    MessageContext.BACKGROUND,
+    MessageContext.CONTENT_SCRIPT
+>;
+
+export type UIMessage =
+    | ShowResultModalMessage
+    | ShowRecordingControlsMessage
+    | CloseRecordingControlsMessage;
+
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\types\video.types.ts
+File type: .ts
+import { MessageContext } from '../config/context';
+import { MessageDomain } from '../config/domain';
+import { BaseMessage } from './base';
+
+export enum VideoAction {
+    // --- Requests ---
+    SETUP_CAPTURE = 'SETUP_CAPTURE',
+    START_RECORDING_REQUEST = 'START_RECORDING_REQUEST',
+    STOP_RECORDING_REQUEST = 'STOP_RECORDING_REQUEST',
+    GET_RECORDING_IN_PROGRESS = 'GET_RECORDING_IN_PROGRESS',
+
+    // --- Notifications / Data Transfer ---
+    RECORDING_STARTED = 'RECORDING_STARTED',
+    RECORDING_STOPPED_DATA_READY = 'RECORDING_STOPPED_DATA_READY',
+    RECORDING_FAILED = 'RECORDING_FAILED',
+}
+
+type VDomain = MessageDomain.VIDEO;
+
+// --- Message Definitions ---
+
+export type SetupVideoCaptureMessage = BaseMessage<
+    `${VDomain}:${VideoAction.SETUP_CAPTURE}`,
+    MessageContext.POPUP,
+    MessageContext.BACKGROUND,
+    { tabId: number }
+>;
+
+export type StartRecordingRequestMessage = BaseMessage<
+    `${VDomain}:${VideoAction.START_RECORDING_REQUEST}`,
+    MessageContext.BACKGROUND,
+    MessageContext.OFFSCREEN,
+    { tabId: number }
+>;
+
+export type StopRecordingRequestMessage = BaseMessage<
+    `${VDomain}:${VideoAction.STOP_RECORDING_REQUEST}`,
+    MessageContext.CONTENT_SCRIPT,
+    MessageContext.OFFSCREEN
+>;
+
+export type GetRecordingInProgressMessage = BaseMessage<
+    `${VDomain}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+    MessageContext.CONTENT_SCRIPT | MessageContext.BACKGROUND,
+    MessageContext.BACKGROUND | MessageContext.OFFSCREEN
+>;
+
+export type RecordingStartedMessage = BaseMessage<
+    `${VDomain}:${VideoAction.RECORDING_STARTED}`,
+    MessageContext.OFFSCREEN,
+    MessageContext.BACKGROUND,
+    { startDate: string }
+>;
+
+export type RecordingStoppedDataReadyMessage = BaseMessage<
+    `${VDomain}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
+    MessageContext.OFFSCREEN,
+    MessageContext.BACKGROUND,
+    { videoBlobAsBase64: string }
+>;
+
+export type RecordingFailedMessage = BaseMessage<
+    `${VDomain}:${VideoAction.RECORDING_FAILED}`,
+    MessageContext.OFFSCREEN,
+    MessageContext.BACKGROUND,
+    { error: string }
+>;
+
+export type VideoMessage =
+    | SetupVideoCaptureMessage
+    | StartRecordingRequestMessage
+    | StopRecordingRequestMessage
+    | GetRecordingInProgressMessage
+    | RecordingStartedMessage
+    | RecordingStoppedDataReadyMessage
+    | RecordingFailedMessage;
+
+
+// TODO: not sure where to put this type
+export type RecordingState =
+    | { inProgress: boolean; startDate: string; tabId: number }
+    | { inProgress: false; }
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\messaging\utils\tab-utils.ts
+File type: .ts
+import { logger } from "../../utils/logger";
+
+const log = logger.getLogger('TabUtils');
+
+export async function getCurrentTabId(): Promise<number | undefined> {
+  try {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length > 0 && tabs[0]?.id !== undefined) {
+      return tabs[0].id;
+    }
+    log.warn('Could not determine active tab ID.');
+    return undefined;
+  } catch (error) {
+    log.error('Error querying for active tab:', error);
+    return undefined;
+  }
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\services\capture.ts
+File type: .ts
+export const RESTRICTED_SCHEMES = [
+    'chrome:',
+    'edge:',
+    'brave:',
+    'about:',
+    'moz-extension:',
+    'chrome-extension:',
+    'vivaldi:'
+];
+
+export async function isCaptureAllowed(): Promise<boolean> {
+    try {
+        const tab = await getCurrentTab();
+        if (tab?.url == undefined) return false;
+
+        const tabUrl = tab.url;
+
+        return !RESTRICTED_SCHEMES.some(scheme =>
+            tabUrl.startsWith(scheme)
+        );
+    } catch (error) {
+        return false;
+    }
+}
+
+export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
+    try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        return tab;
+    } catch (error) {
+        console.error('Error getting current tab:', error);
+        return undefined;
+    }
+}
+
+export function blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+export function base64ToBlob(base64: string, type: string): Blob {
+    const byteString = atob(base64.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+
+    return new Blob([ab], { type });
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\services\storage\index.ts
+File type: .ts
+export const screenshotStorage = storage.defineItem<string>('local:screenshot');
+
+export const videoStorage = storage.defineItem<string>('local:capturedVideo');
+
+export * from './indexedDBService';
+
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\services\storage\indexedDBService.ts
+File type: .ts
+const DB_NAME = 'RebugStorage';
+const DB_VERSION = 1;
+const VIDEO_STORE_NAME = 'videoRecordings';
+
+let dbPromise: Promise<IDBDatabase> | null = null;
+
+function getDb(): Promise<IDBDatabase> {
+    if (dbPromise) {
+        return dbPromise;
+    }
+    dbPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = (event) => {
+            console.error('IndexedDB error:', request.error);
+            reject(`IndexedDB error: ${request.error}`);
+            dbPromise = null; // Reset promise on error
+        };
+
+        request.onsuccess = (event) => {
+            console.log('IndexedDB connection successful.');
+            resolve(request.result);
+        };
+
+        request.onupgradeneeded = (event) => {
+            console.log('Upgrading IndexedDB...');
+            const db = (event.target as IDBOpenDBRequest).result;
+            if (!db.objectStoreNames.contains(VIDEO_STORE_NAME)) {
+                console.log(`Creating ${VIDEO_STORE_NAME} object store.`);
+                db.createObjectStore(VIDEO_STORE_NAME); // Using keyPath requires objects, direct key is simpler here
+            }
+            // Add other stores or indices if needed in future versions
+        };
+    });
+    return dbPromise;
+}
+
+async function performStoreOperation(
+    mode: IDBTransactionMode,
+    operation: (store: IDBObjectStore) => IDBRequest | Promise<any> // Allow promise for async ops inside
+): Promise<any> {
+    const db = await getDb();
+    return new Promise((resolve, reject) => {
+        try {
+            const transaction = db.transaction(VIDEO_STORE_NAME, mode);
+            const store = transaction.objectStore(VIDEO_STORE_NAME);
+            const requestOrPromise = operation(store);
+
+            // Handle both IDBRequest and Promises returned by the operation
+            if (requestOrPromise instanceof IDBRequest) {
+                requestOrPromise.onsuccess = () => resolve(requestOrPromise.result);
+                requestOrPromise.onerror = () => reject(requestOrPromise.error);
+            } else if (requestOrPromise instanceof Promise) {
+                requestOrPromise.then(resolve).catch(reject);
+            } else {
+                // If operation doesn't return request/promise, assume sync success within transaction
+                transaction.oncomplete = () => resolve(undefined);
+                transaction.onerror = () => reject(transaction.error);
+            }
+
+            // Fallback transaction handlers if operation didn't define specific ones
+            transaction.onerror = transaction.onerror || (() => {
+                console.error(`IndexedDB transaction error (${mode}) on ${VIDEO_STORE_NAME}:`, transaction.error);
+                reject(transaction.error)
+            });
+            transaction.onabort = transaction.onabort || (() => {
+                console.warn(`IndexedDB transaction aborted (${mode}) on ${VIDEO_STORE_NAME}:`, transaction.error);
+                reject(new Error("IndexedDB transaction aborted"));
+            });
+
+        } catch (error) {
+            console.error("Error initiating IndexedDB transaction:", error);
+            reject(error);
+        }
+    });
+}
+
+
+export const videoStorage = {
+    async saveVideo(id: string, blob: Blob): Promise<void> {
+        console.log(`IndexedDB: Saving video with ID: ${id}`);
+        try {
+            // Wrap the put operation to ensure it completes before resolving
+            await performStoreOperation('readwrite', (store) => {
+                return new Promise<void>((resolveOp, rejectOp) => {
+                    const request = store.put(blob, id);
+                    request.onsuccess = () => {
+                        console.log(`IndexedDB: Successfully saved video blob with ID: ${id}`);
+                        resolveOp();
+                    };
+                    request.onerror = () => {
+                        console.error(`IndexedDB: Error saving video blob with ID: ${id}`, request.error);
+                        rejectOp(request.error);
+                    };
+                });
+            });
+            console.log(`IndexedDB: Transaction commit for saveVideo ID: ${id}`);
+        } catch (error) {
+            console.error(`IndexedDB: Failed transaction for saveVideo ID: ${id}`, error);
+            throw error; // Re-throw the error after logging
+        }
+    },
+
+    async getVideo(id: string): Promise<Blob | null> {
+        console.log(`IndexedDB: Getting video with ID: ${id}`);
+        try {
+            const result = await performStoreOperation('readonly', (store) => store.get(id));
+            if (result instanceof Blob) {
+                console.log(`IndexedDB: Successfully retrieved video blob with ID: ${id}`);
+                return result;
+            } else if (result === undefined) {
+                console.warn(`IndexedDB: No video found with ID: ${id}`);
+                return null;
+            } else {
+                console.error(`IndexedDB: Retrieved unexpected data type for ID: ${id}`, typeof result);
+                return null;
+            }
+        } catch (error) {
+            console.error(`IndexedDB: Failed to get video with ID: ${id}`, error);
+            return null;
+        }
+    },
+
+    async deleteVideo(id: string): Promise<void> {
+        console.log(`IndexedDB: Deleting video with ID: ${id}`);
+        try {
+            // Wrap the delete operation to ensure it completes before resolving
+            await performStoreOperation('readwrite', (store) => {
+                return new Promise<void>((resolveOp, rejectOp) => {
+                    const request = store.delete(id);
+                    request.onsuccess = () => {
+                        console.log(`IndexedDB: Successfully deleted video with ID: ${id}`);
+                        resolveOp();
+                    };
+                    request.onerror = () => {
+                        console.error(`IndexedDB: Error deleting video with ID: ${id}`, request.error);
+                        rejectOp(request.error);
+                    };
+                });
+            });
+            console.log(`IndexedDB: Transaction commit for deleteVideo ID: ${id}`);
+        } catch (error) {
+            console.error(`IndexedDB: Failed transaction for deleteVideo ID: ${id}`, error);
+            throw error; // Re-throw the error after logging
+        }
+    },
+};
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\stores\modal.store.ts
+File type: .ts
+import { writable, type Writable } from "svelte/store";
+
+export interface ResultModalProps {
+    imageString?: string;
+    videoBlob?: Blob;
+}
+
+type ModalState = {
+    isOpen: boolean;
+    props: ResultModalProps
+};
+
+const initialState: ModalState = {
+    isOpen: false,
+    props: {}
+};
+
+function createModalStore() {
+    const { subscribe, set }: Writable<ModalState> = writable(initialState);
+
+    return {
+        subscribe,
+        open: (props: ResultModalProps) => set({ isOpen: true, props }),
+        close: () => set({ isOpen: false, props: {} }),
+    };
+}
+
+export const modalStore = createModalStore();
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\types\capture.ts
+File type: .ts
+export const SCREENSHOT_FORMAT = 'png';
+export const SCREENSHOT_MIME_TYPE = 'image/png';
+
+export interface SelectionArea {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    devicePixelRatio: number;
+}
+
+export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
+
+export const DEFAULT_RECORDING_ID = 'DEFAULT_RECORDING_ID'
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\lib\utils\logger.ts
+File type: .ts
+export enum LogLevel {
+    DEBUG = 0,
+    INFO = 1,
+    WARN = 2,
+    ERROR = 3,
+    SILENT = 4,
+}
+
+// --- Configuration ---
+
+// Determine the initial log level
+// Default to INFO, but use DEBUG if in a development environment (adjust check as needed for WXT env vars)
+// WXT sets process.env.NODE_ENV, but it might be 'production' even during development builds sometimes.
+// Using import.meta.env.DEV is often more reliable in Vite-based environments like WXT.
+const isDevelopment = import.meta.env.DEV;
+const DEFAULT_LOG_LEVEL = isDevelopment ? LogLevel.DEBUG : LogLevel.INFO;
+
+let currentLogLevel: LogLevel = DEFAULT_LOG_LEVEL;
+
+// Mapping levels to console methods
+const consoleMethods: { [key in LogLevel]?: (...args: any[]) => void } = {
+    [LogLevel.DEBUG]: console.info,
+    [LogLevel.INFO]: console.info,
+    [LogLevel.WARN]: console.warn,
+    [LogLevel.ERROR]: console.error,
+};
+
+// --- Logger Class ---
+
+class Logger {
+    private readonly name: string;
+
+    constructor(name: string) {
+        this.name = name;
+    }
+
+    private log(level: LogLevel, message: any, ...optionalParams: any[]): void {
+        if (level < currentLogLevel || level === LogLevel.SILENT) {
+            return;
+        }
+
+        const method = consoleMethods[level] ?? console.log; // Fallback to console.log
+        const timestamp = new Date().toISOString();
+        const levelString = LogLevel[level].toUpperCase();
+
+        // Format: [LEVEL] [YYYY-MM-DDTHH:mm:ss.sssZ] [LoggerName] Message ...optionalParams
+        method(
+            `[${levelString}] [${timestamp}] [${this.name}]`,
+            message,
+            ...optionalParams
+        );
+    }
+
+    // --- Public Logging Methods ---
+
+    /** Logs debug messages (most verbose) */
+    debug(message: any, ...optionalParams: any[]): void {
+        this.log(LogLevel.DEBUG, message, ...optionalParams);
+    }
+
+    /** Logs informational messages */
+    info(message: any, ...optionalParams: any[]): void {
+        this.log(LogLevel.INFO, message, ...optionalParams);
+    }
+
+    /** Logs warning messages */
+    warn(message: any, ...optionalParams: any[]): void {
+        this.log(LogLevel.WARN, message, ...optionalParams);
+    }
+
+    /** Logs error messages */
+    error(message: any, ...optionalParams: any[]): void {
+        this.log(LogLevel.ERROR, message, ...optionalParams);
+    }
+}
+
+// --- Logger Management ---
+
+// Optional: Cache logger instances to avoid recreating them
+const loggerCache: { [name: string]: Logger } = {};
+
+/**
+ * Factory object to manage logging configuration and create logger instances.
+ */
+export const logger = {
+    /**
+     * Retrieves a logger instance for the given name.
+     * @param name - A descriptive name for the logging context (e.g., 'MessageBus', 'BackgroundService').
+     * @returns A Logger instance.
+     */
+    getLogger(name: string): Logger {
+        if (!loggerCache[name]) {
+            loggerCache[name] = new Logger(name);
+        }
+        return loggerCache[name];
+    },
+
+    /**
+     * Sets the global minimum log level. Messages below this level will be ignored.
+     * @param level - The minimum LogLevel to display.
+     */
+    setLevel(level: LogLevel): void {
+        console.info(
+            `[Logger] Global log level set to: ${LogLevel[level].toUpperCase()}`
+        );
+        currentLogLevel = level;
+    },
+
+    /**
+     * Gets the current global minimum log level.
+     * @returns The current LogLevel.
+     */
+    getLevel(): LogLevel {
+        return currentLogLevel;
+    },
+
+    /**
+     * Gets the string representation of the current global log level.
+     * @returns The current log level as a string (e.g., "DEBUG").
+     */
+    getLevelName(): string {
+        return LogLevel[currentLogLevel].toUpperCase();
+    },
+};
+
+// Initial log message indicating the level being used
+console.info(
+    `[Logger] Initialized. Log level set to: ${logger.getLevelName()}`
+);
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\public\wxt.svg
+File type: .svg
+<svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_305_516)">
+<g clip-path="url(#clip1_305_516)">
+<path d="M49.0229 69.1875C54.1272 69.1875 58.265 65.0497 58.265 59.9454V50.7033H59.9454C65.0497 50.7033 69.1875 46.5655 69.1875 41.4612C69.1875 36.357 65.0497 32.2191 59.9454 32.2191H58.265V22.9771C58.265 17.8728 54.1272 13.735 49.0229 13.735H39.7809V12.0546C39.7809 6.95032 35.643 2.8125 30.5388 2.8125C25.4345 2.8125 21.2967 6.95032 21.2967 12.0546V13.735H12.0546C6.95032 13.735 2.8125 17.8728 2.8125 22.9771V32.2191H4.49288C9.59714 32.2191 13.735 36.357 13.735 41.4612C13.735 46.5655 9.59714 50.7033 4.49288 50.7033H2.8125V69.1875H21.2967V67.5071C21.2967 62.4029 25.4345 58.265 30.5388 58.265C35.643 58.265 39.7809 62.4029 39.7809 67.5071V69.1875H49.0229Z" stroke="#67D55E" stroke-width="5.625"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_305_516">
+<rect width="72" height="72" fill="white"/>
+</clipPath>
+<clipPath id="clip1_305_516">
+<rect width="72" height="72" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
