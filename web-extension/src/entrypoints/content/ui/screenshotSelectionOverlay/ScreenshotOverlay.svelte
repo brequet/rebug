@@ -26,6 +26,7 @@
 	});
 
 	function handleMouseDown(e: MouseEvent) {
+		console.log('Mouse down event:', e);
 		isSelecting = true;
 		startX = e.clientX;
 		startY = e.clientY;
@@ -40,6 +41,7 @@
 	}
 
 	async function handleMouseUp() {
+		console.log('Mouse up event:', { startX, startY, endX, endY });
 		if (!isSelecting) return;
 		isSelecting = false;
 
@@ -74,6 +76,11 @@
 		}
 	}
 
+	function onCancelBtn() {
+		console.log('Cancel button clicked');
+		onCancel();
+	}
+
 	onMount(() => {
 		document.addEventListener('keydown', handleKeyDown);
 
@@ -85,7 +92,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-	class="fixed inset-0 z-[2147483647] cursor-crosshair"
+	class="fixed inset-0 z-[2147483646] cursor-crosshair"
 	onmousedown={handleMouseDown}
 	onmousemove={handleMouseMove}
 	onmouseup={handleMouseUp}
@@ -110,10 +117,10 @@
 		style:width={selectionStyle.width}
 		style:height={selectionStyle.height}
 	></div>
+</div>
 
-	<div class={cn('fixed bottom-5 right-5', isSelecting ? 'hidden' : '')}>
-		<Button variant="destructive" onclick={onCancel} class="px-4 py-2">Cancel</Button>
-	</div>
+<div class={cn('fixed bottom-5 right-5 z-[2147483647]', isSelecting ? 'hidden' : '')}>
+	<Button variant="destructive" onclick={onCancelBtn} class="px-4 py-2">Cancel</Button>
 </div>
 
 <style>
