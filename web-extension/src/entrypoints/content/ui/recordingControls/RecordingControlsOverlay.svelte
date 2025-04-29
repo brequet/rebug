@@ -1,11 +1,10 @@
 <script lang="ts">
-	let {
-		onClose,
-		recordStartDate
-	}: {
+	interface RecordingControlsOverlayProps {
 		onClose: () => void;
-		recordStartDate: Date | undefined;
-	} = $props();
+		recordStartDate: Date;
+	}
+
+	let { onClose, recordStartDate }: RecordingControlsOverlayProps = $props();
 
 	let secondSinceStart = $state(computeSecondSinceStart());
 
@@ -18,7 +17,6 @@
 	});
 
 	function computeSecondSinceStart(): number {
-		if (!recordStartDate) return 0;
 		const now = new Date();
 		return Math.floor((now.getTime() - recordStartDate.getTime()) / 1000);
 	}
@@ -34,6 +32,7 @@
 	}
 </script>
 
+<!-- TODO: dragable -->
 <div class="recording-controls">
 	<div class="recording-indicator">
 		<span class="recording-dot"></span>

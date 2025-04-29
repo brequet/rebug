@@ -18,16 +18,20 @@ export async function handleShowResultModal(message: ShowResultModalMessage): Pr
 }
 
 export async function handleShowRecordingControlsOverlay(
-    showRecordingControlsMessage: ShowRecordingControlsMessage,
+    message: ShowRecordingControlsMessage,
     ctx: ContentScriptContext
 ): Promise<MessageResponse<void>> {
-    log.info(`Handling ${showRecordingControlsMessage.type}`, showRecordingControlsMessage.payload);
+    log.info(`Handling ${message.type}`, message.payload);
     try {
-        await openRecordingControlsOverlay(ctx, async () => {
-            await closeRecordingControlsOverlay()
-            log.debug('Requesting video recording stop...');
-            contentScriptMessagingService.requestStopVideoRecording();
-        });
+        await openRecordingControlsOverlay(
+            ctx,
+            async () => {
+                await closeRecordingControlsOverlay()
+                log.debug('Requesting video recording stop...');
+                contentScriptMessagingService.requestStopVideoRecording();
+            },
+            new Date(message.payload.startDate)
+        );
         return createSuccessResponse();
     } catch (error) {
         return createErrorResponse((error as Error).message || 'Unknown error');
