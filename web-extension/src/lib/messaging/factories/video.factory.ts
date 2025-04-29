@@ -6,7 +6,7 @@ import {
     StartRecordingRequestMessage,
     StopRecordingRequestMessage,
     VideoAction
-} from '../types/video.types';
+} from '../types/domains/video.types';
 
 export const videoMessageFactory = {
     // --- Requests ---

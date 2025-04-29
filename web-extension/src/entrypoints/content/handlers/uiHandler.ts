@@ -1,9 +1,9 @@
 import { createErrorResponse, createSuccessResponse, MessageResponse, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
-import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../../ui/recordingControls";
-import { openRebugResultModal } from "../../ui/resultModal";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
+import { openRebugResultModal } from "../ui/resultModal";
 
 const log = logger.getLogger('ContentScript:UiHandler');
 

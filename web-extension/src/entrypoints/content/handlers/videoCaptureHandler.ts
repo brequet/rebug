@@ -1,8 +1,8 @@
 import { isErrorResponse } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
-import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../../ui/recordingControls";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
 
 const log = logger.getLogger('ContentScript:VideoCaptureHandler');
 

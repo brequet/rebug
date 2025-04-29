@@ -1,6 +1,6 @@
-import { SelectionArea } from '../../types/capture';
-import { MessageContext } from '../config/context';
-import { Message } from './base';
+import { SelectionArea } from '../../../types/capture';
+import { MessageContext } from '../../config/context';
+import { Message } from '../base';
 
 export enum ScreenshotAction {
     START_SELECTION = 'SCREENSHOT:START_SELECTION',

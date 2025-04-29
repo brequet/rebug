@@ -1,5 +1,5 @@
-import { MessageContext } from '../config/context';
-import { Message } from './base';
+import { MessageContext } from '../../config/context';
+import { Message } from '../base';
 
 export type RecordingState =
     | { inProgress: boolean; startDate: string; tabId: number }

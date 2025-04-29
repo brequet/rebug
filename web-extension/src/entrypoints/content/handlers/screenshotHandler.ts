@@ -2,8 +2,8 @@ import { createErrorResponse, createSuccessResponse, MessageResponse, StartScree
 import { SelectionArea } from "$lib/types/capture";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
-import { createRecordingControlsOverlay } from "../../ui/screenshotSelectionOverlay";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { createRecordingControlsOverlay } from "../ui/screenshotSelectionOverlay";
 
 const log = logger.getLogger('ContentScript:ScreenshotHandler');
 

@@ -1,6 +1,6 @@
 import "~/assets/tailwind.css";
-import { initializeMessageListener } from "./messaging/handlers/messageHandler";
-import { handleRecordingInProgress } from "./messaging/handlers/videoCaptureHandler";
+import { initializeMessageListener } from "./handlers/messageHandler";
+import { handleRecordingInProgress } from "./handlers/videoCaptureHandler";
 import { injectRebugResultModal } from "./ui/resultModal";
 
 export default defineContentScript({

@@ -4,7 +4,7 @@ import {
     ShowRecordingControlsMessage,
     ShowResultModalMessage,
     UIAction
-} from '../types/ui.types';
+} from '../types/domains/ui.types';
 
 export const uiMessageFactory = {
     showResultModal(
