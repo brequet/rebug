@@ -1,5 +1,5 @@
 import { logger } from "$lib/utils/logger";
-import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+import { initializeMessageListener } from "./handlers/messageHandler";
 
 const log = logger.getLogger('Offscreen');
 

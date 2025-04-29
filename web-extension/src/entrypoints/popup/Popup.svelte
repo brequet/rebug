@@ -4,7 +4,7 @@
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
-	import { popupMessagingService } from './popup-messaging.service';
+	import { popupMessagingService } from './services/popup-messaging.service';
 
 	let isCaptureDisabled = $state(false);
 

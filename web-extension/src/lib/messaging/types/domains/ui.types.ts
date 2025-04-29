@@ -18,7 +18,7 @@ export type ShowResultModalMessage = Message<
     MessageContext.CONTENT_SCRIPT,
     {
         resultType: ResultModalType;
-        videoBlobAsBase64?: string;
+        videoBlobAsBase64?: string; // TODO something better to do i'm sure
     }
 >;
 
