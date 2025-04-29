@@ -15,7 +15,7 @@ type SDomain = MessageDomain.SCREENSHOT;
 
 export type StartScreenshotSelectionMessage = BaseMessage<
     `${SDomain}:${ScreenshotAction.START_SELECTION}`,
-    MessageContext.POPUP | MessageContext.BACKGROUND,
+    MessageContext.POPUP,
     MessageContext.CONTENT_SCRIPT
 >;
 
@@ -28,7 +28,7 @@ export type CaptureRegionScreenshotMessage = BaseMessage<
 
 export type CaptureVisibleTabScreenshotMessage = BaseMessage<
     `${SDomain}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
-    MessageContext.POPUP | MessageContext.CONTENT_SCRIPT,
+    MessageContext.POPUP,
     MessageContext.BACKGROUND
 >;
 

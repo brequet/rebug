@@ -2,8 +2,6 @@ import { MessageContext } from '../config/context';
 import { MessageDomain } from '../config/domain';
 import {
     GetRecordingInProgressMessage,
-    RecordingFailedMessage,
-    RecordingStartedMessage,
     RecordingStoppedDataReadyMessage,
     SetupVideoCaptureMessage,
     StartRecordingRequestMessage,
@@ -59,33 +57,11 @@ export const videoMessageFactory = {
     },
 
     // --- Notifications / Data ---
-    recordingStarted(
-        payload: { startDate: string }
-    ): RecordingStartedMessage {
-        return {
-            type: `${domain}:${VideoAction.RECORDING_STARTED}`,
-            source: MessageContext.OFFSCREEN,
-            target: MessageContext.BACKGROUND,
-            payload,
-        };
-    },
-
     recordingStoppedDataReady(
         payload: { videoBlobAsBase64: string }
     ): RecordingStoppedDataReadyMessage {
         return {
             type: `${domain}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
-            source: MessageContext.OFFSCREEN,
-            target: MessageContext.BACKGROUND,
-            payload,
-        };
-    },
-
-    recordingFailed(
-        payload: { error: string }
-    ): RecordingFailedMessage {
-        return {
-            type: `${domain}:${VideoAction.RECORDING_FAILED}`,
             source: MessageContext.OFFSCREEN,
             target: MessageContext.BACKGROUND,
             payload,

@@ -32,6 +32,8 @@
 	}
 </script>
 
+<!-- TODO: any way to not record this overlay during the recording ? -->
+
 <!-- TODO: dragable -->
 <div class="recording-controls">
 	<div class="recording-indicator">

@@ -10,7 +10,6 @@ export enum ResultModalType {
 export enum UIAction {
     SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
     SHOW_RECORDING_CONTROLS = 'SHOW_RECORDING_CONTROLS',
-    CLOSE_RECORDING_CONTROLS = 'CLOSE_RECORDING_CONTROLS',
     SHOW_SCREENSHOT_SELECTION_UI = 'SHOW_SCREENSHOT_SELECTION_UI',
 }
 
@@ -35,14 +34,6 @@ export type ShowRecordingControlsMessage = BaseMessage<
     { startDate: string }
 >;
 
-export type CloseRecordingControlsMessage = BaseMessage<
-    `${UIDomain}:${UIAction.CLOSE_RECORDING_CONTROLS}`,
-    MessageContext.BACKGROUND,
-    MessageContext.CONTENT_SCRIPT
->;
-
 export type UIMessage =
     | ShowResultModalMessage
-    | ShowRecordingControlsMessage
-    | CloseRecordingControlsMessage;
-
+    | ShowRecordingControlsMessage;
