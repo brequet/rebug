@@ -1,7 +1,7 @@
 import { MessageContext } from '../config/context';
 
 /** Base structure for all messages */
-export interface BaseMessage<
+export interface Message<
     TType extends string,
     TSource extends MessageContext,
     TTarget extends MessageContext,

@@ -1,5 +1,4 @@
 import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
 import {
     ResultModalType,
     ShowRecordingControlsMessage,
@@ -7,15 +6,13 @@ import {
     UIAction
 } from '../types/ui.types';
 
-const domain = MessageDomain.UI;
-
 export const uiMessageFactory = {
     showResultModal(
         resultType: ResultModalType,
         videoBlobAsBase64?: string
     ): ShowResultModalMessage {
         return {
-            type: `${domain}:${UIAction.SHOW_RESULT_MODAL}`,
+            type: UIAction.SHOW_RESULT_MODAL,
             source: MessageContext.BACKGROUND,
             target: MessageContext.CONTENT_SCRIPT,
             payload: {
@@ -29,7 +26,7 @@ export const uiMessageFactory = {
         startDate: Date
     ): ShowRecordingControlsMessage {
         return {
-            type: `${domain}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+            type: UIAction.SHOW_RECORDING_CONTROLS,
             source: MessageContext.BACKGROUND,
             target: MessageContext.CONTENT_SCRIPT,
             payload: { startDate: startDate.toISOString() },

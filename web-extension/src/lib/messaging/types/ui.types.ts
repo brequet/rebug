@@ -1,6 +1,5 @@
 import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
-import { BaseMessage } from './base';
+import { Message } from './base';
 
 export enum ResultModalType {
     IMAGE = 'IMAGE',
@@ -8,17 +7,13 @@ export enum ResultModalType {
 }
 
 export enum UIAction {
-    SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
-    SHOW_RECORDING_CONTROLS = 'SHOW_RECORDING_CONTROLS',
-    SHOW_SCREENSHOT_SELECTION_UI = 'SHOW_SCREENSHOT_SELECTION_UI',
+    SHOW_RESULT_MODAL = 'UI:SHOW_RESULT_MODAL',
+    SHOW_RECORDING_CONTROLS = 'UI:SHOW_RECORDING_CONTROLS',
+    SHOW_SCREENSHOT_SELECTION_UI = 'UI:SHOW_SCREENSHOT_SELECTION_UI',
 }
 
-type UIDomain = MessageDomain.UI;
-
-// --- Message Definitions ---
-
-export type ShowResultModalMessage = BaseMessage<
-    `${UIDomain}:${UIAction.SHOW_RESULT_MODAL}`,
+export type ShowResultModalMessage = Message<
+    UIAction.SHOW_RESULT_MODAL,
     MessageContext.BACKGROUND,
     MessageContext.CONTENT_SCRIPT,
     {
@@ -27,8 +22,8 @@ export type ShowResultModalMessage = BaseMessage<
     }
 >;
 
-export type ShowRecordingControlsMessage = BaseMessage<
-    `${UIDomain}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+export type ShowRecordingControlsMessage = Message<
+    UIAction.SHOW_RECORDING_CONTROLS,
     MessageContext.BACKGROUND,
     MessageContext.CONTENT_SCRIPT,
     { startDate: string }

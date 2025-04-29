@@ -4,7 +4,6 @@ import { VideoMessage } from './video.types';
 
 // Export core types/enums for easier access
 export * from '../config/context';
-export * from '../config/domain';
 export * from './base';
 
 // Export domain-specific types and actions

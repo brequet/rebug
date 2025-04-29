@@ -1,4 +1,4 @@
-import { MessageDomain, ScreenshotAction, ShowRecordingControlsMessage, StartScreenshotSelectionMessage, UIAction } from "$lib/messaging/types";
+import { ScreenshotAction, ShowRecordingControlsMessage, StartScreenshotSelectionMessage, UIAction } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
@@ -11,17 +11,17 @@ export function initializeMessageListener(ctx: ContentScriptContext) {
     log.info('Registering content script handlers...');
 
     contentScriptMessagingService.registerHandler(
-        `${MessageDomain.UI}:${UIAction.SHOW_RESULT_MODAL}`,
+        UIAction.SHOW_RESULT_MODAL,
         handleShowResultModal
     )
 
     contentScriptMessagingService.registerHandler(
-        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.START_SELECTION}`,
+        ScreenshotAction.START_SELECTION,
         (message: StartScreenshotSelectionMessage) => handleStartScreenshotSelection(message, ctx)
     )
 
     contentScriptMessagingService.registerHandler(
-        `${MessageDomain.UI}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+        UIAction.SHOW_RECORDING_CONTROLS,
         (message: ShowRecordingControlsMessage) => handleShowRecordingControlsOverlay(message, ctx)
     )
 }
