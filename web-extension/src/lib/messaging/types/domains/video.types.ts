@@ -2,7 +2,7 @@ import { MessageContext } from '../../config/context';
 import { Message } from '../base';
 
 export type RecordingState =
-    | { inProgress: boolean; startDate: string; tabId: number }
+    | { inProgress: true; startDate: string; tabId: number }
     | { inProgress: false; }
 
 export enum VideoAction {
