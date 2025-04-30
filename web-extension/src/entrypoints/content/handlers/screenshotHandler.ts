@@ -1,5 +1,4 @@
-import { createErrorResponse, createSuccessResponse, MessageResponse, StartScreenshotSelectionMessage } from "$lib/messaging/types";
-import { SelectionArea } from "$lib/types/capture";
+import { createErrorResponse, createSuccessResponse, MessageResponse, SelectionArea, StartScreenshotSelectionMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";

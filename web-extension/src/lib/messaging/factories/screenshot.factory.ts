@@ -1,6 +1,5 @@
-import { SelectionArea } from '../../types/capture';
 import { MessageContext } from '../config/context';
-import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, ScreenshotAction, StartScreenshotSelectionMessage } from '../types';
+import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, ScreenshotAction, SelectionArea, StartScreenshotSelectionMessage } from '../types';
 
 export const screenshotMessageFactory = {
     startSelection(): StartScreenshotSelectionMessage {

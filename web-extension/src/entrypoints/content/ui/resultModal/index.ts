@@ -1,10 +1,9 @@
-import { ResultModalType, ShowResultModalMessage } from "$lib/messaging/types";
-import { base64ToBlob } from "$lib/services/capture";
+import { ResultModalType, ShowResultModalMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
+import { base64ToBlob } from "$lib/messaging/utils/blob-utils";
 import { screenshotStorage } from "$lib/services/storage";
-import { modalStore, ResultModalProps } from "$lib/stores/modal.store";
-import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
 import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import { modalStore, ResultModalProps } from "./modal.store";
 import ResultModal from "./ResultModal.svelte";
 
 export async function injectRebugResultModal(ctx: ContentScriptContext): Promise<void> {

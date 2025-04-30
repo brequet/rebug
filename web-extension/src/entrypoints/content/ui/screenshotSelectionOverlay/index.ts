@@ -1,7 +1,7 @@
+import { SelectionArea } from "$lib/messaging/types";
+import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import ScreenshotOverlay from "./ScreenshotOverlay.svelte";
-import { mount } from "svelte";
-import { SelectionArea } from "$lib/types/capture";
 
 export async function createRecordingControlsOverlay(
     ctx: ContentScriptContext,

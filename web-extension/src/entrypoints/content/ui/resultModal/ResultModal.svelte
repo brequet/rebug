@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ModalContent from '$lib/components/ModalContent.svelte';
-	import { modalStore } from '$lib/stores/modal.store';
+	import { modalStore } from './modal.store';
 
 	function close() {
 		modalStore.close();

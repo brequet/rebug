@@ -1,7 +1,6 @@
-import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType } from "$lib/messaging/types";
-import { blobToBase64 } from "$lib/services/capture";
+import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType, SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/messaging/types";
+import { blobToBase64 } from "$lib/messaging/utils/blob-utils";
 import { screenshotStorage } from "$lib/services/storage";
-import { SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/capture";
 import { logger } from "$lib/utils/logger";
 import { backgroundMessagingService } from '../services/background-messaging.service';
 
@@ -12,7 +11,7 @@ export async function handleCaptureVisibleTab(
 ): Promise<MessageResponse<{ screenshotDataUrl: string }>> {
     log.info(`Handling ${message.type}`);
     try {
-        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         await screenshotStorage.setValue(dataUrl); // TODO Needed ?
         await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE);
         return createSuccessResponse({ screenshotDataUrl: dataUrl });
@@ -28,7 +27,7 @@ export async function handleCaptureRegion(
     log.info(`Handling ${message.type}`, message.payload);
     const { region } = message.payload;
     try {
-        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         const base64Cropped = await cropImage(dataUrl, region);
 
         await screenshotStorage.setValue(base64Cropped);

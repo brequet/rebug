@@ -7,23 +7,21 @@ src/
     entrypoints/
         background/
             index.ts
-            messaging/
-                handlers/
-                    messageHandler.ts
-                    screenshotHandler.ts
-                    videoCaptureHandler.ts
-                services/
-                    background-messaging.service.ts
+            handlers/
+                messageHandler.ts
+                screenshotHandler.ts
+                videoCaptureHandler.ts
+            services/
+                background-messaging.service.ts
         content/
             index.ts
-            messaging/
-                handlers/
-                    messageHandler.ts
-                    screenshotHandler.ts
-                    uiHandler.ts
-                    videoCaptureHandler.ts
-                services/
-                    content-messaging.service.ts
+            handlers/
+                messageHandler.ts
+                screenshotHandler.ts
+                uiHandler.ts
+                videoCaptureHandler.ts
+            services/
+                content-messaging.service.ts
             ui/
                 recordingControls/
                     index.ts
@@ -37,18 +35,18 @@ src/
         offscreen/
             index.html
             main.ts
-            messaging/
-                handlers/
-                    messageHandler.ts
-                    videoCaptureHandler.ts
-                services/
-                    offscreen-messaging.service.ts
+            handlers/
+                messageHandler.ts
+                videoCaptureHandler.ts
+            services/
+                offscreen-messaging.service.ts
         popup/
             index.html
             main.ts
-            popup-messaging.service.ts
             popup.css
             Popup.svelte
+            services/
+                popup-messaging.service.ts
     lib/
         utils.ts
         components/
@@ -70,7 +68,6 @@ src/
                 message-bus.ts
             config/
                 context.ts
-                domain.ts
             factories/
                 index.ts
                 screenshot.factory.ts
@@ -83,9 +80,10 @@ src/
             types/
                 base.ts
                 index.ts
-                screenshot.types.ts
-                ui.types.ts
-                video.types.ts
+                domains/
+                    screenshot.types.ts
+                    ui.types.ts
+                    video.types.ts
             utils/
                 tab-utils.ts
         services/
@@ -196,7 +194,7 @@ File End
 ./src\entrypoints\background\index.ts
 File type: .ts
 import { logger } from "$lib/utils/logger";
-import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+import { initializeMessageListener } from "./handlers/messageHandler";
 
 const log = logger.getLogger('Background');
 
@@ -212,9 +210,9 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\background\messaging\handlers\messageHandler.ts
+./src\entrypoints\background\handlers\messageHandler.ts
 File type: .ts
-import { MessageDomain, ScreenshotAction, VideoAction } from '$lib/messaging/types';
+import { ScreenshotAction, VideoAction } from '$lib/messaging/types';
 import { logger } from '$lib/utils/logger';
 import { backgroundMessagingService } from '../services/background-messaging.service';
 import { handleCaptureRegion, handleCaptureVisibleTab } from './screenshotHandler';
@@ -226,53 +224,39 @@ export function initializeMessageListener() {
     log.info('Registering background handlers...');
 
     backgroundMessagingService.registerHandler(
-        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
+        ScreenshotAction.CAPTURE_VISIBLE_TAB,
         handleCaptureVisibleTab
     );
 
     backgroundMessagingService.registerHandler(
-        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.CAPTURE_REGION}`,
+        ScreenshotAction.CAPTURE_REGION,
         handleCaptureRegion
     );
 
 
     backgroundMessagingService.registerHandler(
-        `${MessageDomain.VIDEO}:${VideoAction.SETUP_CAPTURE}`,
+        VideoAction.SETUP_CAPTURE,
         handleSetupVideoCapture
     );
 
     backgroundMessagingService.registerHandler(
-        `${MessageDomain.VIDEO}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
+        VideoAction.RECORDING_STOPPED_DATA_READY,
         handleRecordingStoppedDataReady
     );
 
     backgroundMessagingService.registerHandler(
-        `${MessageDomain.VIDEO}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+        VideoAction.GET_RECORDING_IN_PROGRESS,
         handleRecordingInProgress
     );
 }
 
-
-
-// async function handleMessage(message: RuntimeMessage): Promise<MessageProcessingResponse> {
-//     switch (message.type) {
-//         case RuntimeMessageType.SETUP_VIDEO_CAPTURE:
-//             return handleSetupVideoCapture(message.tabId);
-//         case RuntimeMessageType.RECORDING_STOPPED_DATA_READY:
-//             return handleRecordingStoppedDataReady(message);
-//         case RuntimeMessageType.IS_RECORDING_IN_PROGRESS:
-//             return isRecordingInProgress();
-//         default:
-//             return createErrorResponse(`Unknown message type: ${(message as any).type}`);
-//     }
-// }
 
 --------------------------------------------------
 File End
 --------------------------------------------------
 
 
-./src\entrypoints\background\messaging\handlers\screenshotHandler.ts
+./src\entrypoints\background\handlers\screenshotHandler.ts
 File type: .ts
 import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType } from "$lib/messaging/types";
 import { blobToBase64 } from "$lib/services/capture";
@@ -360,7 +344,7 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\background\messaging\handlers\videoCaptureHandler.ts
+./src\entrypoints\background\handlers\videoCaptureHandler.ts
 File type: .ts
 import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, isErrorResponse, MessageResponse, RecordingState, RecordingStoppedDataReadyMessage, ResultModalType, SetupVideoCaptureMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
@@ -483,7 +467,7 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\background\messaging\services\background-messaging.service.ts
+./src\entrypoints\background\services\background-messaging.service.ts
 File type: .ts
 import * as Factories from '$lib/messaging/factories';
 import { BaseMessagingService } from '$lib/messaging/handlers/base-messaging.service';
@@ -560,8 +544,8 @@ File End
 ./src\entrypoints\content\index.ts
 File type: .ts
 import "~/assets/tailwind.css";
-import { initializeMessageListener } from "./messaging/handlers/messageHandler";
-import { handleRecordingInProgress } from "./messaging/handlers/videoCaptureHandler";
+import { initializeMessageListener } from "./handlers/messageHandler";
+import { handleRecordingInProgress } from "./handlers/videoCaptureHandler";
 import { injectRebugResultModal } from "./ui/resultModal";
 
 export default defineContentScript({
@@ -582,9 +566,9 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\content\messaging\handlers\messageHandler.ts
+./src\entrypoints\content\handlers\messageHandler.ts
 File type: .ts
-import { MessageDomain, ScreenshotAction, ShowRecordingControlsMessage, StartScreenshotSelectionMessage, UIAction } from "$lib/messaging/types";
+import { ScreenshotAction, ShowRecordingControlsMessage, StartScreenshotSelectionMessage, UIAction } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
@@ -597,17 +581,17 @@ export function initializeMessageListener(ctx: ContentScriptContext) {
     log.info('Registering content script handlers...');
 
     contentScriptMessagingService.registerHandler(
-        `${MessageDomain.UI}:${UIAction.SHOW_RESULT_MODAL}`,
+        UIAction.SHOW_RESULT_MODAL,
         handleShowResultModal
     )
 
     contentScriptMessagingService.registerHandler(
-        `${MessageDomain.SCREENSHOT}:${ScreenshotAction.START_SELECTION}`,
+        ScreenshotAction.START_SELECTION,
         (message: StartScreenshotSelectionMessage) => handleStartScreenshotSelection(message, ctx)
     )
 
     contentScriptMessagingService.registerHandler(
-        `${MessageDomain.UI}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+        UIAction.SHOW_RECORDING_CONTROLS,
         (message: ShowRecordingControlsMessage) => handleShowRecordingControlsOverlay(message, ctx)
     )
 }
@@ -618,46 +602,47 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\content\messaging\handlers\screenshotHandler.ts
+./src\entrypoints\content\handlers\screenshotHandler.ts
 File type: .ts
 import { createErrorResponse, createSuccessResponse, MessageResponse, StartScreenshotSelectionMessage } from "$lib/messaging/types";
-import { SelectionArea } from "$lib/types/capture";
+import { SelectionArea } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
-import { createRecordingControlsOverlay } from "../../ui/screenshotSelectionOverlay";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { createRecordingControlsOverlay } from "../ui/screenshotSelectionOverlay";
 
 const log = logger.getLogger('ContentScript:ScreenshotHandler');
 
 export async function handleStartScreenshotSelection(message: StartScreenshotSelectionMessage, ctx: ContentScriptContext): Promise<MessageResponse<unknown>> {
     log.info(`Handling ${message.type}`);
 
-    return new Promise<SelectionArea>((resolve, reject) => {
+    try {
         let ui: ShadowRootContentScriptUi<void>;
 
-        const onComplete = (selectionArea: SelectionArea) => {
+        const onComplete = async (selectionArea: SelectionArea) => {
             ui.remove();
-            resolve(selectionArea);
+            try {
+                await contentScriptMessagingService.requestRegionScreenshot(selectionArea);
+            } catch (error) {
+                log.error('Error requesting region screenshot:', error);
+            }
         };
 
         const onCancel = () => {
             ui.remove();
-            reject(new Error('Screenshot selection cancelled'));
+            log.info('Screenshot selection cancelled by user');
         };
 
-        createRecordingControlsOverlay(ctx, onComplete, onCancel).then(createdUi => {
-            ui = createdUi;
-            ui.mount();
-        });
-    }).then(async (selectionArea) => {
-        await contentScriptMessagingService.requestRegionScreenshot(selectionArea);
+        ui = await createRecordingControlsOverlay(ctx, onComplete, onCancel);
+
+        ui.mount();
         return createSuccessResponse();
+    } catch (error) {
+        log.error('Error starting screenshot selection:', error);
+        return createErrorResponse((error as Error).message || 'Failed to start screenshot selection');
     }
-    ).catch((error) => {
-        log.error('Error during screenshot selection:', error);
-        return createErrorResponse(error.message || 'Unknown error during screenshot selection');
-    });
 }
+
 
 
 --------------------------------------------------
@@ -665,14 +650,14 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\content\messaging\handlers\uiHandler.ts
+./src\entrypoints\content\handlers\uiHandler.ts
 File type: .ts
 import { createErrorResponse, createSuccessResponse, MessageResponse, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
-import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../../ui/recordingControls";
-import { openRebugResultModal } from "../../ui/resultModal";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
+import { openRebugResultModal } from "../ui/resultModal";
 
 const log = logger.getLogger('ContentScript:UiHandler');
 
@@ -687,16 +672,20 @@ export async function handleShowResultModal(message: ShowResultModalMessage): Pr
 }
 
 export async function handleShowRecordingControlsOverlay(
-    showRecordingControlsMessage: ShowRecordingControlsMessage,
+    message: ShowRecordingControlsMessage,
     ctx: ContentScriptContext
 ): Promise<MessageResponse<void>> {
-    log.info(`Handling ${showRecordingControlsMessage.type}`, showRecordingControlsMessage.payload);
+    log.info(`Handling ${message.type}`, message.payload);
     try {
-        await openRecordingControlsOverlay(ctx, async () => {
-            await closeRecordingControlsOverlay()
-            log.debug('Requesting video recording stop...');
-            contentScriptMessagingService.requestStopVideoRecording();
-        });
+        await openRecordingControlsOverlay(
+            ctx,
+            async () => {
+                await closeRecordingControlsOverlay()
+                log.debug('Requesting video recording stop...');
+                contentScriptMessagingService.requestStopVideoRecording();
+            },
+            new Date(message.payload.startDate)
+        );
         return createSuccessResponse();
     } catch (error) {
         return createErrorResponse((error as Error).message || 'Unknown error');
@@ -708,13 +697,13 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\content\messaging\handlers\videoCaptureHandler.ts
+./src\entrypoints\content\handlers\videoCaptureHandler.ts
 File type: .ts
 import { isErrorResponse } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
-import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../../ui/recordingControls";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
+import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
 
 const log = logger.getLogger('ContentScript:VideoCaptureHandler');
 
@@ -753,12 +742,12 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\content\messaging\services\content-messaging.service.ts
+./src\entrypoints\content\services\content-messaging.service.ts
 File type: .ts
 import * as Factories from "$lib/messaging/factories";
 import { BaseMessagingService } from "$lib/messaging/handlers/base-messaging.service";
 import { isErrorResponse, MessageContext, MessageResponse, RecordingState } from "$lib/messaging/types";
-import { SelectionArea } from "$lib/types/capture";
+import { SelectionArea } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 
 const log = logger.getLogger('ContentScriptMessagingService');
@@ -811,7 +800,7 @@ import RecordingControlsOverlay from "./RecordingControlsOverlay.svelte";
 
 let recordingControlsOverlay: ShadowRootContentScriptUi<void> | null = null;
 
-export async function openRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate?: Date): Promise<void> {
+export async function openRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate: Date): Promise<void> {
     recordingControlsOverlay = await createRecordingControlsOverlay(ctx, onCloseCallback, recordStartDate);
     recordingControlsOverlay.mount();
 }
@@ -823,7 +812,7 @@ export async function closeRecordingControlsOverlay(): Promise<void> {
     }
 }
 
-async function createRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate: Date | undefined): Promise<ShadowRootContentScriptUi<void>> {
+async function createRecordingControlsOverlay(ctx: ContentScriptContext, onCloseCallback: () => void, recordStartDate: Date): Promise<ShadowRootContentScriptUi<void>> {
     return createShadowRootUi(ctx, {
         name: 'rebug-recording-controls-overlay-ui',
         position: 'inline',
@@ -848,13 +837,12 @@ File End
 ./src\entrypoints\content\ui\recordingControls\RecordingControlsOverlay.svelte
 File type: .svelte
 <script lang="ts">
-	let {
-		onClose,
-		recordStartDate
-	}: {
+	interface RecordingControlsOverlayProps {
 		onClose: () => void;
-		recordStartDate: Date | undefined;
-	} = $props();
+		recordStartDate: Date;
+	}
+
+	let { onClose, recordStartDate }: RecordingControlsOverlayProps = $props();
 
 	let secondSinceStart = $state(computeSecondSinceStart());
 
@@ -867,7 +855,6 @@ File type: .svelte
 	});
 
 	function computeSecondSinceStart(): number {
-		if (!recordStartDate) return 0;
 		const now = new Date();
 		return Math.floor((now.getTime() - recordStartDate.getTime()) / 1000);
 	}
@@ -883,6 +870,9 @@ File type: .svelte
 	}
 </script>
 
+<!-- TODO: any way to not record this overlay during the recording ? -->
+
+<!-- TODO: dragable -->
 <div class="recording-controls">
 	<div class="recording-indicator">
 		<span class="recording-dot"></span>
@@ -1040,7 +1030,7 @@ File type: .ts
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import ScreenshotOverlay from "./ScreenshotOverlay.svelte";
 import { mount } from "svelte";
-import { SelectionArea } from "$lib/types/capture";
+import { SelectionArea } from "$lib/messaging/types";
 
 export async function createRecordingControlsOverlay(
     ctx: ContentScriptContext,
@@ -1098,6 +1088,7 @@ File type: .svelte
 	});
 
 	function handleMouseDown(e: MouseEvent) {
+		console.log('Mouse down event:', e);
 		isSelecting = true;
 		startX = e.clientX;
 		startY = e.clientY;
@@ -1112,6 +1103,7 @@ File type: .svelte
 	}
 
 	async function handleMouseUp() {
+		console.log('Mouse up event:', { startX, startY, endX, endY });
 		if (!isSelecting) return;
 		isSelecting = false;
 
@@ -1146,6 +1138,11 @@ File type: .svelte
 		}
 	}
 
+	function onCancelBtn() {
+		console.log('Cancel button clicked');
+		onCancel();
+	}
+
 	onMount(() => {
 		document.addEventListener('keydown', handleKeyDown);
 
@@ -1157,7 +1154,7 @@ File type: .svelte
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-	class="fixed inset-0 z-[2147483647] cursor-crosshair"
+	class="fixed inset-0 z-[2147483646] cursor-crosshair"
 	onmousedown={handleMouseDown}
 	onmousemove={handleMouseMove}
 	onmouseup={handleMouseUp}
@@ -1182,10 +1179,10 @@ File type: .svelte
 		style:width={selectionStyle.width}
 		style:height={selectionStyle.height}
 	></div>
+</div>
 
-	<div class={cn('fixed bottom-5 right-5', isSelecting ? 'hidden' : '')}>
-		<Button variant="destructive" onclick={onCancel} class="px-4 py-2">Cancel</Button>
-	</div>
+<div class={cn('fixed bottom-5 right-5 z-[2147483647]', isSelecting ? 'hidden' : '')}>
+	<Button variant="destructive" onclick={onCancelBtn} class="px-4 py-2">Cancel</Button>
 </div>
 
 <style>
@@ -1240,7 +1237,7 @@ File End
 ./src\entrypoints\offscreen\main.ts
 File type: .ts
 import { logger } from "$lib/utils/logger";
-import { initializeMessageListener } from "./messaging/handlers/messageHandler";
+import { initializeMessageListener } from "./handlers/messageHandler";
 
 const log = logger.getLogger('Offscreen');
 
@@ -1257,9 +1254,9 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\offscreen\messaging\handlers\messageHandler.ts
+./src\entrypoints\offscreen\handlers\messageHandler.ts
 File type: .ts
-import { MessageDomain, VideoAction } from '$lib/messaging/types';
+import { VideoAction } from '$lib/messaging/types';
 import { logger } from '$lib/utils/logger';
 import { offscreenMessagingService } from '../services/offscreen-messaging.service';
 import { handleRecordingInProgress, handleStartRecording, handleStopRecording } from './videoCaptureHandler';
@@ -1270,20 +1267,19 @@ export function initializeMessageListener() {
     log.info('Registering offscreen script handlers...');
 
     offscreenMessagingService.registerHandler(
-        `${MessageDomain.VIDEO}:${VideoAction.START_RECORDING_REQUEST}`,
+        VideoAction.START_RECORDING_REQUEST,
         handleStartRecording
     )
 
     offscreenMessagingService.registerHandler(
-        `${MessageDomain.VIDEO}:${VideoAction.STOP_RECORDING_REQUEST}`,
+        VideoAction.STOP_RECORDING_REQUEST,
         handleStopRecording
     )
 
     offscreenMessagingService.registerHandler(
-        `${MessageDomain.VIDEO}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+        VideoAction.GET_RECORDING_IN_PROGRESS,
         handleRecordingInProgress
     );
-
 }
 
 
@@ -1292,7 +1288,7 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\offscreen\messaging\handlers\videoCaptureHandler.ts
+./src\entrypoints\offscreen\handlers\videoCaptureHandler.ts
 File type: .ts
 import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, MessageResponse, RecordingState, StartRecordingRequestMessage, StopRecordingRequestMessage } from "$lib/messaging/types";
 import { blobToBase64 } from "$lib/services/capture";
@@ -1419,7 +1415,7 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\offscreen\messaging\services\offscreen-messaging.service.ts
+./src\entrypoints\offscreen\services\offscreen-messaging.service.ts
 File type: .ts
 import * as Factories from '$lib/messaging/factories';
 import { BaseMessagingService } from '$lib/messaging/handlers/base-messaging.service';
@@ -1499,63 +1495,6 @@ File End
 --------------------------------------------------
 
 
-./src\entrypoints\popup\popup-messaging.service.ts
-File type: .ts
-import { logger } from "$lib/utils/logger";
-import * as Factories from "../../lib/messaging/factories";
-import { BaseMessagingService } from "../../lib/messaging/handlers/base-messaging.service";
-import { createErrorResponse, isErrorResponse, MessageContext, MessageResponse } from "../../lib/messaging/types";
-import { getCurrentTabId } from "../../lib/messaging/utils/tab-utils";
-
-const log = logger.getLogger('PopupMessagingService');
-
-export class PopupMessagingService extends BaseMessagingService<MessageContext.POPUP> {
-    constructor() {
-        super(MessageContext.POPUP);
-    }
-
-    async requestCaptureVisibleTab(): Promise<MessageResponse<unknown>> {
-        log.debug('Requesting visible tab screenshot...');
-        const response = await this.send(Factories.screenshotMessageFactory.captureVisibleTab());
-        if (isErrorResponse(response)) {
-            log.error(`Failed: ${response.error}`);
-            // TODO: Show error to user?
-        }
-        return response;
-    }
-
-    async requestStartSelection(): Promise<MessageResponse<unknown>> {
-        log.debug('Requesting screenshot selection start...');
-        const response = await this.send(Factories.screenshotMessageFactory.startSelection());
-        if (isErrorResponse(response)) {
-            log.error(`Failed: ${response.error}`);
-        }
-        return response;
-    }
-
-    async requestSetupVideoCapture(): Promise<MessageResponse<unknown>> {
-        log.debug('Requesting video capture setup...');
-        const tabId = await getCurrentTabId();
-        if (tabId === undefined) {
-            log.error('Cannot start video recording: No active tab ID found.');
-            // TODO: Show error to user
-            return createErrorResponse('No active tab ID found.');
-        }
-        const response = await this.send(Factories.videoMessageFactory.setupCaptureRequest({ tabId }));
-        if (isErrorResponse(response)) {
-            log.error(`Failed: ${response.error}`);
-        }
-        return response;
-    }
-}
-
-export const popupMessagingService = new PopupMessagingService();
-
---------------------------------------------------
-File End
---------------------------------------------------
-
-
 ./src\entrypoints\popup\popup.css
 File type: .css
 /* :root {
@@ -1602,7 +1541,7 @@ File type: .svelte
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
-	import { popupMessagingService } from './popup-messaging.service';
+	import { popupMessagingService } from './services/popup-messaging.service';
 
 	let isCaptureDisabled = $state(false);
 
@@ -1679,6 +1618,63 @@ File type: .svelte
 	{/if}
 </main>
 
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\popup\services\popup-messaging.service.ts
+File type: .ts
+import { logger } from "$lib/utils/logger";
+import * as Factories from "../../../lib/messaging/factories";
+import { BaseMessagingService } from "../../../lib/messaging/handlers/base-messaging.service";
+import { createErrorResponse, isErrorResponse, MessageContext, MessageResponse } from "../../../lib/messaging/types";
+import { getCurrentTabId } from "../../../lib/messaging/utils/tab-utils";
+
+const log = logger.getLogger('PopupMessagingService');
+
+export class PopupMessagingService extends BaseMessagingService<MessageContext.POPUP> {
+    constructor() {
+        super(MessageContext.POPUP);
+    }
+
+    async requestCaptureVisibleTab(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting visible tab screenshot...');
+        const response = await this.send(Factories.screenshotMessageFactory.captureVisibleTab());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+            // TODO: Show error to user?
+        }
+        return response;
+    }
+
+    async requestStartSelection(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting screenshot selection start...');
+        const response = await this.send(Factories.screenshotMessageFactory.startSelection());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+
+    async requestSetupVideoCapture(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting video capture setup...');
+        const tabId = await getCurrentTabId();
+        if (tabId === undefined) {
+            log.error('Cannot start video recording: No active tab ID found.');
+            // TODO: Show error to user
+            return createErrorResponse('No active tab ID found.');
+        }
+        const response = await this.send(Factories.videoMessageFactory.setupCaptureRequest({ tabId }));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+}
+
+export const popupMessagingService = new PopupMessagingService();
 
 --------------------------------------------------
 File End
@@ -2256,21 +2252,6 @@ File End
 --------------------------------------------------
 
 
-./src\lib\messaging\config\domain.ts
-File type: .ts
-export enum MessageDomain {
-    SCREENSHOT = 'SCREENSHOT',
-    VIDEO = 'VIDEO',
-    UI = 'UI', // For general UI interactions not tied to specific capture
-    INTERNAL = 'INTERNAL', // For internal state/checks
-}
-
-
---------------------------------------------------
-File End
---------------------------------------------------
-
-
 ./src\lib\messaging\factories\index.ts
 File type: .ts
 export { screenshotMessageFactory } from './screenshot.factory';
@@ -2287,20 +2268,12 @@ File End
 File type: .ts
 import { SelectionArea } from '../../types/capture';
 import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
-import {
-    CaptureRegionScreenshotMessage,
-    CaptureVisibleTabScreenshotMessage,
-    ScreenshotAction,
-    StartScreenshotSelectionMessage
-} from '../types/screenshot.types';
-
-const domain = MessageDomain.SCREENSHOT;
+import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, ScreenshotAction, StartScreenshotSelectionMessage } from '../types';
 
 export const screenshotMessageFactory = {
     startSelection(): StartScreenshotSelectionMessage {
         return {
-            type: `${domain}:${ScreenshotAction.START_SELECTION}`,
+            type: ScreenshotAction.START_SELECTION,
             source: MessageContext.POPUP,
             target: MessageContext.CONTENT_SCRIPT,
             payload: undefined,
@@ -2311,7 +2284,7 @@ export const screenshotMessageFactory = {
         payload: { region: SelectionArea }
     ): CaptureRegionScreenshotMessage {
         return {
-            type: `${domain}:${ScreenshotAction.CAPTURE_REGION}`,
+            type: ScreenshotAction.CAPTURE_REGION,
             source: MessageContext.CONTENT_SCRIPT,
             target: MessageContext.BACKGROUND,
             payload,
@@ -2320,7 +2293,7 @@ export const screenshotMessageFactory = {
 
     captureVisibleTab(): CaptureVisibleTabScreenshotMessage {
         return {
-            type: `${domain}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
+            type: ScreenshotAction.CAPTURE_VISIBLE_TAB,
             source: MessageContext.POPUP,
             target: MessageContext.BACKGROUND,
             payload: undefined,
@@ -2337,16 +2310,12 @@ File End
 ./src\lib\messaging\factories\ui.factory.ts
 File type: .ts
 import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
 import {
-    CloseRecordingControlsMessage,
     ResultModalType,
     ShowRecordingControlsMessage,
     ShowResultModalMessage,
-    UIAction,
-} from '../types/ui.types';
-
-const domain = MessageDomain.UI;
+    UIAction
+} from '../types/domains/ui.types';
 
 export const uiMessageFactory = {
     showResultModal(
@@ -2354,7 +2323,7 @@ export const uiMessageFactory = {
         videoBlobAsBase64?: string
     ): ShowResultModalMessage {
         return {
-            type: `${domain}:${UIAction.SHOW_RESULT_MODAL}`,
+            type: UIAction.SHOW_RESULT_MODAL,
             source: MessageContext.BACKGROUND,
             target: MessageContext.CONTENT_SCRIPT,
             payload: {
@@ -2368,20 +2337,10 @@ export const uiMessageFactory = {
         startDate: Date
     ): ShowRecordingControlsMessage {
         return {
-            type: `${domain}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+            type: UIAction.SHOW_RECORDING_CONTROLS,
             source: MessageContext.BACKGROUND,
             target: MessageContext.CONTENT_SCRIPT,
             payload: { startDate: startDate.toISOString() },
-        };
-    },
-
-    closeRecordingControls(
-    ): CloseRecordingControlsMessage {
-        return {
-            type: `${domain}:${UIAction.CLOSE_RECORDING_CONTROLS}`,
-            source: MessageContext.BACKGROUND,
-            target: MessageContext.CONTENT_SCRIPT,
-            payload: undefined,
         };
     },
 };
@@ -2395,19 +2354,14 @@ File End
 ./src\lib\messaging\factories\video.factory.ts
 File type: .ts
 import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
 import {
     GetRecordingInProgressMessage,
-    RecordingFailedMessage,
-    RecordingStartedMessage,
     RecordingStoppedDataReadyMessage,
     SetupVideoCaptureMessage,
     StartRecordingRequestMessage,
     StopRecordingRequestMessage,
     VideoAction
-} from '../types/video.types';
-
-const domain = MessageDomain.VIDEO;
+} from '../types/domains/video.types';
 
 export const videoMessageFactory = {
     // --- Requests ---
@@ -2415,7 +2369,7 @@ export const videoMessageFactory = {
         payload: { tabId: number }
     ): SetupVideoCaptureMessage {
         return {
-            type: `${domain}:${VideoAction.SETUP_CAPTURE}`,
+            type: VideoAction.SETUP_CAPTURE,
             source: MessageContext.POPUP,
             target: MessageContext.BACKGROUND,
             payload,
@@ -2424,7 +2378,7 @@ export const videoMessageFactory = {
 
     startRecordingRequest(payload: { tabId: number }): StartRecordingRequestMessage {
         return {
-            type: `${domain}:${VideoAction.START_RECORDING_REQUEST}`,
+            type: VideoAction.START_RECORDING_REQUEST,
             source: MessageContext.BACKGROUND,
             target: MessageContext.OFFSCREEN,
             payload,
@@ -2435,7 +2389,7 @@ export const videoMessageFactory = {
         source: MessageContext.CONTENT_SCRIPT
     ): StopRecordingRequestMessage {
         return {
-            type: `${domain}:${VideoAction.STOP_RECORDING_REQUEST}`,
+            type: VideoAction.STOP_RECORDING_REQUEST,
             source,
             target: MessageContext.OFFSCREEN,
             payload: undefined,
@@ -2447,7 +2401,7 @@ export const videoMessageFactory = {
         target: MessageContext.BACKGROUND | MessageContext.OFFSCREEN
     ): GetRecordingInProgressMessage {
         return {
-            type: `${domain}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+            type: VideoAction.GET_RECORDING_IN_PROGRESS,
             source: source,
             target: target,
             payload: undefined,
@@ -2455,33 +2409,11 @@ export const videoMessageFactory = {
     },
 
     // --- Notifications / Data ---
-    recordingStarted(
-        payload: { startDate: string }
-    ): RecordingStartedMessage {
-        return {
-            type: `${domain}:${VideoAction.RECORDING_STARTED}`,
-            source: MessageContext.OFFSCREEN,
-            target: MessageContext.BACKGROUND,
-            payload,
-        };
-    },
-
     recordingStoppedDataReady(
         payload: { videoBlobAsBase64: string }
     ): RecordingStoppedDataReadyMessage {
         return {
-            type: `${domain}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
-            source: MessageContext.OFFSCREEN,
-            target: MessageContext.BACKGROUND,
-            payload,
-        };
-    },
-
-    recordingFailed(
-        payload: { error: string }
-    ): RecordingFailedMessage {
-        return {
-            type: `${domain}:${VideoAction.RECORDING_FAILED}`,
+            type: VideoAction.RECORDING_STOPPED_DATA_READY,
             source: MessageContext.OFFSCREEN,
             target: MessageContext.BACKGROUND,
             payload,
@@ -2658,7 +2590,7 @@ File type: .ts
 import { MessageContext } from '../config/context';
 
 /** Base structure for all messages */
-export interface BaseMessage<
+export interface Message<
     TType extends string,
     TSource extends MessageContext,
     TTarget extends MessageContext,
@@ -2710,19 +2642,16 @@ File End
 
 ./src\lib\messaging\types\index.ts
 File type: .ts
-import { ScreenshotMessage } from './screenshot.types';
-import { UIMessage } from './ui.types';
-import { VideoMessage } from './video.types';
+import { ScreenshotMessage } from './domains/screenshot.types';
+import { UIMessage } from './domains/ui.types';
+import { VideoMessage } from './domains/video.types';
 
-// Export core types/enums for easier access
 export * from '../config/context';
-export * from '../config/domain';
 export * from './base';
 
-// Export domain-specific types and actions
-export * from './screenshot.types';
-export * from './ui.types';
-export * from './video.types';
+export * from './domains/screenshot.types';
+export * from './domains/ui.types';
+export * from './domains/video.types';
 
 export type AppMessage =
     | ScreenshotMessage
@@ -2737,39 +2666,34 @@ File End
 --------------------------------------------------
 
 
-./src\lib\messaging\types\screenshot.types.ts
+./src\lib\messaging\types\domains\screenshot.types.ts
 File type: .ts
-import { SelectionArea } from '../../types/capture';
-import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
-import { BaseMessage } from './base';
+import { SelectionArea } from '../../../types/capture';
+import { MessageContext } from '../../config/context';
+import { Message } from '../base';
 
 export enum ScreenshotAction {
-    START_SELECTION = 'START_SELECTION',
-    CAPTURE_REGION = 'CAPTURE_REGION',
-    CAPTURE_VISIBLE_TAB = 'CAPTURE_VISIBLE_TAB',
+    START_SELECTION = 'SCREENSHOT:START_SELECTION',
+    CAPTURE_REGION = 'SCREENSHOT:CAPTURE_REGION',
+    CAPTURE_VISIBLE_TAB = 'SCREENSHOT:CAPTURE_VISIBLE_TAB'
 }
 
-type SDomain = MessageDomain.SCREENSHOT;
-
-// --- Message Definitions ---
-
-export type StartScreenshotSelectionMessage = BaseMessage<
-    `${SDomain}:${ScreenshotAction.START_SELECTION}`,
-    MessageContext.POPUP | MessageContext.BACKGROUND,
+export type StartScreenshotSelectionMessage = Message<
+    ScreenshotAction.START_SELECTION,
+    MessageContext.POPUP,
     MessageContext.CONTENT_SCRIPT
 >;
 
-export type CaptureRegionScreenshotMessage = BaseMessage<
-    `${SDomain}:${ScreenshotAction.CAPTURE_REGION}`,
+export type CaptureRegionScreenshotMessage = Message<
+    ScreenshotAction.CAPTURE_REGION,
     MessageContext.CONTENT_SCRIPT,
     MessageContext.BACKGROUND,
     { region: SelectionArea }
 >;
 
-export type CaptureVisibleTabScreenshotMessage = BaseMessage<
-    `${SDomain}:${ScreenshotAction.CAPTURE_VISIBLE_TAB}`,
-    MessageContext.POPUP | MessageContext.CONTENT_SCRIPT,
+export type CaptureVisibleTabScreenshotMessage = Message<
+    ScreenshotAction.CAPTURE_VISIBLE_TAB,
+    MessageContext.POPUP,
     MessageContext.BACKGROUND
 >;
 
@@ -2778,16 +2702,16 @@ export type ScreenshotMessage =
     | CaptureRegionScreenshotMessage
     | CaptureVisibleTabScreenshotMessage;
 
+
 --------------------------------------------------
 File End
 --------------------------------------------------
 
 
-./src\lib\messaging\types\ui.types.ts
+./src\lib\messaging\types\domains\ui.types.ts
 File type: .ts
-import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
-import { BaseMessage } from './base';
+import { MessageContext } from '../../config/context';
+import { Message } from '../base';
 
 export enum ResultModalType {
     IMAGE = 'IMAGE',
@@ -2795,44 +2719,31 @@ export enum ResultModalType {
 }
 
 export enum UIAction {
-    SHOW_RESULT_MODAL = 'SHOW_RESULT_MODAL',
-    SHOW_RECORDING_CONTROLS = 'SHOW_RECORDING_CONTROLS',
-    CLOSE_RECORDING_CONTROLS = 'CLOSE_RECORDING_CONTROLS',
-    SHOW_SCREENSHOT_SELECTION_UI = 'SHOW_SCREENSHOT_SELECTION_UI',
+    SHOW_RESULT_MODAL = 'UI:SHOW_RESULT_MODAL',
+    SHOW_RECORDING_CONTROLS = 'UI:SHOW_RECORDING_CONTROLS',
+    SHOW_SCREENSHOT_SELECTION_UI = 'UI:SHOW_SCREENSHOT_SELECTION_UI',
 }
 
-type UIDomain = MessageDomain.UI;
-
-// --- Message Definitions ---
-
-export type ShowResultModalMessage = BaseMessage<
-    `${UIDomain}:${UIAction.SHOW_RESULT_MODAL}`,
+export type ShowResultModalMessage = Message<
+    UIAction.SHOW_RESULT_MODAL,
     MessageContext.BACKGROUND,
     MessageContext.CONTENT_SCRIPT,
     {
         resultType: ResultModalType;
-        videoBlobAsBase64?: string;
+        videoBlobAsBase64?: string; // TODO something better to do i'm sure
     }
 >;
 
-export type ShowRecordingControlsMessage = BaseMessage<
-    `${UIDomain}:${UIAction.SHOW_RECORDING_CONTROLS}`,
+export type ShowRecordingControlsMessage = Message<
+    UIAction.SHOW_RECORDING_CONTROLS,
     MessageContext.BACKGROUND,
     MessageContext.CONTENT_SCRIPT,
     { startDate: string }
 >;
 
-export type CloseRecordingControlsMessage = BaseMessage<
-    `${UIDomain}:${UIAction.CLOSE_RECORDING_CONTROLS}`,
-    MessageContext.BACKGROUND,
-    MessageContext.CONTENT_SCRIPT
->;
-
 export type UIMessage =
     | ShowResultModalMessage
-    | ShowRecordingControlsMessage
-    | CloseRecordingControlsMessage;
-
+    | ShowRecordingControlsMessage;
 
 
 --------------------------------------------------
@@ -2840,74 +2751,57 @@ File End
 --------------------------------------------------
 
 
-./src\lib\messaging\types\video.types.ts
+./src\lib\messaging\types\domains\video.types.ts
 File type: .ts
-import { MessageContext } from '../config/context';
-import { MessageDomain } from '../config/domain';
-import { BaseMessage } from './base';
+import { MessageContext } from '../../config/context';
+import { Message } from '../base';
+
+export type RecordingState =
+    | { inProgress: true; startDate: string; tabId: number }
+    | { inProgress: false; }
 
 export enum VideoAction {
     // --- Requests ---
-    SETUP_CAPTURE = 'SETUP_CAPTURE',
-    START_RECORDING_REQUEST = 'START_RECORDING_REQUEST',
-    STOP_RECORDING_REQUEST = 'STOP_RECORDING_REQUEST',
-    GET_RECORDING_IN_PROGRESS = 'GET_RECORDING_IN_PROGRESS',
+    SETUP_CAPTURE = 'VIDEO:SETUP_CAPTURE',
+    START_RECORDING_REQUEST = 'VIDEO:START_RECORDING_REQUEST',
+    STOP_RECORDING_REQUEST = 'VIDEO:STOP_RECORDING_REQUEST',
+    GET_RECORDING_IN_PROGRESS = 'VIDEO:GET_RECORDING_IN_PROGRESS',
 
     // --- Notifications / Data Transfer ---
-    RECORDING_STARTED = 'RECORDING_STARTED',
-    RECORDING_STOPPED_DATA_READY = 'RECORDING_STOPPED_DATA_READY',
-    RECORDING_FAILED = 'RECORDING_FAILED',
+    RECORDING_STOPPED_DATA_READY = 'VIDEO:RECORDING_STOPPED_DATA_READY',
 }
 
-type VDomain = MessageDomain.VIDEO;
-
-// --- Message Definitions ---
-
-export type SetupVideoCaptureMessage = BaseMessage<
-    `${VDomain}:${VideoAction.SETUP_CAPTURE}`,
+export type SetupVideoCaptureMessage = Message<
+    VideoAction.SETUP_CAPTURE,
     MessageContext.POPUP,
     MessageContext.BACKGROUND,
     { tabId: number }
 >;
 
-export type StartRecordingRequestMessage = BaseMessage<
-    `${VDomain}:${VideoAction.START_RECORDING_REQUEST}`,
+export type StartRecordingRequestMessage = Message<
+    VideoAction.START_RECORDING_REQUEST,
     MessageContext.BACKGROUND,
     MessageContext.OFFSCREEN,
     { tabId: number }
 >;
 
-export type StopRecordingRequestMessage = BaseMessage<
-    `${VDomain}:${VideoAction.STOP_RECORDING_REQUEST}`,
+export type StopRecordingRequestMessage = Message<
+    VideoAction.STOP_RECORDING_REQUEST,
     MessageContext.CONTENT_SCRIPT,
     MessageContext.OFFSCREEN
 >;
 
-export type GetRecordingInProgressMessage = BaseMessage<
-    `${VDomain}:${VideoAction.GET_RECORDING_IN_PROGRESS}`,
+export type GetRecordingInProgressMessage = Message<
+    VideoAction.GET_RECORDING_IN_PROGRESS,
     MessageContext.CONTENT_SCRIPT | MessageContext.BACKGROUND,
     MessageContext.BACKGROUND | MessageContext.OFFSCREEN
 >;
 
-export type RecordingStartedMessage = BaseMessage<
-    `${VDomain}:${VideoAction.RECORDING_STARTED}`,
-    MessageContext.OFFSCREEN,
-    MessageContext.BACKGROUND,
-    { startDate: string }
->;
-
-export type RecordingStoppedDataReadyMessage = BaseMessage<
-    `${VDomain}:${VideoAction.RECORDING_STOPPED_DATA_READY}`,
+export type RecordingStoppedDataReadyMessage = Message<
+    VideoAction.RECORDING_STOPPED_DATA_READY,
     MessageContext.OFFSCREEN,
     MessageContext.BACKGROUND,
     { videoBlobAsBase64: string }
->;
-
-export type RecordingFailedMessage = BaseMessage<
-    `${VDomain}:${VideoAction.RECORDING_FAILED}`,
-    MessageContext.OFFSCREEN,
-    MessageContext.BACKGROUND,
-    { error: string }
 >;
 
 export type VideoMessage =
@@ -2915,15 +2809,8 @@ export type VideoMessage =
     | StartRecordingRequestMessage
     | StopRecordingRequestMessage
     | GetRecordingInProgressMessage
-    | RecordingStartedMessage
-    | RecordingStoppedDataReadyMessage
-    | RecordingFailedMessage;
+    | RecordingStoppedDataReadyMessage;
 
-
-// TODO: not sure where to put this type
-export type RecordingState =
-    | { inProgress: boolean; startDate: string; tabId: number }
-    | { inProgress: false; }
 
 --------------------------------------------------
 File End

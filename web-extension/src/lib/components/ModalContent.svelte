@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
-	import { ResultModalProps } from '$lib/stores/modal.store';
+	import { SCREENSHOT_FORMAT } from '$lib/messaging/types';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
 	import X from '@lucide/svelte/icons/x';
+	import { ResultModalProps } from '../../entrypoints/content/ui/resultModal/modal.store';
 	import CardContent from './ui/card/card-content.svelte';
 	import CardFooter from './ui/card/card-footer.svelte';
 	import CardHeader from './ui/card/card-header.svelte';
@@ -58,7 +59,7 @@
 
 		const link = document.createElement('a');
 		link.href = resultModalProps.imageString;
-		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.png`;
+		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.${SCREENSHOT_FORMAT}`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);

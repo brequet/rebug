@@ -1,6 +1,8 @@
 import { MessageContext } from '../../config/context';
 import { Message } from '../base';
 
+export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
+
 export type RecordingState =
     | { inProgress: true; startDate: string; tabId: number }
     | { inProgress: false; }

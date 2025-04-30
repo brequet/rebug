@@ -1,7 +1,6 @@
 import * as Factories from "$lib/messaging/factories";
 import { BaseMessagingService } from "$lib/messaging/handlers/base-messaging.service";
-import { isErrorResponse, MessageContext, MessageResponse, RecordingState } from "$lib/messaging/types";
-import { SelectionArea } from "$lib/types/capture";
+import { isErrorResponse, MessageContext, MessageResponse, RecordingState, SelectionArea } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 
 const log = logger.getLogger('ContentScriptMessagingService');
