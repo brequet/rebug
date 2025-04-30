@@ -1,24 +1,20 @@
 import { MessageContext } from '../config/context';
 import {
-    ResultModalType,
     ShowRecordingControlsMessage,
     ShowResultModalMessage,
+    ShowResultModalMessagePayload,
     UIAction
 } from '../types/domains/ui.types';
 
 export const uiMessageFactory = {
     showResultModal(
-        resultType: ResultModalType,
-        videoBlobAsBase64?: string
+        payload: ShowResultModalMessagePayload
     ): ShowResultModalMessage {
         return {
             type: UIAction.SHOW_RESULT_MODAL,
             source: MessageContext.BACKGROUND,
             target: MessageContext.CONTENT_SCRIPT,
-            payload: {
-                resultType,
-                videoBlobAsBase64,
-            },
+            payload
         };
     },
 

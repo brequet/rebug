@@ -5,7 +5,7 @@ import {
     MessageContext,
     MessageResponse,
     RecordingState,
-    ResultModalType
+    ShowResultModalMessagePayload
 } from '$lib/messaging/types';
 import { logger } from '$lib/utils/logger';
 
@@ -17,12 +17,11 @@ export class BackgroundMessagingService extends BaseMessagingService<MessageCont
     }
 
     async notifyContentToShowResult(
-        resultType: ResultModalType,
-        videoBlobAsBase64?: string
+        resultModalMessagePayload: ShowResultModalMessagePayload
     ): Promise<MessageResponse<unknown>> {
-        log.debug(`Notifying content script to show result modal: ${resultType}`, videoBlobAsBase64);
+        log.debug(`Notifying content script to show result modal: ${resultModalMessagePayload.resultType}`);
         const response = await this.send(
-            Factories.uiMessageFactory.showResultModal(resultType, videoBlobAsBase64)
+            Factories.uiMessageFactory.showResultModal(resultModalMessagePayload)
         );
         if (isErrorResponse(response)) {
             log.error(`Failed to notify content script to show result modal: ${response.error}`);

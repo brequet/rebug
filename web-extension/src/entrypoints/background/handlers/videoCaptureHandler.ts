@@ -35,7 +35,10 @@ export async function handleRecordingStoppedDataReady(message: RecordingStoppedD
 
     const { videoBlobAsBase64 } = message.payload;
     try {
-        backgroundMessagingService.notifyContentToShowResult(ResultModalType.VIDEO, videoBlobAsBase64);
+        backgroundMessagingService.notifyContentToShowResult({
+            resultType: ResultModalType.VIDEO,
+            base64Video: videoBlobAsBase64
+        });
 
         closeOffscreenDocument().catch(console.error);
         return createSuccessResponse()

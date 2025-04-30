@@ -12,14 +12,15 @@ export enum UIAction {
     SHOW_SCREENSHOT_SELECTION_UI = 'UI:SHOW_SCREENSHOT_SELECTION_UI',
 }
 
+export type ShowResultModalMessagePayload =
+    | { resultType: ResultModalType.IMAGE; base64Image: string; }
+    | { resultType: ResultModalType.VIDEO; base64Video: string; };
+
 export type ShowResultModalMessage = Message<
     UIAction.SHOW_RESULT_MODAL,
     MessageContext.BACKGROUND,
     MessageContext.CONTENT_SCRIPT,
-    {
-        resultType: ResultModalType;
-        videoBlobAsBase64?: string; // TODO something better to do i'm sure
-    }
+    ShowResultModalMessagePayload
 >;
 
 export type ShowRecordingControlsMessage = Message<

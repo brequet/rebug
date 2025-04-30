@@ -1,6 +1,5 @@
 import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType, SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/messaging/types";
 import { blobToBase64 } from "$lib/messaging/utils/blob-utils";
-import { screenshotStorage } from "$lib/services/storage";
 import { logger } from "$lib/utils/logger";
 import { backgroundMessagingService } from '../services/background-messaging.service';
 
@@ -12,8 +11,10 @@ export async function handleCaptureVisibleTab(
     log.info(`Handling ${message.type}`);
     try {
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
-        await screenshotStorage.setValue(dataUrl); // TODO Needed ?
-        await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE);
+        await backgroundMessagingService.notifyContentToShowResult({
+            resultType: ResultModalType.IMAGE,
+            base64Image: dataUrl
+        });
         return createSuccessResponse({ screenshotDataUrl: dataUrl });
     } catch (error: any) {
         log.error(`Error capturing visible tab: ${error.message}`, error);
@@ -30,8 +31,10 @@ export async function handleCaptureRegion(
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         const base64Cropped = await cropImage(dataUrl, region);
 
-        await screenshotStorage.setValue(base64Cropped);
-        await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE); // TODO: maybe not use screenshot storage nor notify, just use response
+        await backgroundMessagingService.notifyContentToShowResult({
+            resultType: ResultModalType.IMAGE,
+            base64Image: base64Cropped
+        });
         return createSuccessResponse({ screenshotDataUrl: base64Cropped });
     } catch (error: any) {
         log.error(`Error capturing region: ${error.message}`, error);

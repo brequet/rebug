@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { isCaptureAllowed } from '$lib/services/capture';
+	import { isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
@@ -55,7 +55,7 @@
 	}
 </script>
 
-<main class="h-50 w-100 flex flex-col gap-2 bg-white p-2">
+<main class="w-100 flex h-40 flex-col gap-2 bg-white p-2">
 	<h1 class="pb-2 text-center text-4xl font-bold">Rebug</h1>
 
 	{#if isCaptureDisabled}
