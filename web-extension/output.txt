@@ -28,6 +28,7 @@ src/
                     RecordingControlsOverlay.svelte
                 resultModal/
                     index.ts
+                    modal.store.ts
                     ResultModal.svelte
                 screenshotSelectionOverlay/
                     index.ts
@@ -85,16 +86,8 @@ src/
                     ui.types.ts
                     video.types.ts
             utils/
+                blob-utils.ts
                 tab-utils.ts
-        services/
-            capture.ts
-            storage/
-                index.ts
-                indexedDBService.ts
-        stores/
-            modal.store.ts
-        types/
-            capture.ts
         utils/
             logger.ts
     public/
@@ -258,10 +251,8 @@ File End
 
 ./src\entrypoints\background\handlers\screenshotHandler.ts
 File type: .ts
-import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType } from "$lib/messaging/types";
-import { blobToBase64 } from "$lib/services/capture";
-import { screenshotStorage } from "$lib/services/storage";
-import { SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/types/capture";
+import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType, SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/messaging/types";
+import { blobToBase64 } from "$lib/messaging/utils/blob-utils";
 import { logger } from "$lib/utils/logger";
 import { backgroundMessagingService } from '../services/background-messaging.service';
 
@@ -272,9 +263,11 @@ export async function handleCaptureVisibleTab(
 ): Promise<MessageResponse<{ screenshotDataUrl: string }>> {
     log.info(`Handling ${message.type}`);
     try {
-        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
-        await screenshotStorage.setValue(dataUrl); // TODO Needed ?
-        await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE);
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
+        await backgroundMessagingService.notifyContentToShowResult({
+            resultType: ResultModalType.IMAGE,
+            base64Image: dataUrl
+        });
         return createSuccessResponse({ screenshotDataUrl: dataUrl });
     } catch (error: any) {
         log.error(`Error capturing visible tab: ${error.message}`, error);
@@ -288,11 +281,13 @@ export async function handleCaptureRegion(
     log.info(`Handling ${message.type}`, message.payload);
     const { region } = message.payload;
     try {
-        const dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' });
+        const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
         const base64Cropped = await cropImage(dataUrl, region);
 
-        await screenshotStorage.setValue(base64Cropped);
-        await backgroundMessagingService.notifyContentToShowResult(ResultModalType.IMAGE); // TODO: maybe not use screenshot storage nor notify, just use response
+        await backgroundMessagingService.notifyContentToShowResult({
+            resultType: ResultModalType.IMAGE,
+            base64Image: base64Cropped
+        });
         return createSuccessResponse({ screenshotDataUrl: base64Cropped });
     } catch (error: any) {
         log.error(`Error capturing region: ${error.message}`, error);
@@ -383,7 +378,10 @@ export async function handleRecordingStoppedDataReady(message: RecordingStoppedD
 
     const { videoBlobAsBase64 } = message.payload;
     try {
-        backgroundMessagingService.notifyContentToShowResult(ResultModalType.VIDEO, videoBlobAsBase64);
+        backgroundMessagingService.notifyContentToShowResult({
+            resultType: ResultModalType.VIDEO,
+            base64Video: videoBlobAsBase64
+        });
 
         closeOffscreenDocument().catch(console.error);
         return createSuccessResponse()
@@ -393,7 +391,10 @@ export async function handleRecordingStoppedDataReady(message: RecordingStoppedD
     }
 }
 
-export async function handleRecordingInProgress(message: GetRecordingInProgressMessage): Promise<MessageResponse<RecordingState>> {
+export async function handleRecordingInProgress(
+    message: GetRecordingInProgressMessage,
+    sender: chrome.runtime.MessageSender
+): Promise<MessageResponse<RecordingState>> {
     log.info(`Handling ${message.type}`);
 
     if (!(await hasOffscreenDocument(OFFSCREEN_DOCUMENT_PATH))) {
@@ -407,7 +408,14 @@ export async function handleRecordingInProgress(message: GetRecordingInProgressM
         return createErrorResponse(response.error || 'Failed to get recording in progress status');
     }
 
-    return response;
+    if (!response.data?.inProgress) {
+        return createSuccessResponse({ inProgress: false })
+    }
+
+    return createSuccessResponse({
+        ...response.data,
+        isCurrentTab: sender.tab?.id === response.data.tabId
+    })
 }
 
 async function hasOffscreenDocument(path: PublicPath): Promise<boolean> {
@@ -476,7 +484,7 @@ import {
     MessageContext,
     MessageResponse,
     RecordingState,
-    ResultModalType
+    ShowResultModalMessagePayload
 } from '$lib/messaging/types';
 import { logger } from '$lib/utils/logger';
 
@@ -488,12 +496,11 @@ export class BackgroundMessagingService extends BaseMessagingService<MessageCont
     }
 
     async notifyContentToShowResult(
-        resultType: ResultModalType,
-        videoBlobAsBase64?: string
+        resultModalMessagePayload: ShowResultModalMessagePayload
     ): Promise<MessageResponse<unknown>> {
-        log.debug(`Notifying content script to show result modal: ${resultType}`, videoBlobAsBase64);
+        log.debug(`Notifying content script to show result modal: ${resultModalMessagePayload.resultType}`);
         const response = await this.send(
-            Factories.uiMessageFactory.showResultModal(resultType, videoBlobAsBase64)
+            Factories.uiMessageFactory.showResultModal(resultModalMessagePayload)
         );
         if (isErrorResponse(response)) {
             log.error(`Failed to notify content script to show result modal: ${response.error}`);
@@ -604,8 +611,7 @@ File End
 
 ./src\entrypoints\content\handlers\screenshotHandler.ts
 File type: .ts
-import { createErrorResponse, createSuccessResponse, MessageResponse, StartScreenshotSelectionMessage } from "$lib/messaging/types";
-import { SelectionArea } from "$lib/messaging/types";
+import { createErrorResponse, createSuccessResponse, MessageResponse, SelectionArea, StartScreenshotSelectionMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
@@ -652,7 +658,7 @@ File End
 
 ./src\entrypoints\content\handlers\uiHandler.ts
 File type: .ts
-import { createErrorResponse, createSuccessResponse, MessageResponse, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
+import { createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
@@ -664,6 +670,10 @@ const log = logger.getLogger('ContentScript:UiHandler');
 export async function handleShowResultModal(message: ShowResultModalMessage): Promise<MessageResponse<void>> {
     log.info(`Handling ${message.type}`, message.payload);
     try {
+        if (message.payload.resultType === ResultModalType.VIDEO) {
+            await closeRecordingControlsOverlay();
+        }
+
         openRebugResultModal(message);
         return createSuccessResponse();
     } catch (error) {
@@ -703,7 +713,7 @@ import { isErrorResponse } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
-import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
+import { openRecordingControlsOverlay } from "../ui/recordingControls";
 
 const log = logger.getLogger('ContentScript:VideoCaptureHandler');
 
@@ -718,18 +728,20 @@ export async function handleRecordingInProgress(ctx: ContentScriptContext): Prom
         return;
     }
 
-    // TODO identify if current tab is tab that started the recording
-    // const currentTabId = await getCurrentTabId();
-    // if (currentTabId !== messageResponse.data.tabId) {
-    //     return;
-    // }
+    if (messageResponse.data.isCurrentTab === undefined) {
+        log.error('Could not get current tab for recording in progress check');
+        return;
+    }
+
+    if (!messageResponse.data.isCurrentTab) {
+        return;
+    }
 
     log.info("Recording in progress, showing controls overlay...", messageResponse.data);
 
     openRecordingControlsOverlay(
         ctx,
         async () => {
-            await closeRecordingControlsOverlay();
             log.debug('Recording controls closed');
             contentScriptMessagingService.requestStopVideoRecording();
         },
@@ -746,8 +758,7 @@ File End
 File type: .ts
 import * as Factories from "$lib/messaging/factories";
 import { BaseMessagingService } from "$lib/messaging/handlers/base-messaging.service";
-import { isErrorResponse, MessageContext, MessageResponse, RecordingState } from "$lib/messaging/types";
-import { SelectionArea } from "$lib/messaging/types";
+import { isErrorResponse, MessageContext, MessageResponse, RecordingState, SelectionArea } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 
 const log = logger.getLogger('ContentScriptMessagingService');
@@ -942,13 +953,11 @@ File End
 
 ./src\entrypoints\content\ui\resultModal\index.ts
 File type: .ts
-import { ResultModalType, ShowResultModalMessage } from "$lib/messaging/types";
-import { base64ToBlob } from "$lib/services/capture";
-import { screenshotStorage } from "$lib/services/storage";
-import { modalStore, ResultModalProps } from "$lib/stores/modal.store";
-import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
+import { ResultModalType, ShowResultModalMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
+import { base64ToBlob } from "$lib/messaging/utils/blob-utils";
 import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import { modalStore, ResultModalProps } from "./modal.store";
 import ResultModal from "./ResultModal.svelte";
 
 export async function injectRebugResultModal(ctx: ContentScriptContext): Promise<void> {
@@ -975,21 +984,54 @@ async function createRebugResultModalUi(ctx: ContentScriptContext): Promise<Shad
 
 async function getResultModalProps(message: ShowResultModalMessage): Promise<ResultModalProps> {
     if (message.payload.resultType === ResultModalType.IMAGE) {
-        const imageString = await screenshotStorage.getValue();
-        if (!imageString) {
-            throw new Error('No screenshot found in storage');
-        }
-        return { imageString };
+        return { imageString: message.payload.base64Image };
     } else if (message.payload.resultType === ResultModalType.VIDEO) {
-        if (!message.payload.videoBlobAsBase64) {
+        if (!message.payload.base64Video) {
             throw new Error('No blob URL provided for video result modal');
         }
-        const videoBlob = base64ToBlob(message.payload.videoBlobAsBase64, VIDEO_CAPTURE_MIME_TYPE)
+        const videoBlob = base64ToBlob(message.payload.base64Video, VIDEO_CAPTURE_MIME_TYPE)
         return { videoBlob };
     }
 
-    throw new Error(`Unsupported result modal type: ${message.payload.resultType}`);
+    throw new Error(`Unsupported result modal type: ${message}`);
 }
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src\entrypoints\content\ui\resultModal\modal.store.ts
+File type: .ts
+import { writable, type Writable } from "svelte/store";
+
+export interface ResultModalProps {
+    imageString?: string;
+    videoBlob?: Blob;
+}
+
+type ModalState = {
+    isOpen: boolean;
+    props: ResultModalProps
+};
+
+const initialState: ModalState = {
+    isOpen: false,
+    props: {}
+};
+
+function createModalStore() {
+    const { subscribe, set }: Writable<ModalState> = writable(initialState);
+
+    return {
+        subscribe,
+        open: (props: ResultModalProps) => set({ isOpen: true, props }),
+        close: () => set({ isOpen: false, props: {} }),
+    };
+}
+
+export const modalStore = createModalStore();
 
 
 --------------------------------------------------
@@ -1001,7 +1043,7 @@ File End
 File type: .svelte
 <script lang="ts">
 	import ModalContent from '$lib/components/ModalContent.svelte';
-	import { modalStore } from '$lib/stores/modal.store';
+	import { modalStore } from './modal.store';
 
 	function close() {
 		modalStore.close();
@@ -1027,10 +1069,10 @@ File End
 
 ./src\entrypoints\content\ui\screenshotSelectionOverlay\index.ts
 File type: .ts
+import { SelectionArea } from "$lib/messaging/types";
+import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
 import ScreenshotOverlay from "./ScreenshotOverlay.svelte";
-import { mount } from "svelte";
-import { SelectionArea } from "$lib/messaging/types";
 
 export async function createRecordingControlsOverlay(
     ctx: ContentScriptContext,
@@ -1062,7 +1104,7 @@ File End
 File type: .svelte
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { SelectionArea } from '$lib/types/capture';
+	import { SelectionArea } from '$lib/messaging/types';
 	import { cn } from '$lib/utils';
 
 	interface Props {
@@ -1290,9 +1332,8 @@ File End
 
 ./src\entrypoints\offscreen\handlers\videoCaptureHandler.ts
 File type: .ts
-import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, MessageResponse, RecordingState, StartRecordingRequestMessage, StopRecordingRequestMessage } from "$lib/messaging/types";
-import { blobToBase64 } from "$lib/services/capture";
-import { VIDEO_CAPTURE_MIME_TYPE } from "$lib/types/capture";
+import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, MessageResponse, RecordingState, StartRecordingRequestMessage, StopRecordingRequestMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
+import { blobToBase64 } from "$lib/messaging/utils/blob-utils";
 import { logger } from "$lib/utils/logger";
 import { offscreenMessagingService } from '../services/offscreen-messaging.service';
 
@@ -1537,7 +1578,7 @@ File End
 File type: .svelte
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { isCaptureAllowed } from '$lib/services/capture';
+	import { isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
@@ -1592,7 +1633,7 @@ File type: .svelte
 	}
 </script>
 
-<main class="h-50 w-100 flex flex-col gap-2 bg-white p-2">
+<main class="w-100 flex h-40 flex-col gap-2 bg-white p-2">
 	<h1 class="pb-2 text-center text-4xl font-bold">Rebug</h1>
 
 	{#if isCaptureDisabled}
@@ -1630,7 +1671,7 @@ import { logger } from "$lib/utils/logger";
 import * as Factories from "../../../lib/messaging/factories";
 import { BaseMessagingService } from "../../../lib/messaging/handlers/base-messaging.service";
 import { createErrorResponse, isErrorResponse, MessageContext, MessageResponse } from "../../../lib/messaging/types";
-import { getCurrentTabId } from "../../../lib/messaging/utils/tab-utils";
+import { getActiveTabId } from "../../../lib/messaging/utils/tab-utils";
 
 const log = logger.getLogger('PopupMessagingService');
 
@@ -1660,7 +1701,7 @@ export class PopupMessagingService extends BaseMessagingService<MessageContext.P
 
     async requestSetupVideoCapture(): Promise<MessageResponse<unknown>> {
         log.debug('Requesting video capture setup...');
-        const tabId = await getCurrentTabId();
+        const tabId = await getActiveTabId();
         if (tabId === undefined) {
             log.error('Cannot start video recording: No active tab ID found.');
             // TODO: Show error to user
@@ -1701,11 +1742,12 @@ File type: .svelte
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
-	import { ResultModalProps } from '$lib/stores/modal.store';
+	import { SCREENSHOT_FORMAT } from '$lib/messaging/types';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
 	import X from '@lucide/svelte/icons/x';
+	import { ResultModalProps } from '../../entrypoints/content/ui/resultModal/modal.store';
 	import CardContent from './ui/card/card-content.svelte';
 	import CardFooter from './ui/card/card-footer.svelte';
 	import CardHeader from './ui/card/card-header.svelte';
@@ -1758,7 +1800,7 @@ File type: .svelte
 
 		const link = document.createElement('a');
 		link.href = resultModalProps.imageString;
-		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.png`;
+		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.${SCREENSHOT_FORMAT}`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -2166,7 +2208,7 @@ File End
 
 ./src\lib\messaging\bus\message-bus.ts
 File type: .ts
-import { getCurrentTabId } from '$lib/messaging/utils/tab-utils';
+import { getActiveTabId } from '$lib/messaging/utils/tab-utils';
 import { logger } from '$lib/utils/logger';
 import { AppMessage, MessageContext, MessageResponse, createErrorResponse, isSuccessResponse } from '../types';
 
@@ -2191,7 +2233,7 @@ export class MessageBus {
                     break;
 
                 case MessageContext.CONTENT_SCRIPT:
-                    const tabId = await getCurrentTabId();
+                    const tabId = await getActiveTabId();
                     if (tabId === undefined) {
                         throw new Error('Cannot send message to content script: No active tab found.');
                     }
@@ -2266,9 +2308,8 @@ File End
 
 ./src\lib\messaging\factories\screenshot.factory.ts
 File type: .ts
-import { SelectionArea } from '../../types/capture';
 import { MessageContext } from '../config/context';
-import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, ScreenshotAction, StartScreenshotSelectionMessage } from '../types';
+import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, ScreenshotAction, SelectionArea, StartScreenshotSelectionMessage } from '../types';
 
 export const screenshotMessageFactory = {
     startSelection(): StartScreenshotSelectionMessage {
@@ -2311,25 +2352,21 @@ File End
 File type: .ts
 import { MessageContext } from '../config/context';
 import {
-    ResultModalType,
     ShowRecordingControlsMessage,
     ShowResultModalMessage,
+    ShowResultModalMessagePayload,
     UIAction
 } from '../types/domains/ui.types';
 
 export const uiMessageFactory = {
     showResultModal(
-        resultType: ResultModalType,
-        videoBlobAsBase64?: string
+        payload: ShowResultModalMessagePayload
     ): ShowResultModalMessage {
         return {
             type: UIAction.SHOW_RESULT_MODAL,
             source: MessageContext.BACKGROUND,
             target: MessageContext.CONTENT_SCRIPT,
-            payload: {
-                resultType,
-                videoBlobAsBase64,
-            },
+            payload
         };
     },
 
@@ -2481,13 +2518,22 @@ File End
 
 ./src\lib\messaging\handlers\handler.types.ts
 File type: .ts
-
+// src/lib/messaging/handlers/handler.types.ts
 import { AppMessage, MessageResponse } from '../types';
 
-// Generic handler function type, constrained by the message type it handles
-export type MessageHandler<T extends AppMessage = AppMessage> = (
+type HandlerWithoutSender<T extends AppMessage> = (
   message: T
 ) => Promise<MessageResponse<any>> | MessageResponse<any>;
+
+type HandlerWithSender<T extends AppMessage> = (
+  message: T,
+  sender: chrome.runtime.MessageSender
+) => Promise<MessageResponse<any>> | MessageResponse<any>;
+
+export type MessageHandler<T extends AppMessage = AppMessage> =
+  | HandlerWithoutSender<T>
+  | HandlerWithSender<T>;
+
 
 
 --------------------------------------------------
@@ -2498,7 +2544,7 @@ File End
 ./src\lib\messaging\handlers\message-dispatcher.ts
 File type: .ts
 import { logger } from '../../utils/logger';
-import { AppMessage, AppMessageType, MessageContext, createErrorResponse } from '../types';
+import { AppMessage, AppMessageType, MessageContext, MessageResponse, createErrorResponse } from '../types';
 import { MessageHandler } from './handler.types';
 
 const log = logger.getLogger('MessageDispatcher');
@@ -2548,7 +2594,16 @@ export class MessageDispatcher {
 
         // 3. Execute Handler (Async)
         Promise.resolve()
-          .then(() => handler(message))
+          .then(() => {
+            if (handler.length === 1) {
+              // Call handler with only the message
+              return (handler as (msg: AppMessage) => Promise<MessageResponse<any>> | MessageResponse<any>)(message);
+            } else {
+              // Call handler with message and sender
+              return (handler as (msg: AppMessage, snd: chrome.runtime.MessageSender) => Promise<MessageResponse<any>> | MessageResponse<any>)(message, sender);
+            }
+
+          })
           .then((response) => {
             log.debug(`Sending response for ${message.type}:`, response);
             sendResponse(response);
@@ -2560,7 +2615,6 @@ export class MessageDispatcher {
           });
 
         // 4. Indicate Asynchronous Response
-        // Crucial: Tells Chrome to keep the message channel open for the async response
         return true;
       }
     );
@@ -2668,9 +2722,19 @@ File End
 
 ./src\lib\messaging\types\domains\screenshot.types.ts
 File type: .ts
-import { SelectionArea } from '../../../types/capture';
 import { MessageContext } from '../../config/context';
 import { Message } from '../base';
+
+export const SCREENSHOT_FORMAT = 'png';
+export const SCREENSHOT_MIME_TYPE = 'image/png';
+
+export interface SelectionArea {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    devicePixelRatio: number;
+}
 
 export enum ScreenshotAction {
     START_SELECTION = 'SCREENSHOT:START_SELECTION',
@@ -2721,17 +2785,17 @@ export enum ResultModalType {
 export enum UIAction {
     SHOW_RESULT_MODAL = 'UI:SHOW_RESULT_MODAL',
     SHOW_RECORDING_CONTROLS = 'UI:SHOW_RECORDING_CONTROLS',
-    SHOW_SCREENSHOT_SELECTION_UI = 'UI:SHOW_SCREENSHOT_SELECTION_UI',
 }
+
+export type ShowResultModalMessagePayload =
+    | { resultType: ResultModalType.IMAGE; base64Image: string; }
+    | { resultType: ResultModalType.VIDEO; base64Video: string; };
 
 export type ShowResultModalMessage = Message<
     UIAction.SHOW_RESULT_MODAL,
     MessageContext.BACKGROUND,
     MessageContext.CONTENT_SCRIPT,
-    {
-        resultType: ResultModalType;
-        videoBlobAsBase64?: string; // TODO something better to do i'm sure
-    }
+    ShowResultModalMessagePayload
 >;
 
 export type ShowRecordingControlsMessage = Message<
@@ -2756,8 +2820,10 @@ File type: .ts
 import { MessageContext } from '../../config/context';
 import { Message } from '../base';
 
+export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
+
 export type RecordingState =
-    | { inProgress: true; startDate: string; tabId: number }
+    | { inProgress: true; startDate: string; tabId: number; isCurrentTab?: boolean }
     | { inProgress: false; }
 
 export enum VideoAction {
@@ -2817,69 +2883,9 @@ File End
 --------------------------------------------------
 
 
-./src\lib\messaging\utils\tab-utils.ts
+./src\lib\messaging\utils\blob-utils.ts
 File type: .ts
-import { logger } from "../../utils/logger";
-
-const log = logger.getLogger('TabUtils');
-
-export async function getCurrentTabId(): Promise<number | undefined> {
-  try {
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    if (tabs.length > 0 && tabs[0]?.id !== undefined) {
-      return tabs[0].id;
-    }
-    log.warn('Could not determine active tab ID.');
-    return undefined;
-  } catch (error) {
-    log.error('Error querying for active tab:', error);
-    return undefined;
-  }
-}
-
---------------------------------------------------
-File End
---------------------------------------------------
-
-
-./src\lib\services\capture.ts
-File type: .ts
-export const RESTRICTED_SCHEMES = [
-    'chrome:',
-    'edge:',
-    'brave:',
-    'about:',
-    'moz-extension:',
-    'chrome-extension:',
-    'vivaldi:'
-];
-
-export async function isCaptureAllowed(): Promise<boolean> {
-    try {
-        const tab = await getCurrentTab();
-        if (tab?.url == undefined) return false;
-
-        const tabUrl = tab.url;
-
-        return !RESTRICTED_SCHEMES.some(scheme =>
-            tabUrl.startsWith(scheme)
-        );
-    } catch (error) {
-        return false;
-    }
-}
-
-export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
-    try {
-        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-        return tab;
-    } catch (error) {
-        console.error('Error getting current tab:', error);
-        return undefined;
-    }
-}
-
-export function blobToBase64(blob: Blob): Promise<string> {
+export async function blobToBase64(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
@@ -2900,236 +2906,84 @@ export function base64ToBlob(base64: string, type: string): Blob {
     return new Blob([ab], { type });
 }
 
-
 --------------------------------------------------
 File End
 --------------------------------------------------
 
 
-./src\lib\services\storage\index.ts
+./src\lib\messaging\utils\tab-utils.ts
 File type: .ts
-export const screenshotStorage = storage.defineItem<string>('local:screenshot');
+import { logger } from "../../utils/logger";
 
-export const videoStorage = storage.defineItem<string>('local:capturedVideo');
+const log = logger.getLogger('TabUtils');
 
-export * from './indexedDBService';
+const RESTRICTED_SCHEMES = [
+  'chrome:',
+  'edge:',
+  'brave:',
+  'about:',
+  'moz-extension:',
+  'chrome-extension:',
+  'vivaldi:'
+];
 
+export async function isCaptureAllowed(): Promise<boolean> {
+  try {
+    const tab = await getActiveTab();
+    if (tab?.url == undefined) return false;
 
+    const tabUrl = tab.url;
 
---------------------------------------------------
-File End
---------------------------------------------------
+    return !RESTRICTED_SCHEMES.some(scheme =>
+      tabUrl.startsWith(scheme)
+    );
+  } catch (error) {
+    return false;
+  }
+}
 
-
-./src\lib\services\storage\indexedDBService.ts
-File type: .ts
-const DB_NAME = 'RebugStorage';
-const DB_VERSION = 1;
-const VIDEO_STORE_NAME = 'videoRecordings';
-
-let dbPromise: Promise<IDBDatabase> | null = null;
-
-function getDb(): Promise<IDBDatabase> {
-    if (dbPromise) {
-        return dbPromise;
+export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
+  try {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0) {
+      log.warn('No active tab found.');
+      return undefined;
     }
-    dbPromise = new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-        request.onerror = (event) => {
-            console.error('IndexedDB error:', request.error);
-            reject(`IndexedDB error: ${request.error}`);
-            dbPromise = null; // Reset promise on error
-        };
-
-        request.onsuccess = (event) => {
-            console.log('IndexedDB connection successful.');
-            resolve(request.result);
-        };
-
-        request.onupgradeneeded = (event) => {
-            console.log('Upgrading IndexedDB...');
-            const db = (event.target as IDBOpenDBRequest).result;
-            if (!db.objectStoreNames.contains(VIDEO_STORE_NAME)) {
-                console.log(`Creating ${VIDEO_STORE_NAME} object store.`);
-                db.createObjectStore(VIDEO_STORE_NAME); // Using keyPath requires objects, direct key is simpler here
-            }
-            // Add other stores or indices if needed in future versions
-        };
-    });
-    return dbPromise;
+    return tabs[0];
+  } catch (error) {
+    log.error('Error querying for active tab:', error);
+    return undefined;
+  }
 }
 
-async function performStoreOperation(
-    mode: IDBTransactionMode,
-    operation: (store: IDBObjectStore) => IDBRequest | Promise<any> // Allow promise for async ops inside
-): Promise<any> {
-    const db = await getDb();
-    return new Promise((resolve, reject) => {
-        try {
-            const transaction = db.transaction(VIDEO_STORE_NAME, mode);
-            const store = transaction.objectStore(VIDEO_STORE_NAME);
-            const requestOrPromise = operation(store);
-
-            // Handle both IDBRequest and Promises returned by the operation
-            if (requestOrPromise instanceof IDBRequest) {
-                requestOrPromise.onsuccess = () => resolve(requestOrPromise.result);
-                requestOrPromise.onerror = () => reject(requestOrPromise.error);
-            } else if (requestOrPromise instanceof Promise) {
-                requestOrPromise.then(resolve).catch(reject);
-            } else {
-                // If operation doesn't return request/promise, assume sync success within transaction
-                transaction.oncomplete = () => resolve(undefined);
-                transaction.onerror = () => reject(transaction.error);
-            }
-
-            // Fallback transaction handlers if operation didn't define specific ones
-            transaction.onerror = transaction.onerror || (() => {
-                console.error(`IndexedDB transaction error (${mode}) on ${VIDEO_STORE_NAME}:`, transaction.error);
-                reject(transaction.error)
-            });
-            transaction.onabort = transaction.onabort || (() => {
-                console.warn(`IndexedDB transaction aborted (${mode}) on ${VIDEO_STORE_NAME}:`, transaction.error);
-                reject(new Error("IndexedDB transaction aborted"));
-            });
-
-        } catch (error) {
-            console.error("Error initiating IndexedDB transaction:", error);
-            reject(error);
-        }
-    });
+export async function getActiveTabId(): Promise<number | undefined> {
+  try {
+    const tab = await getActiveTab();
+    if (tab?.id === undefined) {
+      log.warn('Could not determine active tab ID.');
+      return undefined;
+    }
+    return tab.id;
+  } catch (error) {
+    log.error('Error querying for active tab:', error);
+    return undefined;
+  }
 }
 
-
-export const videoStorage = {
-    async saveVideo(id: string, blob: Blob): Promise<void> {
-        console.log(`IndexedDB: Saving video with ID: ${id}`);
-        try {
-            // Wrap the put operation to ensure it completes before resolving
-            await performStoreOperation('readwrite', (store) => {
-                return new Promise<void>((resolveOp, rejectOp) => {
-                    const request = store.put(blob, id);
-                    request.onsuccess = () => {
-                        console.log(`IndexedDB: Successfully saved video blob with ID: ${id}`);
-                        resolveOp();
-                    };
-                    request.onerror = () => {
-                        console.error(`IndexedDB: Error saving video blob with ID: ${id}`, request.error);
-                        rejectOp(request.error);
-                    };
-                });
-            });
-            console.log(`IndexedDB: Transaction commit for saveVideo ID: ${id}`);
-        } catch (error) {
-            console.error(`IndexedDB: Failed transaction for saveVideo ID: ${id}`, error);
-            throw error; // Re-throw the error after logging
-        }
-    },
-
-    async getVideo(id: string): Promise<Blob | null> {
-        console.log(`IndexedDB: Getting video with ID: ${id}`);
-        try {
-            const result = await performStoreOperation('readonly', (store) => store.get(id));
-            if (result instanceof Blob) {
-                console.log(`IndexedDB: Successfully retrieved video blob with ID: ${id}`);
-                return result;
-            } else if (result === undefined) {
-                console.warn(`IndexedDB: No video found with ID: ${id}`);
-                return null;
-            } else {
-                console.error(`IndexedDB: Retrieved unexpected data type for ID: ${id}`, typeof result);
-                return null;
-            }
-        } catch (error) {
-            console.error(`IndexedDB: Failed to get video with ID: ${id}`, error);
-            return null;
-        }
-    },
-
-    async deleteVideo(id: string): Promise<void> {
-        console.log(`IndexedDB: Deleting video with ID: ${id}`);
-        try {
-            // Wrap the delete operation to ensure it completes before resolving
-            await performStoreOperation('readwrite', (store) => {
-                return new Promise<void>((resolveOp, rejectOp) => {
-                    const request = store.delete(id);
-                    request.onsuccess = () => {
-                        console.log(`IndexedDB: Successfully deleted video with ID: ${id}`);
-                        resolveOp();
-                    };
-                    request.onerror = () => {
-                        console.error(`IndexedDB: Error deleting video with ID: ${id}`, request.error);
-                        rejectOp(request.error);
-                    };
-                });
-            });
-            console.log(`IndexedDB: Transaction commit for deleteVideo ID: ${id}`);
-        } catch (error) {
-            console.error(`IndexedDB: Failed transaction for deleteVideo ID: ${id}`, error);
-            throw error; // Re-throw the error after logging
-        }
-    },
-};
-
-
---------------------------------------------------
-File End
---------------------------------------------------
-
-
-./src\lib\stores\modal.store.ts
-File type: .ts
-import { writable, type Writable } from "svelte/store";
-
-export interface ResultModalProps {
-    imageString?: string;
-    videoBlob?: Blob;
+export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
+  try {
+    const tabs = await browser.tabs.query({ currentWindow: true });
+    if (tabs.length === 0) {
+      log.warn('No current tab found.');
+      return undefined;
+    }
+    return tabs[0];
+  } catch (error) {
+    log.error('Error querying for current tab:', error);
+    return undefined;
+  }
 }
 
-type ModalState = {
-    isOpen: boolean;
-    props: ResultModalProps
-};
-
-const initialState: ModalState = {
-    isOpen: false,
-    props: {}
-};
-
-function createModalStore() {
-    const { subscribe, set }: Writable<ModalState> = writable(initialState);
-
-    return {
-        subscribe,
-        open: (props: ResultModalProps) => set({ isOpen: true, props }),
-        close: () => set({ isOpen: false, props: {} }),
-    };
-}
-
-export const modalStore = createModalStore();
-
-
---------------------------------------------------
-File End
---------------------------------------------------
-
-
-./src\lib\types\capture.ts
-File type: .ts
-export const SCREENSHOT_FORMAT = 'png';
-export const SCREENSHOT_MIME_TYPE = 'image/png';
-
-export interface SelectionArea {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    devicePixelRatio: number;
-}
-
-export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
-
-export const DEFAULT_RECORDING_ID = 'DEFAULT_RECORDING_ID'
 
 --------------------------------------------------
 File End
