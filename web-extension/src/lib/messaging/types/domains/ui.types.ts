@@ -9,7 +9,6 @@ export enum ResultModalType {
 export enum UIAction {
     SHOW_RESULT_MODAL = 'UI:SHOW_RESULT_MODAL',
     SHOW_RECORDING_CONTROLS = 'UI:SHOW_RECORDING_CONTROLS',
-    SHOW_SCREENSHOT_SELECTION_UI = 'UI:SHOW_SCREENSHOT_SELECTION_UI',
 }
 
 export type ShowResultModalMessagePayload =
