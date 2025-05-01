@@ -1,4 +1,4 @@
-import { createErrorResponse, createSuccessResponse, MessageResponse, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
+import { createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType, ShowRecordingControlsMessage, ShowResultModalMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
@@ -10,6 +10,10 @@ const log = logger.getLogger('ContentScript:UiHandler');
 export async function handleShowResultModal(message: ShowResultModalMessage): Promise<MessageResponse<void>> {
     log.info(`Handling ${message.type}`, message.payload);
     try {
+        if (message.payload.resultType === ResultModalType.VIDEO) {
+            await closeRecordingControlsOverlay();
+        }
+
         openRebugResultModal(message);
         return createSuccessResponse();
     } catch (error) {

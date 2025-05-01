@@ -2,7 +2,7 @@ import { isErrorResponse } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 import { ContentScriptContext } from "wxt/client";
 import { contentScriptMessagingService } from "../services/content-messaging.service";
-import { closeRecordingControlsOverlay, openRecordingControlsOverlay } from "../ui/recordingControls";
+import { openRecordingControlsOverlay } from "../ui/recordingControls";
 
 const log = logger.getLogger('ContentScript:VideoCaptureHandler');
 
@@ -31,7 +31,6 @@ export async function handleRecordingInProgress(ctx: ContentScriptContext): Prom
     openRecordingControlsOverlay(
         ctx,
         async () => {
-            await closeRecordingControlsOverlay();
             log.debug('Recording controls closed');
             contentScriptMessagingService.requestStopVideoRecording();
         },
