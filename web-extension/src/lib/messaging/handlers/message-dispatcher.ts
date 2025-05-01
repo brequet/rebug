@@ -1,5 +1,5 @@
 import { logger } from '../../utils/logger';
-import { AppMessage, AppMessageType, MessageContext, createErrorResponse } from '../types';
+import { AppMessage, AppMessageType, MessageContext, MessageResponse, createErrorResponse } from '../types';
 import { MessageHandler } from './handler.types';
 
 const log = logger.getLogger('MessageDispatcher');
@@ -49,7 +49,16 @@ export class MessageDispatcher {
 
         // 3. Execute Handler (Async)
         Promise.resolve()
-          .then(() => handler(message))
+          .then(() => {
+            if (handler.length === 1) {
+              // Call handler with only the message
+              return (handler as (msg: AppMessage) => Promise<MessageResponse<any>> | MessageResponse<any>)(message);
+            } else {
+              // Call handler with message and sender
+              return (handler as (msg: AppMessage, snd: chrome.runtime.MessageSender) => Promise<MessageResponse<any>> | MessageResponse<any>)(message, sender);
+            }
+
+          })
           .then((response) => {
             log.debug(`Sending response for ${message.type}:`, response);
             sendResponse(response);
@@ -61,7 +70,6 @@ export class MessageDispatcher {
           });
 
         // 4. Indicate Asynchronous Response
-        // Crucial: Tells Chrome to keep the message channel open for the async response
         return true;
       }
     );

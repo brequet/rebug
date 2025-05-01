@@ -17,11 +17,14 @@ export async function handleRecordingInProgress(ctx: ContentScriptContext): Prom
         return;
     }
 
-    // TODO identify if current tab is tab that started the recording
-    // const currentTabId = await getCurrentTabId();
-    // if (currentTabId !== messageResponse.data.tabId) {
-    //     return;
-    // }
+    if (messageResponse.data.isCurrentTab === undefined) {
+        log.error('Could not get current tab for recording in progress check');
+        return;
+    }
+
+    if (!messageResponse.data.isCurrentTab) {
+        return;
+    }
 
     log.info("Recording in progress, showing controls overlay...", messageResponse.data);
 

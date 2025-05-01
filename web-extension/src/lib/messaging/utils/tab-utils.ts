@@ -14,7 +14,7 @@ const RESTRICTED_SCHEMES = [
 
 export async function isCaptureAllowed(): Promise<boolean> {
   try {
-    const tab = await getCurrentTab();
+    const tab = await getActiveTab();
     if (tab?.url == undefined) return false;
 
     const tabUrl = tab.url;
@@ -27,7 +27,7 @@ export async function isCaptureAllowed(): Promise<boolean> {
   }
 }
 
-export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
+export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
   try {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     if (tabs.length === 0) {
@@ -41,9 +41,9 @@ export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
   }
 }
 
-export async function getCurrentTabId(): Promise<number | undefined> {
+export async function getActiveTabId(): Promise<number | undefined> {
   try {
-    const tab = await getCurrentTab();
+    const tab = await getActiveTab();
     if (tab?.id === undefined) {
       log.warn('Could not determine active tab ID.');
       return undefined;
@@ -51,6 +51,20 @@ export async function getCurrentTabId(): Promise<number | undefined> {
     return tab.id;
   } catch (error) {
     log.error('Error querying for active tab:', error);
+    return undefined;
+  }
+}
+
+export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
+  try {
+    const tabs = await browser.tabs.query({ currentWindow: true });
+    if (tabs.length === 0) {
+      log.warn('No current tab found.');
+      return undefined;
+    }
+    return tabs[0];
+  } catch (error) {
+    log.error('Error querying for current tab:', error);
     return undefined;
   }
 }

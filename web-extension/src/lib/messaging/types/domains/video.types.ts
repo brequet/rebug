@@ -4,7 +4,7 @@ import { Message } from '../base';
 export const VIDEO_CAPTURE_MIME_TYPE = 'video/webm';
 
 export type RecordingState =
-    | { inProgress: true; startDate: string; tabId: number }
+    | { inProgress: true; startDate: string; tabId: number; isCurrentTab?: boolean }
     | { inProgress: false; }
 
 export enum VideoAction {

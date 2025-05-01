@@ -1,4 +1,4 @@
-import { getCurrentTabId } from '$lib/messaging/utils/tab-utils';
+import { getActiveTabId } from '$lib/messaging/utils/tab-utils';
 import { logger } from '$lib/utils/logger';
 import { AppMessage, MessageContext, MessageResponse, createErrorResponse, isSuccessResponse } from '../types';
 
@@ -23,7 +23,7 @@ export class MessageBus {
                     break;
 
                 case MessageContext.CONTENT_SCRIPT:
-                    const tabId = await getCurrentTabId();
+                    const tabId = await getActiveTabId();
                     if (tabId === undefined) {
                         throw new Error('Cannot send message to content script: No active tab found.');
                     }

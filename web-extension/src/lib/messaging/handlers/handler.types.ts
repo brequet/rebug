@@ -1,7 +1,16 @@
-
+// src/lib/messaging/handlers/handler.types.ts
 import { AppMessage, MessageResponse } from '../types';
 
-// Generic handler function type, constrained by the message type it handles
-export type MessageHandler<T extends AppMessage = AppMessage> = (
+type HandlerWithoutSender<T extends AppMessage> = (
   message: T
 ) => Promise<MessageResponse<any>> | MessageResponse<any>;
+
+type HandlerWithSender<T extends AppMessage> = (
+  message: T,
+  sender: chrome.runtime.MessageSender
+) => Promise<MessageResponse<any>> | MessageResponse<any>;
+
+export type MessageHandler<T extends AppMessage = AppMessage> =
+  | HandlerWithoutSender<T>
+  | HandlerWithSender<T>;
+

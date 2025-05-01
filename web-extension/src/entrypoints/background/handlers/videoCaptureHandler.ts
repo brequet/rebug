@@ -48,7 +48,10 @@ export async function handleRecordingStoppedDataReady(message: RecordingStoppedD
     }
 }
 
-export async function handleRecordingInProgress(message: GetRecordingInProgressMessage): Promise<MessageResponse<RecordingState>> {
+export async function handleRecordingInProgress(
+    message: GetRecordingInProgressMessage,
+    sender: chrome.runtime.MessageSender
+): Promise<MessageResponse<RecordingState>> {
     log.info(`Handling ${message.type}`);
 
     if (!(await hasOffscreenDocument(OFFSCREEN_DOCUMENT_PATH))) {
@@ -62,7 +65,14 @@ export async function handleRecordingInProgress(message: GetRecordingInProgressM
         return createErrorResponse(response.error || 'Failed to get recording in progress status');
     }
 
-    return response;
+    if (!response.data?.inProgress) {
+        return createSuccessResponse({ inProgress: false })
+    }
+
+    return createSuccessResponse({
+        ...response.data,
+        isCurrentTab: sender.tab?.id === response.data.tabId
+    })
 }
 
 async function hasOffscreenDocument(path: PublicPath): Promise<boolean> {

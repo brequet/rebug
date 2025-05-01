@@ -2,7 +2,7 @@ import { logger } from "$lib/utils/logger";
 import * as Factories from "../../../lib/messaging/factories";
 import { BaseMessagingService } from "../../../lib/messaging/handlers/base-messaging.service";
 import { createErrorResponse, isErrorResponse, MessageContext, MessageResponse } from "../../../lib/messaging/types";
-import { getCurrentTabId } from "../../../lib/messaging/utils/tab-utils";
+import { getActiveTabId } from "../../../lib/messaging/utils/tab-utils";
 
 const log = logger.getLogger('PopupMessagingService');
 
@@ -32,7 +32,7 @@ export class PopupMessagingService extends BaseMessagingService<MessageContext.P
 
     async requestSetupVideoCapture(): Promise<MessageResponse<unknown>> {
         log.debug('Requesting video capture setup...');
-        const tabId = await getCurrentTabId();
+        const tabId = await getActiveTabId();
         if (tabId === undefined) {
             log.error('Cannot start video recording: No active tab ID found.');
             // TODO: Show error to user
