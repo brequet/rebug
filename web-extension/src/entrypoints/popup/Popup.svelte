@@ -6,11 +6,28 @@
 	import Video from '@lucide/svelte/icons/video';
 	import { popupMessagingService } from './services/popup-messaging.service';
 
-	let isCaptureDisabled = $state(false);
+	type PopupActionState = { disabled: false } | { disabled: true; reason: string };
 
-	onMount(async () => {
-		isCaptureDisabled = !(await isCaptureAllowed());
+	let popupActionState: PopupActionState = $state({ disabled: false });
+
+	onMount(() => {
+		computePopupActionState();
 	});
+
+	function computePopupActionState() {
+		isCaptureAllowed()
+			.then((isAllowed) => {
+				if (isAllowed) {
+					popupActionState = { disabled: false };
+				} else {
+					popupActionState = { disabled: true, reason: 'Capture not allowed' };
+				}
+			})
+			.catch((error) => {
+				console.error('Error checking capture permission:', error);
+				popupActionState = { disabled: true, reason: 'Error checking permission' };
+			});
+	}
 
 	async function handleFullScreenshot() {
 		popupMessagingService
@@ -58,8 +75,8 @@
 <main class="w-100 flex h-40 flex-col gap-2 bg-white p-2">
 	<h1 class="pb-2 text-center text-4xl font-bold">Rebug</h1>
 
-	{#if isCaptureDisabled}
-		<p class="text-center text-sm text-gray-500">To use Rebug, please begin browsing websites</p>
+	{#if popupActionState.disabled}
+		<p class="text-center text-sm text-gray-500">{popupActionState.reason}</p>
 	{:else if isResultModalOpened()}
 		<p class="text-center text-sm text-gray-500">A capture is already in progress</p>
 	{:else}

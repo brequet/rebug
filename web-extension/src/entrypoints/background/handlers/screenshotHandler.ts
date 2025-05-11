@@ -42,6 +42,7 @@ export async function handleCaptureRegion(
     }
 }
 
+// TODO: screenshot seems to be blurry
 async function cropImage(dataUrl: string, region: SelectionArea): Promise<string> {
     log.debug('Cropping image for region:', region);
     const response = await fetch(dataUrl);
@@ -50,29 +51,24 @@ async function cropImage(dataUrl: string, region: SelectionArea): Promise<string
     const imageBitmap = await createImageBitmap(blob);
 
     // Create offscreen canvas - adjust for device pixel ratio
-    const canvas = new OffscreenCanvas(region.width, region.height);
+    const scaledWidth = region.width * region.devicePixelRatio;
+    const scaledHeight = region.height * region.devicePixelRatio;
+    const canvas = new OffscreenCanvas(scaledWidth, scaledHeight);
     const ctx = canvas.getContext('2d');
     if (!ctx) {
         throw new Error('Failed to get 2D context');
     }
 
-    const scaledRegion = {
-        left: region.x * region.devicePixelRatio,
-        top: region.y * region.devicePixelRatio,
-        width: region.width * region.devicePixelRatio,
-        height: region.height * region.devicePixelRatio
-    };
-
     ctx.drawImage(
         imageBitmap,
-        scaledRegion.left,
-        scaledRegion.top,
-        scaledRegion.width,
-        scaledRegion.height,
+        region.x * region.devicePixelRatio,
+        region.y * region.devicePixelRatio,
+        scaledWidth,
+        scaledHeight,
         0,
         0,
-        region.width,
-        region.height
+        scaledWidth,
+        scaledHeight
     );
 
     const croppedBlob = await canvas.convertToBlob({ type: SCREENSHOT_MIME_TYPE });
