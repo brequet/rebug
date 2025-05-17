@@ -1,0 +1,10 @@
+type: workspace
+model: workspace
+id: wk_uEV9dkQtcy
+createdAt: 2025-05-17T09:53:25.020287200
+updatedAt: 2025-05-17T12:12:29
+name: Rebug
+description: ''
+settingValidateCertificates: true
+settingFollowRedirects: true
+settingRequestTimeout: 0

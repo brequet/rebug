@@ -1,0 +1,27 @@
+type: http_request
+model: http_request
+id: rq_cSn9V4JJp4
+createdAt: 2025-05-17T10:06:15.666764
+updatedAt: 2025-05-17T10:06:35.795201900
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_BnL4gQN527
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "email": "test@example.com",
+      "password": "password123"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: null
+method: POST
+name: ''
+sortPriority: 0.0
+url: http://127.0.0.1:3000/api/auth/login
+urlParameters: []

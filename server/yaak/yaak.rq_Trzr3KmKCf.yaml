@@ -1,0 +1,29 @@
+type: http_request
+model: http_request
+id: rq_Trzr3KmKCf
+createdAt: 2025-05-17T10:05:42.819660200
+updatedAt: 2025-05-17T10:05:53.528122300
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_kw6XVpV4FT
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "email": "test@example.com",
+      "password": "password123",
+      "first_name": "Test",
+      "last_name": "User"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: null
+method: POST
+name: ''
+sortPriority: 0.0
+url: http://127.0.0.1:3000/api/users
+urlParameters: []
