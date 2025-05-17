@@ -1,0 +1,1309 @@
+Folder Structure
+--------------------------------------------------
+/
+    lib.rs
+    main.rs
+api/
+    auth.rs
+    error.rs
+    mod.rs
+    state.rs
+    models/
+        mod.rs
+        request/
+            auth_models.rs
+            mod.rs
+            user_models.rs
+        response/
+            auth_models.rs
+            mod.rs
+            user_models.rs
+    routers/
+        auth.rs
+        health.rs
+        mod.rs
+        user_routes.rs
+application/
+    mod.rs
+    services/
+        auth_service.rs
+        health_service.rs
+        mod.rs
+        user_service.rs
+config/
+    app_config.rs
+    mod.rs
+domain/
+    mod.rs
+    models/
+        auth.rs
+        mod.rs
+        user.rs
+    repositories/
+        mod.rs
+        user_repository.rs
+infrastructure/
+    mod.rs
+    database/
+        mod.rs
+        sqlite.rs
+    repositories/
+        mod.rs
+        sqlite_user_repository.rs
+    security/
+        mod.rs
+        password_hasher.rs
+
+
+File Contents
+--------------------------------------------------
+
+
+./src/lib.rs
+File type: .rs
+pub mod api;
+pub mod application;
+pub mod config;
+pub mod domain;
+pub mod infrastructure;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/main.rs
+File type: .rs
+use std::{env, net::SocketAddr, sync::Arc};
+
+use axum::Router;
+use dotenv::dotenv;
+use rebug::{
+    api::{
+        routers::{auth::auth_routes, health::health_routes, user_routes::user_routes},
+        state::AppState,
+    },
+    application::services::{
+        auth_service::AuthService, health_service::HealthService, user_service::UserService,
+    },
+    infrastructure::{
+        database::sqlite::Sqlite, repositories::sqlite_user_repository::SqliteUserRepository,
+    },
+};
+use tracing::info;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
+    tracing_subscriber::fmt::init();
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
+    let sqlite_connection = Sqlite::new(database_url.clone())
+        .await
+        .expect("Failed to create SQLite connection pool");
+
+    info!("Running database migrations...");
+    sqlx::migrate!()
+        .run(&sqlite_connection.get_pool())
+        .await
+        .expect("Failed to run database migrations");
+    info!("Database migrations completed.");
+
+    let health_service = Arc::new(HealthService);
+
+    let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
+    let user_service = Arc::new(UserService::new(user_repository));
+
+    let auth_service = Arc::new(AuthService::new(user_service.clone()));
+
+    let app_state = AppState::new(auth_service, health_service, user_service);
+
+    let router = Router::new()
+        .nest("/api", auth_routes())
+        .nest("/api", health_routes())
+        .nest("/api", user_routes())
+        .with_state(app_state);
+
+    let port: u16 = env::var("PORT")
+        .unwrap_or_else(|_| "3000".to_string())
+        .parse::<u16>()?;
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+
+    info!("Starting server on {}", addr);
+
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, router).await?;
+
+    Ok(())
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\auth.rs
+File type: .rs
+use axum::{
+    RequestPartsExt,
+    extract::FromRequestParts,
+    http::{StatusCode, request::Parts},
+    response::{IntoResponse, Json, Response},
+};
+use axum_extra::{
+    TypedHeader,
+    headers::{Authorization, authorization::Bearer},
+};
+use jsonwebtoken::{Validation, decode};
+use serde_json::json;
+
+use crate::{config::app_config::JWT_KEYS, domain::models::auth::TokenClaims};
+
+#[derive(Debug)]
+pub enum AuthError {
+    MissingToken,
+    InvalidToken(String),
+}
+
+impl IntoResponse for AuthError {
+    fn into_response(self) -> Response {
+        let (status, error_message) = match self {
+            AuthError::MissingToken => (
+                StatusCode::UNAUTHORIZED,
+                "Missing authentication token".to_string(),
+            ),
+            AuthError::InvalidToken(reason) => (
+                StatusCode::UNAUTHORIZED,
+                format!("Invalid token: {}", reason),
+            ),
+        };
+        let body = Json(json!({ "error": error_message }));
+        (status, body).into_response()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AuthenticatedUser {
+    pub claims: TokenClaims,
+}
+
+impl<S> FromRequestParts<S> for AuthenticatedUser
+where
+    S: Send + Sync,
+{
+    type Rejection = AuthError;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        let TypedHeader(Authorization(bearer)) = parts
+            .extract::<TypedHeader<Authorization<Bearer>>>()
+            .await
+            .map_err(|_| AuthError::MissingToken)?;
+
+        let token_data =
+            decode::<TokenClaims>(bearer.token(), &JWT_KEYS.decoding, &Validation::default())
+                .map_err(|e| AuthError::InvalidToken(e.to_string()))?;
+
+        Ok(AuthenticatedUser {
+            claims: token_data.claims,
+        })
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\error.rs
+File type: .rs
+use crate::application::services::{
+    auth_service::AuthServiceError, user_service::UserServiceError,
+};
+use axum::{
+    Json,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
+use serde_json::json;
+
+#[derive(Debug, thiserror::Error)]
+pub enum ApiError {
+    #[error("Validation error: {0}")]
+    Validation(String),
+    #[error("Resource not found: {0}")]
+    NotFound(String),
+    #[error("Authentication failed")]
+    Unauthorized,
+    #[error("Action forbidden")]
+    Forbidden,
+    #[error("Conflict: {0}")]
+    Conflict(String),
+    #[error("Internal server error: {0}")]
+    InternalServerError(String),
+}
+
+impl From<AuthServiceError> for ApiError {
+    fn from(err: AuthServiceError) -> Self {
+        match err {
+            AuthServiceError::InvalidCredentials => ApiError::Unauthorized,
+            AuthServiceError::PasswordHashingError(msg)
+            | AuthServiceError::TokenCreationError(msg)
+            | AuthServiceError::InternalError(msg) => {
+                tracing::error!("Internal service error: {}", msg);
+                ApiError::InternalServerError("An unexpected error occurred".to_string())
+            }
+        }
+    }
+}
+
+impl From<UserServiceError> for ApiError {
+    fn from(err: UserServiceError) -> Self {
+        match err {
+            UserServiceError::ValidationError(msg) => ApiError::Validation(msg),
+            UserServiceError::UserAlreadyExists => {
+                ApiError::Conflict("User already exists".to_string())
+            }
+            UserServiceError::UserNotFound => ApiError::NotFound("User not found".to_string()),
+            UserServiceError::PasswordHashingError(msg) | UserServiceError::InternalError(msg) => {
+                tracing::error!("Internal service error: {}", msg);
+                ApiError::InternalServerError("An unexpected error occurred".to_string())
+            }
+        }
+    }
+}
+
+impl ApiError {
+    fn get_status_and_message(&self) -> (StatusCode, String) {
+        match self {
+            ApiError::Validation(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
+            ApiError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
+            ApiError::Unauthorized => (
+                StatusCode::UNAUTHORIZED,
+                "Authentication failed".to_string(),
+            ),
+            ApiError::Forbidden => (StatusCode::FORBIDDEN, "Action forbidden".to_string()),
+            ApiError::Conflict(msg) => (StatusCode::CONFLICT, msg.clone()),
+            ApiError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.clone()),
+        }
+    }
+}
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        let (status, error_message) = self.get_status_and_message();
+        let body = Json(json!({
+            "error": error_message,
+        }));
+        (status, body).into_response()
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\mod.rs
+File type: .rs
+pub mod auth;
+pub mod error;
+pub mod models;
+pub mod routers;
+pub mod state;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\state.rs
+File type: .rs
+use std::sync::Arc;
+
+use crate::application::services::{
+    auth_service::AuthService, health_service::HealthService, user_service::UserService,
+};
+
+#[derive(Clone)]
+pub struct AppState {
+    pub auth_service: Arc<AuthService>,
+    pub health_service: Arc<HealthService>,
+    pub user_service: Arc<UserService>,
+}
+
+impl AppState {
+    pub fn new(
+        auth_service: Arc<AuthService>,
+        health_service: Arc<HealthService>,
+        user_service: Arc<UserService>,
+    ) -> Self {
+        AppState {
+            auth_service,
+            health_service,
+            user_service,
+        }
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\mod.rs
+File type: .rs
+pub mod request;
+pub mod response;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\request\auth_models.rs
+File type: .rs
+use serde::Deserialize;
+use validator::Validate;
+
+#[derive(Deserialize, Validate)]
+pub struct LoginRequest {
+    #[validate(email)]
+    pub email: String,
+    pub password: String,
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\request\mod.rs
+File type: .rs
+pub mod auth_models;
+pub mod user_models;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\request\user_models.rs
+File type: .rs
+use serde::Deserialize;
+use validator::Validate;
+
+#[derive(Deserialize, Validate)]
+pub struct CreateUserRequest {
+    #[validate(email)]
+    pub email: String,
+    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
+    pub password: String,
+    #[validate(length(min = 1))]
+    pub first_name: Option<String>,
+    #[validate(length(min = 1))]
+    pub last_name: Option<String>,
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\response\auth_models.rs
+File type: .rs
+use serde::Serialize;
+
+use super::user_models::UserResponse;
+
+#[derive(Serialize)]
+pub struct LoginResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub user: UserResponse,
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\response\mod.rs
+File type: .rs
+pub mod auth_models;
+pub mod user_models;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\response\user_models.rs
+File type: .rs
+use serde::Serialize;
+use uuid::Uuid;
+
+use crate::domain::models::user::{User, UserRole};
+
+#[derive(Serialize)]
+pub struct UserResponse {
+    pub id: Uuid,
+    pub email: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub role: UserRole,
+}
+
+impl From<User> for UserResponse {
+    fn from(user: User) -> Self {
+        Self {
+            id: user.id,
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            role: user.role,
+        }
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\routers\auth.rs
+File type: .rs
+use axum::{Json, Router, extract::State, routing::post};
+use validator::Validate;
+
+use crate::api::{
+    error::ApiError, models::request::auth_models::LoginRequest,
+    models::response::auth_models::LoginResponse, state::AppState,
+};
+
+pub fn auth_routes() -> Router<AppState> {
+    Router::new().route("/auth/login", post(login_handler))
+}
+
+async fn login_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<LoginRequest>,
+) -> Result<Json<LoginResponse>, ApiError> {
+    payload
+        .validate()
+        .map_err(|e| ApiError::Validation(e.to_string()))?;
+
+    let (user, token) = state
+        .auth_service
+        .login_user(&payload.email, &payload.password)
+        .await?;
+
+    let response = LoginResponse {
+        access_token: token,
+        token_type: "Bearer".to_string(),
+        user: user.into(),
+    };
+
+    Ok(Json(response))
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\routers\health.rs
+File type: .rs
+use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
+
+use crate::api::state::AppState;
+
+pub fn health_routes() -> Router<AppState> {
+    Router::new().route("/health", get(health_check_handler))
+}
+
+async fn health_check_handler(State(state): State<AppState>) -> impl IntoResponse {
+    let response = state.health_service.health_check();
+    Json(response)
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\routers\mod.rs
+File type: .rs
+pub mod auth;
+pub mod health;
+pub mod user_routes;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\routers\user_routes.rs
+File type: .rs
+use axum::{
+    Json, Router,
+    extract::State,
+    http::StatusCode,
+    routing::{get, post},
+};
+use validator::Validate;
+
+use crate::api::{
+    auth::AuthenticatedUser,
+    error::ApiError,
+    models::{request::user_models::CreateUserRequest, response::user_models::UserResponse},
+    state::AppState,
+};
+
+pub fn user_routes() -> Router<AppState> {
+    Router::new()
+        .route("/users", post(create_user_handler))
+        .route("/users/me", get(get_current_user_handler))
+}
+
+async fn create_user_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<CreateUserRequest>,
+) -> Result<(StatusCode, Json<UserResponse>), ApiError> {
+    payload
+        .validate()
+        .map_err(|e| ApiError::Validation(e.to_string()))?;
+
+    let user = state
+        .user_service
+        .create_user(
+            &payload.email,
+            &payload.password,
+            payload.first_name.as_deref(),
+            payload.last_name.as_deref(),
+        )
+        .await?;
+
+    Ok((StatusCode::CREATED, Json(user.into())))
+}
+
+async fn get_current_user_handler(
+    State(state): State<AppState>,
+    authenticated_user: AuthenticatedUser,
+) -> Result<Json<UserResponse>, ApiError> {
+    let user_id = authenticated_user.claims.sub;
+
+    let user = state.user_service.get_user_by_id(user_id).await?;
+
+    Ok(Json(user.into()))
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/application\mod.rs
+File type: .rs
+pub mod services;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/application\services\auth_service.rs
+File type: .rs
+use std::sync::Arc;
+
+use chrono::{Duration, Utc};
+use jsonwebtoken::{Header, encode};
+use uuid::Uuid;
+
+use crate::{
+    config::app_config::{JWT_CONFIG, JWT_KEYS},
+    domain::models::{
+        auth::TokenClaims,
+        user::{User, UserRole},
+    },
+    infrastructure::security::password_hasher::{PasswordError, verify_password},
+};
+
+use super::user_service::UserService;
+
+#[derive(Debug, thiserror::Error)]
+pub enum AuthServiceError {
+    #[error("Failed to create JWT: {0}")]
+    TokenCreationError(String),
+    #[error("Invalid credentials")]
+    InvalidCredentials,
+    #[error("Password hashing failed: {0}")]
+    PasswordHashingError(String),
+    #[error("Internal server error: {0}")]
+    InternalError(String),
+}
+
+impl From<PasswordError> for AuthServiceError {
+    fn from(err: PasswordError) -> Self {
+        match err {
+            PasswordError::HashingError(msg) | PasswordError::VerificationError(msg) => {
+                AuthServiceError::PasswordHashingError(msg)
+            }
+            PasswordError::InvalidPassword => AuthServiceError::InvalidCredentials,
+        }
+    }
+}
+
+pub type AuthServiceResult<T> = Result<T, AuthServiceError>;
+
+#[derive(Clone)]
+pub struct AuthService {
+    user_service: Arc<UserService>,
+}
+
+impl AuthService {
+    pub fn new(user_service: Arc<UserService>) -> Self {
+        Self { user_service }
+    }
+
+    pub async fn login_user(
+        &self,
+        email: &str,
+        password: &str,
+    ) -> AuthServiceResult<(User, String)> {
+        let user = self
+            .user_service
+            .get_user_by_email(email)
+            .await
+            .map_err(|_| AuthServiceError::InvalidCredentials)?;
+
+        if verify_password(password, &user.password_hash)? {
+            let token = self.create_jwt(user.id, &user.role)?;
+            Ok((user, token))
+        } else {
+            Err(AuthServiceError::InvalidCredentials)
+        }
+    }
+
+    fn create_jwt(&self, user_id: Uuid, role: &UserRole) -> Result<String, AuthServiceError> {
+        let now = Utc::now();
+        let iat = now.timestamp() as usize;
+        let exp = (now + Duration::seconds(JWT_CONFIG.expiration_seconds)).timestamp() as usize;
+
+        let claims = TokenClaims {
+            sub: user_id,
+            role: role.to_string(),
+            exp,
+            iat,
+        };
+
+        encode(&Header::default(), &claims, &JWT_KEYS.encoding).map_err(|e| {
+            AuthServiceError::TokenCreationError(format!("Failed to create JWT: {}", e))
+        })
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/application\services\health_service.rs
+File type: .rs
+#[derive(Clone)]
+pub struct HealthService;
+
+impl HealthService {
+    pub fn new() -> Self {
+        HealthService
+    }
+
+    pub fn health_check(&self) -> serde_json::Value {
+        const HEALTH_CHECK_RESPONSE: &str = "Everything is OK";
+
+        let json_response = serde_json::json!({
+            "status": "success",
+            "message": HEALTH_CHECK_RESPONSE,
+        });
+
+        json_response
+    }
+}
+
+impl Default for HealthService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/application\services\mod.rs
+File type: .rs
+pub mod auth_service;
+pub mod health_service;
+pub mod user_service;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/application\services\user_service.rs
+File type: .rs
+use std::sync::Arc;
+
+use uuid::Uuid;
+
+use crate::{
+    domain::{
+        models::user::{User, UserRole},
+        repositories::user_repository::{RepositoryError, UserRepository},
+    },
+    infrastructure::security::password_hasher::{PasswordError, hash_password},
+};
+
+#[derive(Debug, thiserror::Error)]
+pub enum UserServiceError {
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+    #[error("User already exists")]
+    UserAlreadyExists,
+    #[error("User not found")]
+    UserNotFound,
+    #[error("Password hashing failed: {0}")]
+    PasswordHashingError(String),
+    #[error("Internal server error: {0}")]
+    InternalError(String),
+}
+
+impl From<RepositoryError> for UserServiceError {
+    fn from(err: RepositoryError) -> Self {
+        match err {
+            RepositoryError::NotFound => UserServiceError::UserNotFound,
+            RepositoryError::AlreadyExists => UserServiceError::UserAlreadyExists,
+            RepositoryError::DatabaseError(msg) => UserServiceError::InternalError(msg),
+        }
+    }
+}
+
+impl From<PasswordError> for UserServiceError {
+    fn from(err: PasswordError) -> Self {
+        match err {
+            PasswordError::HashingError(msg) | PasswordError::VerificationError(msg) => {
+                UserServiceError::PasswordHashingError(msg)
+            }
+            _ => UserServiceError::InternalError("Unexpected error".to_string()),
+        }
+    }
+}
+
+pub type UserServiceResult<T> = Result<T, UserServiceError>;
+
+#[derive(Clone)]
+pub struct UserService {
+    user_repository: Arc<dyn UserRepository>,
+}
+
+impl UserService {
+    pub fn new(user_repository: Arc<dyn UserRepository>) -> Self {
+        Self { user_repository }
+    }
+
+    pub async fn create_user(
+        &self,
+        email: &str,
+        password: &str,
+        first_name: Option<&str>,
+        last_name: Option<&str>,
+    ) -> UserServiceResult<User> {
+        if email.is_empty() || !email.contains('@') {
+            return Err(UserServiceError::ValidationError(
+                "Invalid email format".to_string(),
+            ));
+        }
+        if password.len() < 8 {
+            return Err(UserServiceError::ValidationError(
+                "Password must be at least 8 characters long".to_string(),
+            ));
+        }
+
+        let password_hash = hash_password(password)?;
+
+        self.user_repository
+            .create_user(email, &password_hash, first_name, last_name, UserRole::User)
+            .await
+            .map_err(Into::into)
+    }
+
+    pub async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
+        self.user_repository
+            .find_by_id(user_id)
+            .await?
+            .ok_or(UserServiceError::UserNotFound)
+    }
+
+    pub async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
+        self.user_repository
+            .find_by_email(email)
+            .await?
+            .ok_or(UserServiceError::UserNotFound)
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/config\app_config.rs
+File type: .rs
+use once_cell::sync::Lazy;
+use std::env;
+
+pub struct JwtConfig {
+    pub secret: String,
+    pub expiration_seconds: i64,
+}
+
+impl JwtConfig {
+    fn init() -> Self {
+        let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let expiration_seconds = env::var("JWT_EXPIRATION_SECONDS")
+            .expect("JWT_EXPIRATION_SECONDS must be set")
+            .parse::<i64>()
+            .expect("JWT_EXPIRATION_SECONDS must be a number");
+        Self {
+            secret,
+            expiration_seconds,
+        }
+    }
+}
+
+pub static JWT_CONFIG: Lazy<JwtConfig> = Lazy::new(JwtConfig::init);
+
+use jsonwebtoken::{DecodingKey, EncodingKey};
+
+pub struct Keys {
+    pub encoding: EncodingKey,
+    pub decoding: DecodingKey,
+}
+
+impl Keys {
+    fn new(secret: &[u8]) -> Self {
+        Self {
+            encoding: EncodingKey::from_secret(secret),
+            decoding: DecodingKey::from_secret(secret),
+        }
+    }
+}
+
+pub static JWT_KEYS: Lazy<Keys> = Lazy::new(|| Keys::new(JWT_CONFIG.secret.as_bytes()));
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/config\mod.rs
+File type: .rs
+pub mod app_config;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\mod.rs
+File type: .rs
+pub mod models;
+pub mod repositories;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\models\auth.rs
+File type: .rs
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TokenClaims {
+    pub sub: Uuid,    // Subject (user_id)
+    pub role: String, // User role (can be UserRole enum if you stringify it)
+    pub exp: usize,   // Expiration timestamp (seconds since Unix epoch)
+    pub iat: usize,   // Issued at timestamp
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\models\mod.rs
+File type: .rs
+pub mod auth;
+pub mod user;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\models\user.rs
+File type: .rs
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
+use std::fmt;
+use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "TEXT", rename_all = "PascalCase")]
+pub enum UserRole {
+    Admin,
+    User,
+}
+
+impl fmt::Display for UserRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            UserRole::Admin => write!(f, "Admin"),
+            UserRole::User => write!(f, "User"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct User {
+    pub id: Uuid,
+    pub email: String,
+    pub password_hash: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub role: UserRole,
+    #[sqlx(default)]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    #[sqlx(default)]
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl User {}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\repositories\mod.rs
+File type: .rs
+pub mod user_repository;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\repositories\user_repository.rs
+File type: .rs
+use uuid::Uuid;
+
+use crate::domain::models::user::{User, UserRole};
+
+#[derive(Debug, thiserror::Error)]
+pub enum RepositoryError {
+    #[error("User not found")]
+    NotFound,
+    #[error("User already exists")]
+    AlreadyExists,
+    #[error("Database error: {0}")]
+    DatabaseError(String),
+}
+
+pub type RepositoryResult<T> = Result<T, RepositoryError>;
+
+#[async_trait::async_trait]
+pub trait UserRepository: Send + Sync {
+    async fn create_user(
+        &self,
+        email: &str,
+        password_hash: &str,
+        first_name: Option<&str>,
+        last_name: Option<&str>,
+        role: UserRole,
+    ) -> RepositoryResult<User>;
+
+    async fn find_by_email(&self, email: &str) -> RepositoryResult<Option<User>>;
+    async fn find_by_id(&self, id: Uuid) -> RepositoryResult<Option<User>>;
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\mod.rs
+File type: .rs
+pub mod database;
+pub mod repositories;
+pub mod security;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\database\mod.rs
+File type: .rs
+pub mod sqlite;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\database\sqlite.rs
+File type: .rs
+use sqlx::SqlitePool;
+
+#[derive(Clone)]
+pub struct Sqlite {
+    pool: SqlitePool,
+}
+
+impl Sqlite {
+    pub async fn new(database_url: String) -> Result<Self, Box<dyn std::error::Error>> {
+        let db_pool = SqlitePool::connect(&database_url)
+            .await
+            .expect("Failed to create SQLite connection pool");
+
+        Ok(Self { pool: db_pool })
+    }
+
+    pub fn get_pool(&self) -> SqlitePool {
+        self.pool.clone()
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\repositories\mod.rs
+File type: .rs
+pub mod sqlite_user_repository;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\repositories\sqlite_user_repository.rs
+File type: .rs
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use sqlx::{Error as SqlxError, SqlitePool};
+use uuid::Uuid;
+
+use crate::domain::{
+    models::user::{User, UserRole},
+    repositories::user_repository::{RepositoryError, RepositoryResult, UserRepository},
+};
+
+#[derive(Clone)]
+pub struct SqliteUserRepository {
+    pool: SqlitePool,
+}
+
+impl SqliteUserRepository {
+    pub fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
+
+fn map_sqlx_error(e: SqlxError) -> RepositoryError {
+    match e {
+        SqlxError::RowNotFound => RepositoryError::NotFound,
+        SqlxError::Database(db_err) => {
+            if db_err.is_unique_violation() {
+                RepositoryError::AlreadyExists
+            } else {
+                RepositoryError::DatabaseError(db_err.to_string())
+            }
+        }
+        _ => RepositoryError::DatabaseError(e.to_string()),
+    }
+}
+
+#[async_trait]
+impl UserRepository for SqliteUserRepository {
+    async fn create_user(
+        &self,
+        email: &str,
+        password_hash: &str,
+        first_name: Option<&str>,
+        last_name: Option<&str>,
+        role: UserRole,
+    ) -> RepositoryResult<User> {
+        let user_id = Uuid::new_v4();
+
+        let result = sqlx::query_as!(
+            User,
+            r#"
+            INSERT INTO users (id, email, password_hash, first_name, last_name, role)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING
+                id as "id: uuid::Uuid",
+                email,
+                password_hash,
+                first_name,
+                last_name,
+                role as "role: UserRole",
+                created_at as "created_at: DateTime<Utc>",
+                updated_at as "updated_at: DateTime<Utc>"
+            "#,
+            user_id,
+            email,
+            password_hash,
+            first_name,
+            last_name,
+            role
+        )
+        .fetch_one(&self.pool)
+        .await;
+
+        match result {
+            Ok(user) => Ok(user),
+            Err(e) => Err(map_sqlx_error(e)),
+        }
+    }
+
+    async fn find_by_email(&self, email: &str) -> RepositoryResult<Option<User>> {
+        sqlx::query_as!(
+            User,
+            r#"
+            SELECT
+                id as "id: uuid::Uuid",
+                email,
+                password_hash,
+                first_name,
+                last_name,
+                role as "role: UserRole",
+                created_at as "created_at: DateTime<Utc>",
+                updated_at as "updated_at: DateTime<Utc>"
+            FROM users
+            WHERE email = $1
+            "#,
+            email
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx_error)
+    }
+
+    async fn find_by_id(&self, id: Uuid) -> RepositoryResult<Option<User>> {
+        sqlx::query_as!(
+            User,
+            r#"
+            SELECT
+                id as "id: uuid::Uuid",
+                email,
+                password_hash,
+                first_name,
+                last_name,
+                role as "role: UserRole",
+                created_at as "created_at: DateTime<Utc>",
+                updated_at as "updated_at: DateTime<Utc>"
+            FROM users
+            WHERE id = $1 
+            "#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx_error)
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\security\mod.rs
+File type: .rs
+pub mod password_hasher;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\security\password_hasher.rs
+File type: .rs
+use bcrypt::{DEFAULT_COST, hash, verify};
+
+#[derive(Debug, thiserror::Error)]
+pub enum PasswordError {
+    #[error("Failed to hash password: {0}")]
+    HashingError(String),
+    #[error("Failed to verify password: {0}")]
+    VerificationError(String),
+    #[error("Invalid password")]
+    InvalidPassword,
+}
+
+pub type PasswordResult<T> = Result<T, PasswordError>;
+
+pub fn hash_password(password: &str) -> PasswordResult<String> {
+    hash(password, DEFAULT_COST).map_err(|e| PasswordError::HashingError(e.to_string()))
+}
+
+pub fn verify_password(password: &str, hashed_password: &str) -> PasswordResult<bool> {
+    verify(password, hashed_password).map_err(|e| PasswordError::VerificationError(e.to_string()))
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------

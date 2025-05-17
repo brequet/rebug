@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_cSn9V4JJp4
 createdAt: 2025-05-17T10:06:15.666764
-updatedAt: 2025-05-17T10:06:35.795201900
+updatedAt: 2025-05-17T16:25:39.444302700
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_BnL4gQN527
 authentication: {}
@@ -21,7 +21,7 @@ headers:
   value: application/json
   id: null
 method: POST
-name: ''
+name: Login
 sortPriority: 0.0
 url: http://127.0.0.1:3000/api/auth/login
 urlParameters: []

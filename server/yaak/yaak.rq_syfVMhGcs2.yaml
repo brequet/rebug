@@ -1,0 +1,51 @@
+type: http_request
+model: http_request
+id: rq_syfVMhGcs2
+createdAt: 2025-05-17T16:25:11.070480600
+updatedAt: 2025-05-17T16:29:48.677446
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_9f4nSTRAxu
+authentication: {}
+authenticationType: null
+body:
+  form:
+  - enabled: true
+    id: abq29XRMiq
+    name: title
+    value: My Test Screenshot
+  - enabled: true
+    id: rf5fp6ZKk7
+    name: description
+    value: This is a detailed description of the bug.
+  - enabled: true
+    id: gNvb8SkCFc
+    name: url
+    value: http://example.com/page-with-bug
+  - enabled: true
+    file: C:\dev\projects\rebug\server\yaak\image-1743197808485.png
+    id: JcNnCpVQi4
+    name: file
+  - enabled: true
+    id: 4pgnHCGeie
+    name: ''
+    value: ''
+bodyType: multipart/form-data
+description: ''
+headers:
+- enabled: true
+  name: Authorization
+  value: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmZjEyYjIyMy01ZDJlLTQ4YjYtYTBmYy0yZDdmNDMwZGI2MzMiLCJyb2xlIjoiVXNlciIsImV4cCI6MTc0ODEwMzczNywiaWF0IjoxNzQ3NDk4OTM3fQ.k45zBpS42MW0NDfS3edhe5wBpqUDyokWTS3hZv67F74
+  id: RT9QRSM9t4
+- enabled: true
+  name: Content-Type
+  value: multipart/form-data
+  id: sSz8ZfgExa
+- enabled: true
+  name: ''
+  value: ''
+  id: j4vqr3UtiN
+method: POST
+name: Upload screenshot
+sortPriority: 0.0
+url: http://localhost:3000/api/reports/screenshots
+urlParameters: []

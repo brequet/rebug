@@ -4,14 +4,22 @@ use axum::Router;
 use dotenv::dotenv;
 use rebug::{
     api::{
-        routers::{auth::auth_routes, health::health_routes, user_routes::user_routes},
+        routers::{
+            auth::auth_routes, health::health_routes, report_routes::report_routes,
+            user_routes::user_routes,
+        },
         state::AppState,
     },
     application::services::{
-        auth_service::AuthService, health_service::HealthService, user_service::UserService,
+        auth_service::AuthService, health_service::HealthService, report_service::ReportService,
+        user_service::UserService,
     },
     infrastructure::{
-        database::sqlite::Sqlite, repositories::sqlite_user_repository::SqliteUserRepository,
+        database::sqlite::Sqlite,
+        repositories::{
+            sqlite_report_repository::SqliteReportRepository,
+            sqlite_user_repository::SqliteUserRepository,
+        },
     },
 };
 use tracing::info;
@@ -40,11 +48,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let auth_service = Arc::new(AuthService::new(user_service.clone()));
 
-    let app_state = AppState::new(auth_service, health_service, user_service);
+    // TODO: report could be not Arc maybe ?
+    let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
+    let report_service = Arc::new(ReportService::new(report_repository));
+
+    let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
     let router = Router::new()
         .nest("/api", auth_routes())
         .nest("/api", health_routes())
+        .nest("/api", report_routes())
         .nest("/api", user_routes())
         .with_state(app_state);
 
@@ -57,6 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, router).await?;
+
+    // TODO: use logs everywhere, LLM ?
 
     Ok(())
 }

@@ -1,4 +1,3 @@
--- migrations/YYYYMMDDHHMMSS_create_users_table.sql
 CREATE TABLE IF NOT EXISTS users (
     id BLOB PRIMARY KEY NOT NULL,
     email TEXT UNIQUE NOT NULL,

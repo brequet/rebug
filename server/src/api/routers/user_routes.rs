@@ -19,6 +19,8 @@ pub fn user_routes() -> Router<AppState> {
         .route("/users/me", get(get_current_user_handler))
 }
 
+// TODO: create default admin user
+// TODO: check admin role
 async fn create_user_handler(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,

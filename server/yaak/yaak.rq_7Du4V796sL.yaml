@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_7Du4V796sL
 createdAt: 2025-05-17T10:07:16.093068100
-updatedAt: 2025-05-17T10:07:31.983410800
+updatedAt: 2025-05-17T16:25:36.327452500
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_kw6XVpV4FT
 authentication: {}
@@ -13,14 +13,14 @@ description: ''
 headers:
 - enabled: true
   name: Authorization
-  value: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjZDAwYTA2NS04YTM0LTQwZGEtODBiZi1iM2MxNzhjMzJlMWUiLCJyb2xlIjoiVXNlciIsImV4cCI6MTc0ODA4MTE5NywiaWF0IjoxNzQ3NDc2Mzk3fQ.7VckbYUmvfOXn9Ztvbrf8EZsgyJ-RowjZLaBqx_D7pE
+  value: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmZjEyYjIyMy01ZDJlLTQ4YjYtYTBmYy0yZDdmNDMwZGI2MzMiLCJyb2xlIjoiVXNlciIsImV4cCI6MTc0ODEwMzczNywiaWF0IjoxNzQ3NDk4OTM3fQ.k45zBpS42MW0NDfS3edhe5wBpqUDyokWTS3hZv67F74
   id: ExiZA3SGQU
 - enabled: true
   name: ''
   value: ''
-  id: iX7EjwKqPf
+  id: NJNrXavffg
 method: GET
-name: ''
+name: Get me (user)
 sortPriority: 0.0
 url: http://127.0.0.1:3000/api/users/me
 urlParameters: []

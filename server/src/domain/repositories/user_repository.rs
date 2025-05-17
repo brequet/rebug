@@ -2,17 +2,7 @@ use uuid::Uuid;
 
 use crate::domain::models::user::{User, UserRole};
 
-#[derive(Debug, thiserror::Error)]
-pub enum RepositoryError {
-    #[error("User not found")]
-    NotFound,
-    #[error("User already exists")]
-    AlreadyExists,
-    #[error("Database error: {0}")]
-    DatabaseError(String),
-}
-
-pub type RepositoryResult<T> = Result<T, RepositoryError>;
+use super::RepositoryResult;
 
 #[async_trait::async_trait]
 pub trait UserRepository: Send + Sync {

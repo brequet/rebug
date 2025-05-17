@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     domain::{
         models::user::{User, UserRole},
-        repositories::user_repository::{RepositoryError, UserRepository},
+        repositories::{RepositoryError, user_repository::UserRepository},
     },
     infrastructure::security::password_hasher::{PasswordError, hash_password},
 };

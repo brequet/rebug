@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use sqlx::{Error as SqlxError, SqlitePool};
+use sqlx::SqlitePool;
 use uuid::Uuid;
 
 use crate::domain::{
     models::user::{User, UserRole},
-    repositories::user_repository::{RepositoryError, RepositoryResult, UserRepository},
+    repositories::{RepositoryResult, map_sqlx_error, user_repository::UserRepository},
 };
 
 #[derive(Clone)]
@@ -16,20 +16,6 @@ pub struct SqliteUserRepository {
 impl SqliteUserRepository {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
-    }
-}
-
-fn map_sqlx_error(e: SqlxError) -> RepositoryError {
-    match e {
-        SqlxError::RowNotFound => RepositoryError::NotFound,
-        SqlxError::Database(db_err) => {
-            if db_err.is_unique_violation() {
-                RepositoryError::AlreadyExists
-            } else {
-                RepositoryError::DatabaseError(db_err.to_string())
-            }
-        }
-        _ => RepositoryError::DatabaseError(e.to_string()),
     }
 }
 

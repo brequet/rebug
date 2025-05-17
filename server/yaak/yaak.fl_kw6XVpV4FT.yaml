@@ -2,9 +2,9 @@ type: folder
 model: folder
 id: fl_kw6XVpV4FT
 createdAt: 2025-05-17T10:04:17.454203800
-updatedAt: 2025-05-17T10:06:20.429308
+updatedAt: 2025-05-17T16:25:14.201516200
 workspaceId: wk_uEV9dkQtcy
 folderId: null
 name: Users
 description: ''
-sortPriority: 0.0
+sortPriority: 1000.0
