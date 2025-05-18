@@ -386,24 +386,24 @@ File type: .rs
 use std::sync::Arc;
 
 use crate::application::services::{
-    auth_service::AuthService, health_service::HealthService, report_service::ReportService,
-    user_service::UserService,
+    auth_service::AuthServiceInterface, health_service::HealthServiceInterface,
+    report_service::ReportServiceInterface, user_service::UserServiceInterface,
 };
 
 #[derive(Clone)]
 pub struct AppState {
-    pub auth_service: Arc<AuthService>,
-    pub health_service: Arc<HealthService>,
-    pub report_service: Arc<ReportService>,
-    pub user_service: Arc<UserService>,
+    pub auth_service: Arc<dyn AuthServiceInterface>,
+    pub health_service: Arc<dyn HealthServiceInterface>,
+    pub report_service: Arc<dyn ReportServiceInterface>,
+    pub user_service: Arc<dyn UserServiceInterface>,
 }
 
 impl AppState {
     pub fn new(
-        auth_service: Arc<AuthService>,
-        health_service: Arc<HealthService>,
-        report_service: Arc<ReportService>,
-        user_service: Arc<UserService>,
+        auth_service: Arc<dyn AuthServiceInterface>,
+        health_service: Arc<dyn HealthServiceInterface>,
+        report_service: Arc<dyn ReportServiceInterface>,
+        user_service: Arc<dyn UserServiceInterface>,
     ) -> Self {
         AppState {
             auth_service,
@@ -714,10 +714,10 @@ use crate::api::{
 
 pub fn report_routes() -> Router<AppState> {
     let report_routes = Router::new()
-        .route("/{report_id}", get(get_report_handler))
-        .route("/screenshots", post(create_screenshot_report_handler));
+        .route("/screenshots", post(create_screenshot_report_handler))
+        .route("/{report_id}", get(get_report_handler));
 
-    return Router::new().nest("/reports", report_routes);
+    Router::new().nest("/reports", report_routes)
 }
 
 #[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub, report_id = %report_id), level = "debug")]
@@ -725,8 +725,30 @@ async fn get_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
     Path(report_id): Path<Uuid>,
-) -> Result<(StatusCode, Json<_>), ApiError> {
-    // TODO
+) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
+    tracing::debug!("Fetching report with ID: {}", report_id);
+
+    // TODO: Check if the user has permission to access this report
+    let report = state
+        .report_service
+        .get_report(report_id)
+        .await
+        .map_err(|e| {
+            tracing::error!("Report service error: {:?}", e);
+            ApiError::InternalServerError("Failed to fetch report.".to_string())
+        })?;
+
+    let response = ReportResponse {
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        file_path: report.file_path,
+        url: report.url,
+    };
+
+    tracing::info!(report_id = %report.id, "Report fetched successfully.");
+
+    Ok((StatusCode::OK, Json(response)))
 }
 
 #[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
@@ -801,7 +823,7 @@ pub fn user_routes() -> Router<AppState> {
         .route("/", post(create_user_handler))
         .route("/me", get(get_current_user_handler));
 
-    return Router::new().nest("/users", user_routes);
+    Router::new().nest("/users", user_routes)
 }
 
 // TODO: create default admin user
@@ -866,6 +888,7 @@ File End
 File type: .rs
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Header, encode};
 use tracing::instrument;
@@ -880,7 +903,7 @@ use crate::{
     infrastructure::security::password_hasher::{PasswordError, verify_password},
 };
 
-use super::user_service::UserService;
+use super::user_service::UserServiceInterface;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AuthServiceError {
@@ -907,43 +930,19 @@ impl From<PasswordError> for AuthServiceError {
 
 pub type AuthServiceResult<T> = Result<T, AuthServiceError>;
 
+#[async_trait]
+pub trait AuthServiceInterface: Send + Sync {
+    async fn login_user(&self, email: &str, password: &str) -> AuthServiceResult<(User, String)>;
+}
+
 #[derive(Clone)]
 pub struct AuthService {
-    user_service: Arc<UserService>,
+    user_service: Arc<dyn UserServiceInterface>,
 }
 
 impl AuthService {
-    pub fn new(user_service: Arc<UserService>) -> Self {
+    pub fn new(user_service: Arc<dyn UserServiceInterface>) -> Self {
         Self { user_service }
-    }
-
-    #[instrument(skip(self, password), fields(email = %email), level = "debug")]
-    pub async fn login_user(
-        &self,
-        email: &str,
-        password: &str,
-    ) -> AuthServiceResult<(User, String)> {
-        tracing::debug!("Attempting to authenticate user.");
-
-        let user = self
-            .user_service
-            .get_user_by_email(email)
-            .await
-            .map_err(|_| {
-                tracing::warn!(
-                    "Authentication failed: user not found or other error during lookup."
-                );
-                AuthServiceError::InvalidCredentials
-            })?;
-
-        if verify_password(password, &user.password_hash)? {
-            tracing::debug!(user_id = %user.id, "Password verification successful.");
-            let token = self.create_jwt(user.id, &user.role)?;
-            Ok((user, token))
-        } else {
-            tracing::warn!(user_id = %user.id, "Password verification failed.");
-            Err(AuthServiceError::InvalidCredentials)
-        }
     }
 
     #[instrument(skip(self), fields(user_id = %user_id, role = %role), level = "debug")]
@@ -967,6 +966,34 @@ impl AuthService {
     }
 }
 
+#[async_trait]
+impl AuthServiceInterface for AuthService {
+    #[instrument(skip(self, password), fields(email = %email), level = "debug")]
+    async fn login_user(&self, email: &str, password: &str) -> AuthServiceResult<(User, String)> {
+        tracing::debug!("Attempting to authenticate user.");
+
+        let user = self
+            .user_service
+            .get_user_by_email(email)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    "Authentication failed: user not found or other error during lookup."
+                );
+                AuthServiceError::InvalidCredentials
+            })?;
+
+        if verify_password(password, &user.password_hash)? {
+            tracing::debug!(user_id = %user.id, "Password verification successful.");
+            let token = self.create_jwt(user.id, &user.role)?;
+            Ok((user, token))
+        } else {
+            tracing::warn!(user_id = %user.id, "Password verification failed.");
+            Err(AuthServiceError::InvalidCredentials)
+        }
+    }
+}
+
 
 --------------------------------------------------
 File End
@@ -975,6 +1002,13 @@ File End
 
 ./src/application\services\health_service.rs
 File type: .rs
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait HealthServiceInterface: Send + Sync {
+    fn health_check(&self) -> serde_json::Value;
+}
+
 #[derive(Clone)]
 pub struct HealthService;
 
@@ -982,8 +1016,17 @@ impl HealthService {
     pub fn new() -> Self {
         HealthService
     }
+}
 
-    pub fn health_check(&self) -> serde_json::Value {
+impl Default for HealthService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[async_trait]
+impl HealthServiceInterface for HealthService {
+    fn health_check(&self) -> serde_json::Value {
         const HEALTH_CHECK_RESPONSE: &str = "Everything is OK";
 
         let json_response = serde_json::json!({
@@ -992,12 +1035,6 @@ impl HealthService {
         });
 
         json_response
-    }
-}
-
-impl Default for HealthService {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -1022,6 +1059,7 @@ File End
 
 ./src/application\services\report_service.rs
 File type: .rs
+use async_trait::async_trait;
 use bytes::Bytes;
 use std::sync::Arc;
 use tracing::instrument;
@@ -1039,16 +1077,33 @@ pub enum ReportServiceError {
     RepositoryError(#[from] RepositoryError),
     #[error("Storage error: {0}")]
     StorageError(#[from] StorageError),
+    #[error("Report not found")]
+    ReportNotFound,
     #[error("Internal server error: {0}")]
     InternalError(String),
 }
 
 pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 
+#[async_trait]
+pub trait ReportServiceInterface: Send + Sync {
+    async fn create_screenshot_report(
+        &self,
+        user_id: Uuid,
+        original_file_name: &str,
+        file_data: Bytes,
+        title: String,
+        description: Option<String>,
+        url: Option<String>,
+    ) -> ReportServiceResult<Report>;
+
+    async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report>;
+}
+
 #[derive(Clone)]
 pub struct ReportService {
     report_repository: Arc<dyn ReportRepository>,
-    storage_port: Arc<StoragePort>,
+    storage_port: Arc<dyn StoragePort>,
 }
 
 impl ReportService {
@@ -1061,8 +1116,12 @@ impl ReportService {
             storage_port,
         }
     }
+}
+
+#[async_trait]
+impl ReportServiceInterface for ReportService {
     #[instrument(skip(self, file_data), fields(user_id = %user_id), level="info")]
-    pub async fn create_screenshot_report(
+    async fn create_screenshot_report(
         &self,
         user_id: Uuid,
         original_file_name: &str,
@@ -1097,6 +1156,20 @@ impl ReportService {
         tracing::info!(report_id = %report.id, "Screenshot report created successfully");
         Ok(report)
     }
+
+    #[instrument(skip(self), fields(report_id = %id), level="info")]
+    async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report> {
+        tracing::debug!("Fetching report with ID: {}", id);
+
+        let report = self
+            .report_repository
+            .get_report(id)
+            .await?
+            .ok_or(ReportServiceError::ReportNotFound)?;
+
+        tracing::info!(report_id = %report.id, "Report fetched successfully");
+        Ok(report)
+    }
 }
 
 
@@ -1109,6 +1182,7 @@ File End
 File type: .rs
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use tracing::instrument;
 use uuid::Uuid;
 
@@ -1157,6 +1231,20 @@ impl From<PasswordError> for UserServiceError {
 
 pub type UserServiceResult<T> = Result<T, UserServiceError>;
 
+#[async_trait]
+pub trait UserServiceInterface: Send + Sync {
+    async fn create_user(
+        &self,
+        email: &str,
+        password: &str,
+        first_name: Option<&str>,
+        last_name: Option<&str>,
+    ) -> UserServiceResult<User>;
+
+    async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User>;
+    async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User>;
+}
+
 #[derive(Clone)]
 pub struct UserService {
     user_repository: Arc<dyn UserRepository>,
@@ -1166,9 +1254,12 @@ impl UserService {
     pub fn new(user_repository: Arc<dyn UserRepository>) -> Self {
         Self { user_repository }
     }
+}
 
+#[async_trait]
+impl UserServiceInterface for UserService {
     #[instrument(skip(self, password), fields(email = %email, first_name = ?first_name, last_name = ?last_name), level = "info")]
-    pub async fn create_user(
+    async fn create_user(
         &self,
         email: &str,
         password: &str,
@@ -1203,7 +1294,7 @@ impl UserService {
     }
 
     #[instrument(skip(self), level = "debug")]
-    pub async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
+    async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
         self.user_repository
             .find_by_id(user_id)
             .await?
@@ -1211,7 +1302,7 @@ impl UserService {
     }
 
     #[instrument(skip(self), level = "debug")]
-    pub async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
+    async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
         self.user_repository
             .find_by_email(email)
             .await?

@@ -10,10 +10,11 @@ use crate::domain::ports::storage_port::{StorageError, StoragePort, StorageResul
 #[derive(Clone)]
 pub struct FileSystemStorage {
     upload_directory: String,
+    base_url: String,
 }
 
 impl FileSystemStorage {
-    pub fn new(upload_directory: String) -> StorageResult<Self> {
+    pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
         let path = Path::new(&upload_directory);
         if !path.exists() {
             std::fs::create_dir_all(path).map_err(|e| {
@@ -23,7 +24,11 @@ impl FileSystemStorage {
                 ))
             })?;
         }
-        Ok(Self { upload_directory })
+
+        Ok(Self {
+            upload_directory,
+            base_url,
+        })
     }
 }
 
@@ -49,5 +54,10 @@ impl StoragePort for FileSystemStorage {
         tracing::debug!(path = %full_path.display(), "File saved successfully.");
 
         Ok(unique_file_name.to_string())
+    }
+
+    #[instrument(skip(self), level = "debug")]
+    fn get_public_url(&self, file_path: &str) -> String {
+        format!("{}/{}", self.base_url, file_path)
     }
 }

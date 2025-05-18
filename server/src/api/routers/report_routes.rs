@@ -20,8 +20,8 @@ use crate::api::{
 
 pub fn report_routes() -> Router<AppState> {
     let report_routes = Router::new()
-        .route("/{report_id}", get(get_report_handler))
-        .route("/screenshots", post(create_screenshot_report_handler));
+        .route("/screenshots", post(create_screenshot_report_handler))
+        .route("/{report_id}", get(get_report_handler));
 
     Router::new().nest("/reports", report_routes)
 }
@@ -32,9 +32,29 @@ async fn get_report_handler(
     authenticated_user: AuthenticatedUser,
     Path(report_id): Path<Uuid>,
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
-    Err(ApiError::InternalServerError(
-        "Fetching report details is not implemented yet.".to_string(),
-    ))
+    tracing::debug!("Fetching report with ID: {}", report_id);
+
+    // TODO: Check if the user has permission to access this report
+    let report = state
+        .report_service
+        .get_report(report_id)
+        .await
+        .map_err(|e| {
+            tracing::error!("Report service error: {:?}", e);
+            ApiError::InternalServerError("Failed to fetch report.".to_string())
+        })?;
+
+    let response = ReportResponse {
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        file_path: report.file_path,
+        url: report.url,
+    };
+
+    tracing::info!(report_id = %report.id, "Report fetched successfully.");
+
+    Ok((StatusCode::OK, Json(response)))
 }
 
 #[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]

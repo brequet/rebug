@@ -49,8 +49,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Database migrations completed.");
 
     let upload_dir = env::var("UPLOAD_DIRECTORY").unwrap_or_else(|_| "uploads".to_string());
+    let base_url =
+        env::var("FILE_BASE_URL").unwrap_or_else(|_| "http://localhost:3000/files".to_string());
     let file_system_storage = Arc::new(
-        FileSystemStorage::new(upload_dir).expect("Failed to initialize file system storage"),
+        FileSystemStorage::new(upload_dir, base_url)
+            .expect("Failed to initialize file system storage"),
     );
     let storage_port: Arc<dyn StoragePort> = file_system_storage;
 

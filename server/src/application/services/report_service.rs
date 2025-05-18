@@ -16,6 +16,8 @@ pub enum ReportServiceError {
     RepositoryError(#[from] RepositoryError),
     #[error("Storage error: {0}")]
     StorageError(#[from] StorageError),
+    #[error("Report not found")]
+    ReportNotFound,
     #[error("Internal server error: {0}")]
     InternalError(String),
 }
@@ -33,6 +35,8 @@ pub trait ReportServiceInterface: Send + Sync {
         description: Option<String>,
         url: Option<String>,
     ) -> ReportServiceResult<Report>;
+
+    async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report>;
 }
 
 #[derive(Clone)]
@@ -74,7 +78,7 @@ impl ReportServiceInterface for ReportService {
             .await?;
 
         tracing::debug!("Saving report");
-        let report = self
+        let mut report = self
             .report_repository
             .create_report(
                 user_id,
@@ -86,9 +90,25 @@ impl ReportServiceInterface for ReportService {
             )
             .await?;
 
-        // TODO: overload file path with full file path URL
+        report.file_path = self.storage_port.get_public_url(&report.file_path);
 
         tracing::info!(report_id = %report.id, "Screenshot report created successfully");
+        Ok(report)
+    }
+
+    #[instrument(skip(self), fields(report_id = %id), level="info")]
+    async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report> {
+        tracing::debug!("Fetching report with ID: {}", id);
+
+        let mut report = self
+            .report_repository
+            .get_report(id)
+            .await?
+            .ok_or(ReportServiceError::ReportNotFound)?;
+
+        report.file_path = self.storage_port.get_public_url(&report.file_path);
+
+        tracing::info!(report_id = %report.id, "Report fetched successfully");
         Ok(report)
     }
 }
