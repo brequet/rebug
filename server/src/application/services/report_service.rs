@@ -1,8 +1,11 @@
+use bytes::Bytes;
 use std::sync::Arc;
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::domain::{
     models::report::{Report, ReportType},
+    ports::storage_port::{StorageError, StoragePort},
     repositories::{RepositoryError, report_repository::ReportRepository},
 };
 
@@ -10,6 +13,8 @@ use crate::domain::{
 pub enum ReportServiceError {
     #[error("Repository error: {0}")]
     RepositoryError(#[from] RepositoryError),
+    #[error("Storage error: {0}")]
+    StorageError(#[from] StorageError),
     #[error("Internal server error: {0}")]
     InternalError(String),
 }
@@ -19,21 +24,38 @@ pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 #[derive(Clone)]
 pub struct ReportService {
     report_repository: Arc<dyn ReportRepository>,
+    storage_port: Arc<dyn StoragePort>,
 }
 
 impl ReportService {
-    pub fn new(report_repository: Arc<dyn ReportRepository>) -> Self {
-        Self { report_repository }
+    pub fn new(
+        report_repository: Arc<dyn ReportRepository>,
+        storage_port: Arc<dyn StoragePort>,
+    ) -> Self {
+        Self {
+            report_repository,
+            storage_port,
+        }
     }
-
+    #[instrument(skip(self, file_data), fields(user_id = %user_id), level="info")]
     pub async fn create_screenshot_report(
         &self,
         user_id: Uuid,
+        original_file_name: &str,
+        file_data: Bytes,
         title: String,
         description: Option<String>,
-        file_path: String,
         url: Option<String>,
     ) -> ReportServiceResult<Report> {
+        tracing::debug!("Creating screenshot report");
+
+        tracing::debug!("Saving file to storage");
+        let file_path = self
+            .storage_port
+            .save_file(original_file_name, file_data)
+            .await?;
+
+        tracing::debug!("Saving report");
         let report = self
             .report_repository
             .create_report(
@@ -45,6 +67,8 @@ impl ReportService {
                 url,
             )
             .await?;
+
+        tracing::info!(report_id = %report.id, "Screenshot report created successfully");
         Ok(report)
     }
 }

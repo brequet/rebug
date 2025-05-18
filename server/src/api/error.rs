@@ -73,6 +73,17 @@ impl ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, error_message) = self.get_status_and_message();
+
+        match status {
+            s if s.is_server_error() => {
+                tracing::error!(status_code = %s, error.type = %self, error.message = %error_message, "API request resulted in server error");
+            }
+            s if s.is_client_error() => {
+                tracing::warn!(status_code = %s, error.type = %self, error.message = %error_message, "API request resulted in client error");
+            }
+            _ => {}
+        }
+
         let body = Json(json!({
             "error": error_message,
         }));

@@ -1,4 +1,5 @@
 use axum::{Json, Router, extract::State, routing::post};
+use tracing::instrument;
 use validator::Validate;
 
 use crate::api::{
@@ -10,13 +11,16 @@ pub fn auth_routes() -> Router<AppState> {
     Router::new().route("/auth/login", post(login_handler))
 }
 
+#[instrument(skip(state, payload), fields(email = %payload.email), level = "debug")]
 async fn login_handler(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<LoginResponse>, ApiError> {
-    payload
-        .validate()
-        .map_err(|e| ApiError::Validation(e.to_string()))?;
+    tracing::debug!("Attempting login.");
+    payload.validate().map_err(|e| {
+        tracing::warn!("Login validation failed: {}", e);
+        ApiError::Validation(e.to_string())
+    })?;
 
     let (user, token) = state
         .auth_service
@@ -26,8 +30,9 @@ async fn login_handler(
     let response = LoginResponse {
         access_token: token,
         token_type: "Bearer".to_string(),
-        user: user.into(),
+        user: user.clone().into(),
     };
 
+    tracing::info!(user_id = %user.id, "User logged in successfully.");
     Ok(Json(response))
 }

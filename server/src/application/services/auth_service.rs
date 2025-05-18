@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Header, encode};
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -50,26 +51,39 @@ impl AuthService {
         Self { user_service }
     }
 
+    #[instrument(skip(self, password), fields(email = %email), level = "debug")]
     pub async fn login_user(
         &self,
         email: &str,
         password: &str,
     ) -> AuthServiceResult<(User, String)> {
+        tracing::debug!("Attempting to authenticate user.");
+
         let user = self
             .user_service
             .get_user_by_email(email)
             .await
-            .map_err(|_| AuthServiceError::InvalidCredentials)?;
+            .map_err(|_| {
+                tracing::warn!(
+                    "Authentication failed: user not found or other error during lookup."
+                );
+                AuthServiceError::InvalidCredentials
+            })?;
 
         if verify_password(password, &user.password_hash)? {
+            tracing::debug!(user_id = %user.id, "Password verification successful.");
             let token = self.create_jwt(user.id, &user.role)?;
             Ok((user, token))
         } else {
+            tracing::warn!(user_id = %user.id, "Password verification failed.");
             Err(AuthServiceError::InvalidCredentials)
         }
     }
 
+    #[instrument(skip(self), fields(user_id = %user_id, role = %role), level = "debug")]
     fn create_jwt(&self, user_id: Uuid, role: &UserRole) -> Result<String, AuthServiceError> {
+        tracing::debug!("Creating JWT for user.");
+
         let now = Utc::now();
         let iat = now.timestamp() as usize;
         let exp = (now + Duration::seconds(JWT_CONFIG.expiration_seconds)).timestamp() as usize;

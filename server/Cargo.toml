@@ -7,7 +7,9 @@ edition = "2024"
 async-trait = "0.1.88"
 axum = { version = "0.8.4", features = ["multipart"] }
 axum-extra = { version = "0.10.1", features = ["typed-header"] }
+axum_typed_multipart = "0.16.2"
 bcrypt = "0.17.0"
+bytes = "1.10.1"
 chrono = { version = "0.4.41", features = ["serde"] }
 dotenv = "0.15.0"
 jsonwebtoken = "9.3.1"
@@ -18,8 +20,8 @@ sqlx = { version = "0.8.5", features = ["runtime-tokio-rustls", "sqlite", "uuid"
 thiserror = "2.0.12"
 tokio = { version = "1.45.0", features = ["full"] }
 tower = "0.5.2"
-tower-http = { version = "0.6.4", features = ["cors", "trace"] }
+tower-http = { version = "0.6.4", features = ["cors", "trace", "tracing"] }
 tracing = "0.1.41"
-tracing-subscriber = "0.3.19"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 uuid = { version = "1.16.0", features = ["v4", "serde"] }
 validator = { version = "0.20.0", features = ["derive"] }

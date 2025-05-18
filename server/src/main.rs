@@ -3,31 +3,38 @@ use std::{env, net::SocketAddr, sync::Arc};
 use axum::Router;
 use dotenv::dotenv;
 use rebug::{
-    api::{
-        routers::{
-            auth::auth_routes, health::health_routes, report_routes::report_routes,
-            user_routes::user_routes,
-        },
-        state::AppState,
-    },
+    api::{routers::get_api_routes, state::AppState},
     application::services::{
         auth_service::AuthService, health_service::HealthService, report_service::ReportService,
         user_service::UserService,
     },
+    domain::ports::storage_port::StoragePort,
     infrastructure::{
         database::sqlite::Sqlite,
         repositories::{
             sqlite_report_repository::SqliteReportRepository,
             sqlite_user_repository::SqliteUserRepository,
         },
+        storage::file_system_storage::FileSystemStorage,
     },
 };
-use tracing::info;
+use tower_http::trace::{self, TraceLayer};
+use tracing::{Level, info};
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    tracing_subscriber::fmt::init();
+
+    let subscriber = FmtSubscriber::builder()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info,rebug=trace")),
+        )
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("Setting default tracing subscriber failed");
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
     let sqlite_connection = Sqlite::new(database_url.clone())
@@ -41,6 +48,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run database migrations");
     info!("Database migrations completed.");
 
+    let upload_dir = env::var("UPLOAD_DIRECTORY").unwrap_or_else(|_| "uploads".to_string());
+    let file_system_storage = Arc::new(
+        FileSystemStorage::new(upload_dir).expect("Failed to initialize file system storage"),
+    );
+    let storage_port: Arc<dyn StoragePort> = file_system_storage;
+
     let health_service = Arc::new(HealthService);
 
     let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
@@ -48,17 +61,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let auth_service = Arc::new(AuthService::new(user_service.clone()));
 
-    // TODO: report could be not Arc maybe ?
     let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
-    let report_service = Arc::new(ReportService::new(report_repository));
+    let report_service = Arc::new(ReportService::new(report_repository, storage_port));
 
     let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
     let router = Router::new()
-        .nest("/api", auth_routes())
-        .nest("/api", health_routes())
-        .nest("/api", report_routes())
-        .nest("/api", user_routes())
+        .nest("/api", get_api_routes())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),
+        )
         .with_state(app_state);
 
     let port: u16 = env::var("PORT")
@@ -70,8 +83,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, router).await?;
-
-    // TODO: use logs everywhere, LLM ?
 
     Ok(())
 }

@@ -1,12 +1,14 @@
-use axum::{
-    Json, Router,
-    extract::{Multipart, State},
-    http::StatusCode,
-    routing::post,
-};
+use axum::{Json, Router, extract::State, http::StatusCode, routing::post};
+use axum_typed_multipart::TypedMultipart;
+use tracing::instrument;
 
 use crate::api::{
-    auth::AuthenticatedUser, error::ApiError, models::response::report_models::ReportResponse,
+    auth::AuthenticatedUser,
+    error::ApiError,
+    models::{
+        request::report_models::CreateScreenshotReportRequest,
+        response::report_models::ReportResponse,
+    },
     state::AppState,
 };
 
@@ -18,74 +20,33 @@ pub fn report_routes() -> Router<AppState> {
     // TODO: getters for reports
 }
 
+#[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
 async fn create_screenshot_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
-    mut multipart: Multipart,
+    TypedMultipart(payload): TypedMultipart<CreateScreenshotReportRequest>,
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
+    tracing::debug!("Creating screenshot report.");
+
     let user_id = authenticated_user.claims.sub;
 
-    // Extract the form data
-    let mut title = None;
-    let mut description = None;
-    let mut url = None;
-    let mut file_data = None;
-    let mut file_name = None;
+    let title = payload.title;
+    let description = payload.description;
+    let url = payload.url;
 
-    while let Some(field) = multipart
-        .next_field()
-        .await
-        .map_err(|e| ApiError::InternalServerError(e.to_string()))?
-    {
-        let name = field.name().map(|s| s.to_string());
-        let file_name_opt = field.file_name().map(|s| s.to_string());
-        let data = field
-            .bytes()
-            .await
-            .map_err(|e| ApiError::InternalServerError(e.to_string()))?;
+    let file_name = payload.file.metadata.file_name.ok_or_else(|| {
+        ApiError::Validation("File name is required in the multipart data.".to_string())
+    })?;
+    let file_data = payload.file.contents;
 
-        match name.as_deref() {
-            Some("title") => {
-                title = Some(
-                    String::from_utf8(data.to_vec())
-                        .map_err(|e| ApiError::Validation(e.to_string()))?,
-                );
-            }
-            Some("description") => {
-                description = Some(
-                    String::from_utf8(data.to_vec())
-                        .map_err(|e| ApiError::Validation(e.to_string()))?,
-                );
-            }
-            Some("url") => {
-                url = Some(
-                    String::from_utf8(data.to_vec())
-                        .map_err(|e| ApiError::Validation(e.to_string()))?,
-                );
-            }
-            Some("file") => {
-                file_data = Some(data);
-                file_name = file_name_opt;
-            }
-            _ => {}
-        }
-    }
-
-    let title = title.ok_or(ApiError::Validation("Title is required".to_string()))?;
-    let file_data = file_data.ok_or(ApiError::Validation("File is required".to_string()))?;
-    let file_name = file_name.ok_or(ApiError::Validation("File name is required".to_string()))?;
-
-    // Save the file
-    let file_path = save_file(&file_name, file_data.to_vec())
-        .await
-        .map_err(|e| ApiError::InternalServerError(e.to_string()))?;
-
-    // Create the report
     let report = state
         .report_service
-        .create_screenshot_report(user_id, title, description, file_path.clone(), url)
+        .create_screenshot_report(user_id, &file_name, file_data, title, description, url)
         .await
-        .map_err(|e| ApiError::InternalServerError(e.to_string()))?;
+        .map_err(|e| {
+            tracing::error!("Report service error: {:?}", e);
+            ApiError::InternalServerError("Failed to create report.".to_string())
+        })?;
 
     let response = ReportResponse {
         id: report.id,
@@ -95,22 +56,9 @@ async fn create_screenshot_report_handler(
         url: report.url,
     };
 
+    tracing::info!(report_id = %report.id, "Screenshot report created successfully.");
+
     Ok((StatusCode::CREATED, Json(response)))
 }
 
 // TODO: Implement a proper file storage solution, separate concern: move this to a service
-async fn save_file(file_name: &str, file_data: Vec<u8>) -> Result<String, std::io::Error> {
-    // Generate a unique file name
-    let timestamp = chrono::Utc::now().timestamp();
-    // TODO: Use a more robust file naming strategy to avoid collisions, also drop initial file name
-    let new_file_name = format!("{}_{}", timestamp, file_name);
-    let file_path = format!("uploads/{}", new_file_name);
-
-    // Create the uploads directory if it doesn't exist
-    std::fs::create_dir_all("uploads")?; // TODO: upload directory should be configurable
-
-    // Write the file to disk
-    tokio::fs::write(&file_path, file_data).await?;
-
-    Ok(file_path)
-}

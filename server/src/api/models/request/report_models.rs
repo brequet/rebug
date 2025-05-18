@@ -1,9 +1,13 @@
-use serde::Deserialize;
+use axum::body::Bytes;
+use axum_typed_multipart::{FieldData, TryFromMultipart};
 
-#[derive(Deserialize)]
+#[derive(TryFromMultipart)]
 pub struct CreateScreenshotReportRequest {
+    // Regular form fields
     pub title: String,
     pub description: Option<String>,
     pub url: Option<String>,
-    // The file will be handled separately via multipart form data
+
+    // File field
+    pub file: FieldData<Bytes>,
 }

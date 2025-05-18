@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -57,6 +58,7 @@ impl UserService {
         Self { user_repository }
     }
 
+    #[instrument(skip(self, password), fields(email = %email, first_name = ?first_name, last_name = ?last_name), level = "info")]
     pub async fn create_user(
         &self,
         email: &str,
@@ -64,6 +66,8 @@ impl UserService {
         first_name: Option<&str>,
         last_name: Option<&str>,
     ) -> UserServiceResult<User> {
+        tracing::debug!("Validating user input.");
+
         if email.is_empty() || !email.contains('@') {
             return Err(UserServiceError::ValidationError(
                 "Invalid email format".to_string(),
@@ -75,14 +79,21 @@ impl UserService {
             ));
         }
 
+        tracing::debug!("Hashing password.");
         let password_hash = hash_password(password)?;
 
-        self.user_repository
+        tracing::debug!("Attempting to save user to repository.");
+        let user = self
+            .user_repository
             .create_user(email, &password_hash, first_name, last_name, UserRole::User)
             .await
-            .map_err(Into::into)
+            .map_err(UserServiceError::from)?;
+
+        tracing::info!(user_id = %user.id, "User created successfully.");
+        Ok(user)
     }
 
+    #[instrument(skip(self), level = "debug")]
     pub async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
         self.user_repository
             .find_by_id(user_id)
@@ -90,6 +101,7 @@ impl UserService {
             .ok_or(UserServiceError::UserNotFound)
     }
 
+    #[instrument(skip(self), level = "debug")]
     pub async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
         self.user_repository
             .find_by_email(email)

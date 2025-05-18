@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::SqlitePool;
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::domain::{
@@ -21,6 +22,7 @@ impl SqliteUserRepository {
 
 #[async_trait]
 impl UserRepository for SqliteUserRepository {
+    #[instrument(skip(self, password_hash), fields(email = %email, role = %role), level = "debug")]
     async fn create_user(
         &self,
         email: &str,
@@ -30,6 +32,7 @@ impl UserRepository for SqliteUserRepository {
         role: UserRole,
     ) -> RepositoryResult<User> {
         let user_id = Uuid::new_v4();
+        tracing::debug!(user_id = %user_id, "Executing insert query for new user.");
 
         let result = sqlx::query_as!(
             User,
@@ -62,6 +65,7 @@ impl UserRepository for SqliteUserRepository {
         }
     }
 
+    #[instrument(skip(self), fields(email = %email), level = "debug")]
     async fn find_by_email(&self, email: &str) -> RepositoryResult<Option<User>> {
         sqlx::query_as!(
             User,
@@ -85,6 +89,7 @@ impl UserRepository for SqliteUserRepository {
         .map_err(map_sqlx_error)
     }
 
+    #[instrument(skip(self), fields(id = %id), level = "debug")]
     async fn find_by_id(&self, id: Uuid) -> RepositoryResult<Option<User>> {
         sqlx::query_as!(
             User,

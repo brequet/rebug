@@ -13,15 +13,18 @@ api/
         request/
             auth_models.rs
             mod.rs
+            report_models.rs
             user_models.rs
         response/
             auth_models.rs
             mod.rs
+            report_models.rs
             user_models.rs
     routers/
         auth.rs
         health.rs
         mod.rs
+        report_routes.rs
         user_routes.rs
 application/
     mod.rs
@@ -29,6 +32,7 @@ application/
         auth_service.rs
         health_service.rs
         mod.rs
+        report_service.rs
         user_service.rs
 config/
     app_config.rs
@@ -38,9 +42,14 @@ domain/
     models/
         auth.rs
         mod.rs
+        report.rs
         user.rs
+    ports/
+        mod.rs
+        storage_port.rs
     repositories/
         mod.rs
+        report_repository.rs
         user_repository.rs
 infrastructure/
     mod.rs
@@ -49,10 +58,14 @@ infrastructure/
         sqlite.rs
     repositories/
         mod.rs
+        sqlite_report_repository.rs
         sqlite_user_repository.rs
     security/
         mod.rs
         password_hasher.rs
+    storage/
+        file_system_storage.rs
+        mod.rs
 
 
 File Contents
@@ -80,23 +93,38 @@ use std::{env, net::SocketAddr, sync::Arc};
 use axum::Router;
 use dotenv::dotenv;
 use rebug::{
-    api::{
-        routers::{auth::auth_routes, health::health_routes, user_routes::user_routes},
-        state::AppState,
-    },
+    api::{routers::get_api_routes, state::AppState},
     application::services::{
-        auth_service::AuthService, health_service::HealthService, user_service::UserService,
+        auth_service::AuthService, health_service::HealthService, report_service::ReportService,
+        user_service::UserService,
     },
+    domain::ports::storage_port::StoragePort,
     infrastructure::{
-        database::sqlite::Sqlite, repositories::sqlite_user_repository::SqliteUserRepository,
+        database::sqlite::Sqlite,
+        repositories::{
+            sqlite_report_repository::SqliteReportRepository,
+            sqlite_user_repository::SqliteUserRepository,
+        },
+        storage::file_system_storage::FileSystemStorage,
     },
 };
-use tracing::info;
+use tower_http::trace::{self, TraceLayer};
+use tracing::{Level, info};
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    tracing_subscriber::fmt::init();
+
+    let subscriber = FmtSubscriber::builder()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info,rebug=trace")),
+        )
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("Setting default tracing subscriber failed");
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
     let sqlite_connection = Sqlite::new(database_url.clone())
@@ -110,6 +138,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run database migrations");
     info!("Database migrations completed.");
 
+    let upload_dir = env::var("UPLOAD_DIRECTORY").unwrap_or_else(|_| "uploads".to_string());
+    let file_system_storage = Arc::new(
+        FileSystemStorage::new(upload_dir).expect("Failed to initialize file system storage"),
+    );
+    let storage_port: Arc<dyn StoragePort> = file_system_storage;
+
     let health_service = Arc::new(HealthService);
 
     let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
@@ -117,12 +151,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let auth_service = Arc::new(AuthService::new(user_service.clone()));
 
-    let app_state = AppState::new(auth_service, health_service, user_service);
+    let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
+    let report_service = Arc::new(ReportService::new(report_repository, storage_port));
+
+    let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
     let router = Router::new()
-        .nest("/api", auth_routes())
-        .nest("/api", health_routes())
-        .nest("/api", user_routes())
+        .nest("/api", get_api_routes())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),
+        )
         .with_state(app_state);
 
     let port: u16 = env::var("PORT")
@@ -294,6 +333,17 @@ impl ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, error_message) = self.get_status_and_message();
+
+        match status {
+            s if s.is_server_error() => {
+                tracing::error!(status_code = %s, error.type = %self, error.message = %error_message, "API request resulted in server error");
+            }
+            s if s.is_client_error() => {
+                tracing::warn!(status_code = %s, error.type = %self, error.message = %error_message, "API request resulted in client error");
+            }
+            _ => {}
+        }
+
         let body = Json(json!({
             "error": error_message,
         }));
@@ -326,13 +376,15 @@ File type: .rs
 use std::sync::Arc;
 
 use crate::application::services::{
-    auth_service::AuthService, health_service::HealthService, user_service::UserService,
+    auth_service::AuthService, health_service::HealthService, report_service::ReportService,
+    user_service::UserService,
 };
 
 #[derive(Clone)]
 pub struct AppState {
     pub auth_service: Arc<AuthService>,
     pub health_service: Arc<HealthService>,
+    pub report_service: Arc<ReportService>,
     pub user_service: Arc<UserService>,
 }
 
@@ -340,11 +392,13 @@ impl AppState {
     pub fn new(
         auth_service: Arc<AuthService>,
         health_service: Arc<HealthService>,
+        report_service: Arc<ReportService>,
         user_service: Arc<UserService>,
     ) -> Self {
         AppState {
             auth_service,
             health_service,
+            report_service,
             user_service,
         }
     }
@@ -388,7 +442,30 @@ File End
 ./src/api\models\request\mod.rs
 File type: .rs
 pub mod auth_models;
+pub mod report_models;
 pub mod user_models;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\request\report_models.rs
+File type: .rs
+use axum::body::Bytes;
+use axum_typed_multipart::{FieldData, TryFromMultipart};
+
+#[derive(TryFromMultipart)]
+pub struct CreateScreenshotReportRequest {
+    // Regular form fields
+    pub title: String,
+    pub description: Option<String>,
+    pub url: Option<String>,
+
+    // File field
+    pub file: FieldData<Bytes>,
+}
 
 
 --------------------------------------------------
@@ -441,7 +518,28 @@ File End
 ./src/api\models\response\mod.rs
 File type: .rs
 pub mod auth_models;
+pub mod report_models;
 pub mod user_models;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\models\response\report_models.rs
+File type: .rs
+use serde::Serialize;
+use uuid::Uuid;
+
+#[derive(Serialize)]
+pub struct ReportResponse {
+    pub id: Uuid,
+    pub title: String,
+    pub description: Option<String>,
+    pub file_path: String,
+    pub url: Option<String>,
+}
 
 
 --------------------------------------------------
@@ -548,9 +646,91 @@ File End
 
 ./src/api\routers\mod.rs
 File type: .rs
+use auth::auth_routes;
+use axum::Router;
+use health::health_routes;
+use report_routes::report_routes;
+use user_routes::user_routes;
+
+use super::state::AppState;
+
 pub mod auth;
 pub mod health;
+pub mod report_routes;
 pub mod user_routes;
+
+pub fn get_api_routes() -> Router<AppState> {
+    Router::new()
+        .merge(auth_routes())
+        .merge(health_routes())
+        .merge(report_routes())
+        .merge(user_routes())
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/api\routers\report_routes.rs
+File type: .rs
+use axum::{Json, Router, extract::State, http::StatusCode, routing::post};
+use axum_typed_multipart::TypedMultipart;
+
+use crate::api::{
+    auth::AuthenticatedUser,
+    error::ApiError,
+    models::{
+        request::report_models::CreateScreenshotReportRequest,
+        response::report_models::ReportResponse,
+    },
+    state::AppState,
+};
+
+pub fn report_routes() -> Router<AppState> {
+    Router::new().route(
+        "/reports/screenshots",
+        post(create_screenshot_report_handler),
+    )
+    // TODO: getters for reports
+}
+
+async fn create_screenshot_report_handler(
+    State(state): State<AppState>,
+    authenticated_user: AuthenticatedUser,
+    TypedMultipart(payload): TypedMultipart<CreateScreenshotReportRequest>,
+) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
+    let user_id = authenticated_user.claims.sub;
+
+    let title = payload.title;
+    let description = payload.description;
+    let url = payload.url;
+
+    let file_name = payload.file.metadata.file_name.ok_or_else(|| {
+        ApiError::Validation("File name is required in the multipart data.".to_string())
+    })?;
+    let file_data = payload.file.contents;
+
+    let report = state
+        .report_service
+        .create_screenshot_report(user_id, &file_name, file_data, title, description, url)
+        .await
+        .map_err(|e| {
+            tracing::error!("Report service error: {:?}", e);
+            ApiError::InternalServerError("Failed to create report.".to_string())
+        })?;
+
+    let response = ReportResponse {
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        file_path: report.file_path,
+        url: report.url,
+    };
+
+    Ok((StatusCode::CREATED, Json(response)))
+}
 
 
 --------------------------------------------------
@@ -581,6 +761,8 @@ pub fn user_routes() -> Router<AppState> {
         .route("/users/me", get(get_current_user_handler))
 }
 
+// TODO: create default admin user
+// TODO: check admin role
 async fn create_user_handler(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
@@ -764,7 +946,84 @@ File End
 File type: .rs
 pub mod auth_service;
 pub mod health_service;
+pub mod report_service;
 pub mod user_service;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/application\services\report_service.rs
+File type: .rs
+use bytes::Bytes;
+use std::sync::Arc;
+use uuid::Uuid;
+
+use crate::domain::{
+    models::report::{Report, ReportType},
+    ports::storage_port::{StorageError, StoragePort},
+    repositories::{RepositoryError, report_repository::ReportRepository},
+};
+
+#[derive(Debug, thiserror::Error)]
+pub enum ReportServiceError {
+    #[error("Repository error: {0}")]
+    RepositoryError(#[from] RepositoryError),
+    #[error("Storage error: {0}")]
+    StorageError(#[from] StorageError),
+    #[error("Internal server error: {0}")]
+    InternalError(String),
+}
+
+pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
+
+#[derive(Clone)]
+pub struct ReportService {
+    report_repository: Arc<dyn ReportRepository>,
+    storage_port: Arc<dyn StoragePort>,
+}
+
+impl ReportService {
+    pub fn new(
+        report_repository: Arc<dyn ReportRepository>,
+        storage_port: Arc<dyn StoragePort>,
+    ) -> Self {
+        Self {
+            report_repository,
+            storage_port,
+        }
+    }
+
+    pub async fn create_screenshot_report(
+        &self,
+        user_id: Uuid,
+        original_file_name: &str,
+        file_data: Bytes,
+        title: String,
+        description: Option<String>,
+        url: Option<String>,
+    ) -> ReportServiceResult<Report> {
+        let file_path = self
+            .storage_port
+            .save_file(original_file_name, file_data)
+            .await?;
+
+        let report = self
+            .report_repository
+            .create_report(
+                user_id,
+                title,
+                ReportType::Screenshot,
+                description,
+                file_path,
+                url,
+            )
+            .await?;
+        Ok(report)
+    }
+}
 
 
 --------------------------------------------------
@@ -781,7 +1040,7 @@ use uuid::Uuid;
 use crate::{
     domain::{
         models::user::{User, UserRole},
-        repositories::user_repository::{RepositoryError, UserRepository},
+        repositories::{RepositoryError, user_repository::UserRepository},
     },
     infrastructure::security::password_hasher::{PasswordError, hash_password},
 };
@@ -840,6 +1099,8 @@ impl UserService {
         first_name: Option<&str>,
         last_name: Option<&str>,
     ) -> UserServiceResult<User> {
+        tracing::info!(email = %email, "Creating user...");
+
         if email.is_empty() || !email.contains('@') {
             return Err(UserServiceError::ValidationError(
                 "Invalid email format".to_string(),
@@ -853,10 +1114,14 @@ impl UserService {
 
         let password_hash = hash_password(password)?;
 
-        self.user_repository
+        let user = self
+            .user_repository
             .create_user(email, &password_hash, first_name, last_name, UserRole::User)
             .await
-            .map_err(Into::into)
+            .map_err(UserServiceError::from)?;
+
+        tracing::info!(user_id = %user.id, "User created successfully.");
+        Ok(user)
     }
 
     pub async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
@@ -943,6 +1208,7 @@ File End
 ./src/domain\mod.rs
 File type: .rs
 pub mod models;
+pub mod ports;
 pub mod repositories;
 
 
@@ -973,7 +1239,53 @@ File End
 ./src/domain\models\mod.rs
 File type: .rs
 pub mod auth;
+pub mod report;
 pub mod user;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\models\report.rs
+File type: .rs
+use std::fmt;
+
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
+use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "TEXT", rename_all = "PascalCase")]
+pub enum ReportType {
+    Screenshot,
+    Video,
+}
+
+impl fmt::Display for ReportType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ReportType::Screenshot => write!(f, "Screenshot"),
+            ReportType::Video => write!(f, "Video"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct Report {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub report_type: ReportType,
+    pub title: String,
+    pub description: Option<String>,
+    pub file_path: String, // Path to the stored file
+    pub url: Option<String>,
+    #[sqlx(default)]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    #[sqlx(default)]
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
 
 
 --------------------------------------------------
@@ -1018,7 +1330,51 @@ pub struct User {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl User {}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\ports\mod.rs
+File type: .rs
+pub mod storage_port;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\ports\storage_port.rs
+File type: .rs
+use async_trait::async_trait;
+use bytes::Bytes;
+
+#[derive(Debug, thiserror::Error)]
+pub enum StorageError {
+    #[error("Failed to save file: {0}")]
+    SaveFailed(String),
+    #[error("Failed to retrieve file: {0}")]
+    RetrievalFailed(String),
+    #[error("File not found")]
+    NotFound,
+    #[error("Configuration error: {0}")]
+    ConfigurationError(String),
+    #[error("I/O error: {0}")]
+    IoError(#[from] std::io::Error),
+}
+
+pub type StorageResult<T> = Result<T, StorageError>;
+
+#[async_trait]
+pub trait StoragePort: Send + Sync {
+    /// Saves file data and returns a unique identifier or path to the stored file.
+    async fn save_file(&self, file_name: &str, data: Bytes) -> StorageResult<String>;
+    // Potentially add other methods like:
+    // async fn retrieve_file(&self, file_identifier: &str) -> StorageResult<Bytes>;
+    // async fn delete_file(&self, file_identifier: &str) -> StorageResult<()>;
+}
 
 
 --------------------------------------------------
@@ -1028,7 +1384,65 @@ File End
 
 ./src/domain\repositories\mod.rs
 File type: .rs
+use sqlx::Error as SqlxError;
+
+pub mod report_repository;
 pub mod user_repository;
+
+#[derive(Debug, thiserror::Error)]
+pub enum RepositoryError {
+    #[error("User not found")]
+    NotFound,
+    #[error("User already exists")]
+    AlreadyExists,
+    #[error("Database error: {0}")]
+    DatabaseError(String),
+}
+
+pub fn map_sqlx_error(e: SqlxError) -> RepositoryError {
+    match e {
+        SqlxError::RowNotFound => RepositoryError::NotFound,
+        SqlxError::Database(db_err) => {
+            if db_err.is_unique_violation() {
+                RepositoryError::AlreadyExists
+            } else {
+                RepositoryError::DatabaseError(db_err.to_string())
+            }
+        }
+        _ => RepositoryError::DatabaseError(e.to_string()),
+    }
+}
+
+pub type RepositoryResult<T> = Result<T, RepositoryError>;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/domain\repositories\report_repository.rs
+File type: .rs
+use async_trait::async_trait;
+use uuid::Uuid;
+
+use crate::domain::models::report::{Report, ReportType};
+
+use super::RepositoryResult;
+
+#[async_trait]
+pub trait ReportRepository: Send + Sync {
+    async fn create_report(
+        &self,
+        user_id: Uuid,
+        title: String,
+        report_type: ReportType,
+        description: Option<String>,
+        file_path: String,
+        url: Option<String>,
+    ) -> RepositoryResult<Report>;
+    async fn get_report(&self, id: Uuid) -> RepositoryResult<Option<Report>>;
+}
 
 
 --------------------------------------------------
@@ -1042,17 +1456,7 @@ use uuid::Uuid;
 
 use crate::domain::models::user::{User, UserRole};
 
-#[derive(Debug, thiserror::Error)]
-pub enum RepositoryError {
-    #[error("User not found")]
-    NotFound,
-    #[error("User already exists")]
-    AlreadyExists,
-    #[error("Database error: {0}")]
-    DatabaseError(String),
-}
-
-pub type RepositoryResult<T> = Result<T, RepositoryError>;
+use super::RepositoryResult;
 
 #[async_trait::async_trait]
 pub trait UserRepository: Send + Sync {
@@ -1080,6 +1484,7 @@ File type: .rs
 pub mod database;
 pub mod repositories;
 pub mod security;
+pub mod storage;
 
 
 --------------------------------------------------
@@ -1128,7 +1533,109 @@ File End
 
 ./src/infrastructure\repositories\mod.rs
 File type: .rs
+pub mod sqlite_report_repository;
 pub mod sqlite_user_repository;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\repositories\sqlite_report_repository.rs
+File type: .rs
+use async_trait::async_trait;
+
+use chrono::{DateTime, Utc};
+use sqlx::SqlitePool;
+use uuid::Uuid;
+
+use crate::domain::{
+    models::report::{Report, ReportType},
+    repositories::{RepositoryResult, map_sqlx_error, report_repository::ReportRepository},
+};
+
+#[derive(Clone)]
+pub struct SqliteReportRepository {
+    pool: SqlitePool,
+}
+
+impl SqliteReportRepository {
+    pub fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait]
+impl ReportRepository for SqliteReportRepository {
+    async fn create_report(
+        &self,
+        user_id: Uuid,
+        title: String,
+        report_type: ReportType,
+        description: Option<String>,
+        file_path: String,
+        url: Option<String>,
+    ) -> RepositoryResult<Report> {
+        let report_id = Uuid::new_v4();
+
+        let result = sqlx::query_as!(
+            Report,
+            r#"
+            INSERT INTO reports (id, user_id, report_type, title, description, file_path, url)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING
+                id as "id: uuid::Uuid",
+                user_id as "user_id: uuid::Uuid",
+                report_type as "report_type: ReportType",
+                title,
+                description,
+                file_path,
+                url,
+                created_at as "created_at: DateTime<Utc>",
+                updated_at as "updated_at: DateTime<Utc>"
+            "#,
+            report_id,
+            user_id,
+            report_type,
+            title,
+            description,
+            file_path,
+            url,
+        )
+        .fetch_one(&self.pool)
+        .await;
+
+        match result {
+            Ok(report) => Ok(report),
+            Err(e) => Err(map_sqlx_error(e)),
+        }
+    }
+
+    async fn get_report(&self, id: Uuid) -> RepositoryResult<Option<Report>> {
+        sqlx::query_as!(
+            Report,
+            r#"
+            SELECT 
+                id as "id: uuid::Uuid",
+                user_id as "user_id: uuid::Uuid",
+                report_type as "report_type: ReportType",
+                title,
+                description,
+                file_path,
+                url,
+                created_at as "created_at: DateTime<Utc>",
+                updated_at as "updated_at: DateTime<Utc>"
+            FROM reports
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx_error)
+    }
+}
 
 
 --------------------------------------------------
@@ -1140,12 +1647,12 @@ File End
 File type: .rs
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use sqlx::{Error as SqlxError, SqlitePool};
+use sqlx::SqlitePool;
 use uuid::Uuid;
 
 use crate::domain::{
     models::user::{User, UserRole},
-    repositories::user_repository::{RepositoryError, RepositoryResult, UserRepository},
+    repositories::{RepositoryResult, map_sqlx_error, user_repository::UserRepository},
 };
 
 #[derive(Clone)]
@@ -1156,20 +1663,6 @@ pub struct SqliteUserRepository {
 impl SqliteUserRepository {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
-    }
-}
-
-fn map_sqlx_error(e: SqlxError) -> RepositoryError {
-    match e {
-        SqlxError::RowNotFound => RepositoryError::NotFound,
-        SqlxError::Database(db_err) => {
-            if db_err.is_unique_violation() {
-                RepositoryError::AlreadyExists
-            } else {
-                RepositoryError::DatabaseError(db_err.to_string())
-            }
-        }
-        _ => RepositoryError::DatabaseError(e.to_string()),
     }
 }
 
@@ -1302,6 +1795,74 @@ pub fn hash_password(password: &str) -> PasswordResult<String> {
 pub fn verify_password(password: &str, hashed_password: &str) -> PasswordResult<bool> {
     verify(password, hashed_password).map_err(|e| PasswordError::VerificationError(e.to_string()))
 }
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\storage\file_system_storage.rs
+File type: .rs
+use async_trait::async_trait;
+use bytes::Bytes;
+use chrono::Utc;
+use std::path::Path;
+use tokio::fs;
+
+use crate::domain::ports::storage_port::{StorageError, StoragePort, StorageResult};
+
+#[derive(Clone)]
+pub struct FileSystemStorage {
+    upload_directory: String,
+}
+
+impl FileSystemStorage {
+    pub fn new(upload_directory: String) -> StorageResult<Self> {
+        let path = Path::new(&upload_directory);
+        if !path.exists() {
+            std::fs::create_dir_all(path).map_err(|e| {
+                StorageError::ConfigurationError(format!(
+                    "Failed to create upload directory '{}': {}",
+                    upload_directory, e
+                ))
+            })?;
+        }
+        Ok(Self { upload_directory })
+    }
+}
+
+#[async_trait]
+impl StoragePort for FileSystemStorage {
+    // TODO: maybe just use the file extension from the original file name
+    async fn save_file(&self, original_file_name: &str, data: Bytes) -> StorageResult<String> {
+        let timestamp = Utc::now().timestamp_millis();
+
+        let safe_original_name = original_file_name
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '.' || *c == '-' || *c == '_')
+            .collect::<String>();
+        let unique_file_name = format!("{}_{}", timestamp, safe_original_name);
+
+        let full_path = Path::new(&self.upload_directory).join(&unique_file_name);
+
+        fs::write(&full_path, data)
+            .await
+            .map_err(|e| StorageError::SaveFailed(e.to_string()))?;
+
+        Ok(unique_file_name.to_string())
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\storage\mod.rs
+File type: .rs
+pub mod file_system_storage;
 
 
 --------------------------------------------------

@@ -4,6 +4,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
+use tracing::instrument;
 use validator::Validate;
 
 use crate::api::{
@@ -21,13 +22,17 @@ pub fn user_routes() -> Router<AppState> {
 
 // TODO: create default admin user
 // TODO: check admin role
+#[instrument(skip(state, payload), level = "debug")]
 async fn create_user_handler(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
 ) -> Result<(StatusCode, Json<UserResponse>), ApiError> {
-    payload
-        .validate()
-        .map_err(|e| ApiError::Validation(e.to_string()))?;
+    tracing::debug!("Creating user.");
+
+    payload.validate().map_err(|e| {
+        tracing::warn!("User validation failed: {}", e);
+        ApiError::Validation(e.to_string())
+    })?;
 
     let user = state
         .user_service
@@ -39,13 +44,17 @@ async fn create_user_handler(
         )
         .await?;
 
+    tracing::info!(user_id = %user.id, "User created successfully.");
+
     Ok((StatusCode::CREATED, Json(user.into())))
 }
 
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
 async fn get_current_user_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
 ) -> Result<Json<UserResponse>, ApiError> {
+    tracing::debug!("Fetching current user.");
     let user_id = authenticated_user.claims.sub;
 
     let user = state.user_service.get_user_by_id(user_id).await?;
