@@ -197,6 +197,7 @@ use axum_extra::{
 };
 use jsonwebtoken::{Validation, decode};
 use serde_json::json;
+use tracing::instrument;
 
 use crate::{config::app_config::JWT_KEYS, domain::models::auth::TokenClaims};
 
@@ -234,16 +235,25 @@ where
 {
     type Rejection = AuthError;
 
+    #[instrument(name = "authenticate_user", skip_all, level = "debug")]
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        tracing::debug!("Attempting to extract and validate JWT.");
         let TypedHeader(Authorization(bearer)) = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
             .await
-            .map_err(|_| AuthError::MissingToken)?;
+            .map_err(|e| {
+                tracing::warn!("Failed to extract Authorization header: {:?}", e);
+                AuthError::MissingToken
+            })?;
 
         let token_data =
             decode::<TokenClaims>(bearer.token(), &JWT_KEYS.decoding, &Validation::default())
-                .map_err(|e| AuthError::InvalidToken(e.to_string()))?;
+                .map_err(|e| {
+                    tracing::warn!("JWT decoding/validation failed: {}", e);
+                    AuthError::InvalidToken(e.to_string())
+                })?;
 
+        tracing::debug!(user_id = %token_data.claims.sub, "User authenticated successfully via token.");
         Ok(AuthenticatedUser {
             claims: token_data.claims,
         })
@@ -584,6 +594,7 @@ File End
 ./src/api\routers\auth.rs
 File type: .rs
 use axum::{Json, Router, extract::State, routing::post};
+use tracing::instrument;
 use validator::Validate;
 
 use crate::api::{
@@ -595,13 +606,16 @@ pub fn auth_routes() -> Router<AppState> {
     Router::new().route("/auth/login", post(login_handler))
 }
 
+#[instrument(skip(state, payload), fields(email = %payload.email), level = "debug")]
 async fn login_handler(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<LoginResponse>, ApiError> {
-    payload
-        .validate()
-        .map_err(|e| ApiError::Validation(e.to_string()))?;
+    tracing::debug!("Attempting login.");
+    payload.validate().map_err(|e| {
+        tracing::warn!("Login validation failed: {}", e);
+        ApiError::Validation(e.to_string())
+    })?;
 
     let (user, token) = state
         .auth_service
@@ -611,9 +625,10 @@ async fn login_handler(
     let response = LoginResponse {
         access_token: token,
         token_type: "Bearer".to_string(),
-        user: user.into(),
+        user: user.clone().into(),
     };
 
+    tracing::info!(user_id = %user.id, "User logged in successfully.");
     Ok(Json(response))
 }
 
@@ -626,6 +641,7 @@ File End
 ./src/api\routers\health.rs
 File type: .rs
 use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
+use tracing::instrument;
 
 use crate::api::state::AppState;
 
@@ -633,6 +649,7 @@ pub fn health_routes() -> Router<AppState> {
     Router::new().route("/health", get(health_check_handler))
 }
 
+#[instrument(skip(state), level = "debug")]
 async fn health_check_handler(State(state): State<AppState>) -> impl IntoResponse {
     let response = state.health_service.health_check();
     Json(response)
@@ -675,8 +692,15 @@ File End
 
 ./src/api\routers\report_routes.rs
 File type: .rs
-use axum::{Json, Router, extract::State, http::StatusCode, routing::post};
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    routing::{get, post},
+};
 use axum_typed_multipart::TypedMultipart;
+use tracing::instrument;
+use uuid::Uuid;
 
 use crate::api::{
     auth::AuthenticatedUser,
@@ -689,18 +713,30 @@ use crate::api::{
 };
 
 pub fn report_routes() -> Router<AppState> {
-    Router::new().route(
-        "/reports/screenshots",
-        post(create_screenshot_report_handler),
-    )
-    // TODO: getters for reports
+    let report_routes = Router::new()
+        .route("/{report_id}", get(get_report_handler))
+        .route("/screenshots", post(create_screenshot_report_handler));
+
+    return Router::new().nest("/reports", report_routes);
 }
 
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub, report_id = %report_id), level = "debug")]
+async fn get_report_handler(
+    State(state): State<AppState>,
+    authenticated_user: AuthenticatedUser,
+    Path(report_id): Path<Uuid>,
+) -> Result<(StatusCode, Json<_>), ApiError> {
+    // TODO
+}
+
+#[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
 async fn create_screenshot_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
     TypedMultipart(payload): TypedMultipart<CreateScreenshotReportRequest>,
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
+    tracing::debug!("Creating screenshot report.");
+
     let user_id = authenticated_user.claims.sub;
 
     let title = payload.title;
@@ -729,8 +765,12 @@ async fn create_screenshot_report_handler(
         url: report.url,
     };
 
+    tracing::info!(report_id = %report.id, "Screenshot report created successfully.");
+
     Ok((StatusCode::CREATED, Json(response)))
 }
+
+// TODO: Implement a proper file storage solution, separate concern: move this to a service
 
 
 --------------------------------------------------
@@ -746,6 +786,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
+use tracing::instrument;
 use validator::Validate;
 
 use crate::api::{
@@ -756,20 +797,26 @@ use crate::api::{
 };
 
 pub fn user_routes() -> Router<AppState> {
-    Router::new()
-        .route("/users", post(create_user_handler))
-        .route("/users/me", get(get_current_user_handler))
+    let user_routes = Router::new()
+        .route("/", post(create_user_handler))
+        .route("/me", get(get_current_user_handler));
+
+    return Router::new().nest("/users", user_routes);
 }
 
 // TODO: create default admin user
 // TODO: check admin role
+#[instrument(skip(state, payload), level = "debug")]
 async fn create_user_handler(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
 ) -> Result<(StatusCode, Json<UserResponse>), ApiError> {
-    payload
-        .validate()
-        .map_err(|e| ApiError::Validation(e.to_string()))?;
+    tracing::debug!("Creating user.");
+
+    payload.validate().map_err(|e| {
+        tracing::warn!("User validation failed: {}", e);
+        ApiError::Validation(e.to_string())
+    })?;
 
     let user = state
         .user_service
@@ -781,13 +828,17 @@ async fn create_user_handler(
         )
         .await?;
 
+    tracing::info!(user_id = %user.id, "User created successfully.");
+
     Ok((StatusCode::CREATED, Json(user.into())))
 }
 
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
 async fn get_current_user_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
 ) -> Result<Json<UserResponse>, ApiError> {
+    tracing::debug!("Fetching current user.");
     let user_id = authenticated_user.claims.sub;
 
     let user = state.user_service.get_user_by_id(user_id).await?;
@@ -817,6 +868,7 @@ use std::sync::Arc;
 
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Header, encode};
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -865,26 +917,39 @@ impl AuthService {
         Self { user_service }
     }
 
+    #[instrument(skip(self, password), fields(email = %email), level = "debug")]
     pub async fn login_user(
         &self,
         email: &str,
         password: &str,
     ) -> AuthServiceResult<(User, String)> {
+        tracing::debug!("Attempting to authenticate user.");
+
         let user = self
             .user_service
             .get_user_by_email(email)
             .await
-            .map_err(|_| AuthServiceError::InvalidCredentials)?;
+            .map_err(|_| {
+                tracing::warn!(
+                    "Authentication failed: user not found or other error during lookup."
+                );
+                AuthServiceError::InvalidCredentials
+            })?;
 
         if verify_password(password, &user.password_hash)? {
+            tracing::debug!(user_id = %user.id, "Password verification successful.");
             let token = self.create_jwt(user.id, &user.role)?;
             Ok((user, token))
         } else {
+            tracing::warn!(user_id = %user.id, "Password verification failed.");
             Err(AuthServiceError::InvalidCredentials)
         }
     }
 
+    #[instrument(skip(self), fields(user_id = %user_id, role = %role), level = "debug")]
     fn create_jwt(&self, user_id: Uuid, role: &UserRole) -> Result<String, AuthServiceError> {
+        tracing::debug!("Creating JWT for user.");
+
         let now = Utc::now();
         let iat = now.timestamp() as usize;
         let exp = (now + Duration::seconds(JWT_CONFIG.expiration_seconds)).timestamp() as usize;
@@ -959,6 +1024,7 @@ File End
 File type: .rs
 use bytes::Bytes;
 use std::sync::Arc;
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::domain::{
@@ -982,7 +1048,7 @@ pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 #[derive(Clone)]
 pub struct ReportService {
     report_repository: Arc<dyn ReportRepository>,
-    storage_port: Arc<dyn StoragePort>,
+    storage_port: Arc<StoragePort>,
 }
 
 impl ReportService {
@@ -995,7 +1061,7 @@ impl ReportService {
             storage_port,
         }
     }
-
+    #[instrument(skip(self, file_data), fields(user_id = %user_id), level="info")]
     pub async fn create_screenshot_report(
         &self,
         user_id: Uuid,
@@ -1005,11 +1071,15 @@ impl ReportService {
         description: Option<String>,
         url: Option<String>,
     ) -> ReportServiceResult<Report> {
+        tracing::debug!("Creating screenshot report");
+
+        tracing::debug!("Saving file to storage");
         let file_path = self
             .storage_port
             .save_file(original_file_name, file_data)
             .await?;
 
+        tracing::debug!("Saving report");
         let report = self
             .report_repository
             .create_report(
@@ -1021,6 +1091,10 @@ impl ReportService {
                 url,
             )
             .await?;
+
+        // TODO: overload file path with full file path URL
+
+        tracing::info!(report_id = %report.id, "Screenshot report created successfully");
         Ok(report)
     }
 }
@@ -1035,6 +1109,7 @@ File End
 File type: .rs
 use std::sync::Arc;
 
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -1092,6 +1167,7 @@ impl UserService {
         Self { user_repository }
     }
 
+    #[instrument(skip(self, password), fields(email = %email, first_name = ?first_name, last_name = ?last_name), level = "info")]
     pub async fn create_user(
         &self,
         email: &str,
@@ -1099,7 +1175,7 @@ impl UserService {
         first_name: Option<&str>,
         last_name: Option<&str>,
     ) -> UserServiceResult<User> {
-        tracing::info!(email = %email, "Creating user...");
+        tracing::debug!("Validating user input.");
 
         if email.is_empty() || !email.contains('@') {
             return Err(UserServiceError::ValidationError(
@@ -1112,8 +1188,10 @@ impl UserService {
             ));
         }
 
+        tracing::debug!("Hashing password.");
         let password_hash = hash_password(password)?;
 
+        tracing::debug!("Attempting to save user to repository.");
         let user = self
             .user_repository
             .create_user(email, &password_hash, first_name, last_name, UserRole::User)
@@ -1124,6 +1202,7 @@ impl UserService {
         Ok(user)
     }
 
+    #[instrument(skip(self), level = "debug")]
     pub async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
         self.user_repository
             .find_by_id(user_id)
@@ -1131,6 +1210,7 @@ impl UserService {
             .ok_or(UserServiceError::UserNotFound)
     }
 
+    #[instrument(skip(self), level = "debug")]
     pub async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
         self.user_repository
             .find_by_email(email)
@@ -1279,7 +1359,7 @@ pub struct Report {
     pub report_type: ReportType,
     pub title: String,
     pub description: Option<String>,
-    pub file_path: String, // Path to the stored file
+    pub file_path: String,
     pub url: Option<String>,
     #[sqlx(default)]
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -1648,6 +1728,7 @@ File type: .rs
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sqlx::SqlitePool;
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::domain::{
@@ -1668,6 +1749,7 @@ impl SqliteUserRepository {
 
 #[async_trait]
 impl UserRepository for SqliteUserRepository {
+    #[instrument(skip(self, password_hash), fields(email = %email, role = %role), level = "debug")]
     async fn create_user(
         &self,
         email: &str,
@@ -1677,6 +1759,7 @@ impl UserRepository for SqliteUserRepository {
         role: UserRole,
     ) -> RepositoryResult<User> {
         let user_id = Uuid::new_v4();
+        tracing::debug!(user_id = %user_id, "Executing insert query for new user.");
 
         let result = sqlx::query_as!(
             User,
@@ -1709,6 +1792,7 @@ impl UserRepository for SqliteUserRepository {
         }
     }
 
+    #[instrument(skip(self), fields(email = %email), level = "debug")]
     async fn find_by_email(&self, email: &str) -> RepositoryResult<Option<User>> {
         sqlx::query_as!(
             User,
@@ -1732,6 +1816,7 @@ impl UserRepository for SqliteUserRepository {
         .map_err(map_sqlx_error)
     }
 
+    #[instrument(skip(self), fields(id = %id), level = "debug")]
     async fn find_by_id(&self, id: Uuid) -> RepositoryResult<Option<User>> {
         sqlx::query_as!(
             User,
@@ -1809,6 +1894,7 @@ use bytes::Bytes;
 use chrono::Utc;
 use std::path::Path;
 use tokio::fs;
+use tracing::instrument;
 
 use crate::domain::ports::storage_port::{StorageError, StoragePort, StorageResult};
 
@@ -1835,6 +1921,7 @@ impl FileSystemStorage {
 #[async_trait]
 impl StoragePort for FileSystemStorage {
     // TODO: maybe just use the file extension from the original file name
+    #[instrument(skip(self, data), fields(original_file_name = %original_file_name, file_size = data.len()), level = "debug")]
     async fn save_file(&self, original_file_name: &str, data: Bytes) -> StorageResult<String> {
         let timestamp = Utc::now().timestamp_millis();
 
@@ -1846,9 +1933,11 @@ impl StoragePort for FileSystemStorage {
 
         let full_path = Path::new(&self.upload_directory).join(&unique_file_name);
 
+        tracing::debug!(path = %full_path.display(), "Attempting to write file to disk.");
         fs::write(&full_path, data)
             .await
             .map_err(|e| StorageError::SaveFailed(e.to_string()))?;
+        tracing::debug!(path = %full_path.display(), "File saved successfully.");
 
         Ok(unique_file_name.to_string())
     }

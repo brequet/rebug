@@ -1,24 +1,24 @@
 use std::sync::Arc;
 
 use crate::application::services::{
-    auth_service::AuthService, health_service::HealthService, report_service::ReportService,
-    user_service::UserService,
+    auth_service::AuthServiceInterface, health_service::HealthServiceInterface,
+    report_service::ReportServiceInterface, user_service::UserServiceInterface,
 };
 
 #[derive(Clone)]
 pub struct AppState {
-    pub auth_service: Arc<AuthService>,
-    pub health_service: Arc<HealthService>,
-    pub report_service: Arc<ReportService>,
-    pub user_service: Arc<UserService>,
+    pub auth_service: Arc<dyn AuthServiceInterface>,
+    pub health_service: Arc<dyn HealthServiceInterface>,
+    pub report_service: Arc<dyn ReportServiceInterface>,
+    pub user_service: Arc<dyn UserServiceInterface>,
 }
 
 impl AppState {
     pub fn new(
-        auth_service: Arc<AuthService>,
-        health_service: Arc<HealthService>,
-        report_service: Arc<ReportService>,
-        user_service: Arc<UserService>,
+        auth_service: Arc<dyn AuthServiceInterface>,
+        health_service: Arc<dyn HealthServiceInterface>,
+        report_service: Arc<dyn ReportServiceInterface>,
+        user_service: Arc<dyn UserServiceInterface>,
     ) -> Self {
         AppState {
             auth_service,

@@ -1,6 +1,12 @@
-use axum::{Json, Router, extract::State, http::StatusCode, routing::post};
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    routing::{get, post},
+};
 use axum_typed_multipart::TypedMultipart;
 use tracing::instrument;
+use uuid::Uuid;
 
 use crate::api::{
     auth::AuthenticatedUser,
@@ -13,11 +19,22 @@ use crate::api::{
 };
 
 pub fn report_routes() -> Router<AppState> {
-    Router::new().route(
-        "/reports/screenshots",
-        post(create_screenshot_report_handler),
-    )
-    // TODO: getters for reports
+    let report_routes = Router::new()
+        .route("/{report_id}", get(get_report_handler))
+        .route("/screenshots", post(create_screenshot_report_handler));
+
+    Router::new().nest("/reports", report_routes)
+}
+
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub, report_id = %report_id), level = "debug")]
+async fn get_report_handler(
+    State(state): State<AppState>,
+    authenticated_user: AuthenticatedUser,
+    Path(report_id): Path<Uuid>,
+) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
+    Err(ApiError::InternalServerError(
+        "Fetching report details is not implemented yet.".to_string(),
+    ))
 }
 
 #[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]

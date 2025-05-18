@@ -27,7 +27,7 @@ pub struct Report {
     pub report_type: ReportType,
     pub title: String,
     pub description: Option<String>,
-    pub file_path: String, // Path to the stored file
+    pub file_path: String,
     pub url: Option<String>,
     #[sqlx(default)]
     pub created_at: chrono::DateTime<chrono::Utc>,

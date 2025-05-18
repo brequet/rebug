@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Header, encode};
 use tracing::instrument;
@@ -14,7 +15,7 @@ use crate::{
     infrastructure::security::password_hasher::{PasswordError, verify_password},
 };
 
-use super::user_service::UserService;
+use super::user_service::UserServiceInterface;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AuthServiceError {
@@ -41,22 +42,46 @@ impl From<PasswordError> for AuthServiceError {
 
 pub type AuthServiceResult<T> = Result<T, AuthServiceError>;
 
+#[async_trait]
+pub trait AuthServiceInterface: Send + Sync {
+    async fn login_user(&self, email: &str, password: &str) -> AuthServiceResult<(User, String)>;
+}
+
 #[derive(Clone)]
 pub struct AuthService {
-    user_service: Arc<UserService>,
+    user_service: Arc<dyn UserServiceInterface>,
 }
 
 impl AuthService {
-    pub fn new(user_service: Arc<UserService>) -> Self {
+    pub fn new(user_service: Arc<dyn UserServiceInterface>) -> Self {
         Self { user_service }
     }
 
+    #[instrument(skip(self), fields(user_id = %user_id, role = %role), level = "debug")]
+    fn create_jwt(&self, user_id: Uuid, role: &UserRole) -> Result<String, AuthServiceError> {
+        tracing::debug!("Creating JWT for user.");
+
+        let now = Utc::now();
+        let iat = now.timestamp() as usize;
+        let exp = (now + Duration::seconds(JWT_CONFIG.expiration_seconds)).timestamp() as usize;
+
+        let claims = TokenClaims {
+            sub: user_id,
+            role: role.to_string(),
+            exp,
+            iat,
+        };
+
+        encode(&Header::default(), &claims, &JWT_KEYS.encoding).map_err(|e| {
+            AuthServiceError::TokenCreationError(format!("Failed to create JWT: {}", e))
+        })
+    }
+}
+
+#[async_trait]
+impl AuthServiceInterface for AuthService {
     #[instrument(skip(self, password), fields(email = %email), level = "debug")]
-    pub async fn login_user(
-        &self,
-        email: &str,
-        password: &str,
-    ) -> AuthServiceResult<(User, String)> {
+    async fn login_user(&self, email: &str, password: &str) -> AuthServiceResult<(User, String)> {
         tracing::debug!("Attempting to authenticate user.");
 
         let user = self
@@ -78,25 +103,5 @@ impl AuthService {
             tracing::warn!(user_id = %user.id, "Password verification failed.");
             Err(AuthServiceError::InvalidCredentials)
         }
-    }
-
-    #[instrument(skip(self), fields(user_id = %user_id, role = %role), level = "debug")]
-    fn create_jwt(&self, user_id: Uuid, role: &UserRole) -> Result<String, AuthServiceError> {
-        tracing::debug!("Creating JWT for user.");
-
-        let now = Utc::now();
-        let iat = now.timestamp() as usize;
-        let exp = (now + Duration::seconds(JWT_CONFIG.expiration_seconds)).timestamp() as usize;
-
-        let claims = TokenClaims {
-            sub: user_id,
-            role: role.to_string(),
-            exp,
-            iat,
-        };
-
-        encode(&Header::default(), &claims, &JWT_KEYS.encoding).map_err(|e| {
-            AuthServiceError::TokenCreationError(format!("Failed to create JWT: {}", e))
-        })
     }
 }

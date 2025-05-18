@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use bytes::Bytes;
 use std::sync::Arc;
 use tracing::instrument;
@@ -21,6 +22,19 @@ pub enum ReportServiceError {
 
 pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 
+#[async_trait]
+pub trait ReportServiceInterface: Send + Sync {
+    async fn create_screenshot_report(
+        &self,
+        user_id: Uuid,
+        original_file_name: &str,
+        file_data: Bytes,
+        title: String,
+        description: Option<String>,
+        url: Option<String>,
+    ) -> ReportServiceResult<Report>;
+}
+
 #[derive(Clone)]
 pub struct ReportService {
     report_repository: Arc<dyn ReportRepository>,
@@ -37,8 +51,12 @@ impl ReportService {
             storage_port,
         }
     }
+}
+
+#[async_trait]
+impl ReportServiceInterface for ReportService {
     #[instrument(skip(self, file_data), fields(user_id = %user_id), level="info")]
-    pub async fn create_screenshot_report(
+    async fn create_screenshot_report(
         &self,
         user_id: Uuid,
         original_file_name: &str,
@@ -67,6 +85,8 @@ impl ReportService {
                 url,
             )
             .await?;
+
+        // TODO: overload file path with full file path URL
 
         tracing::info!(report_id = %report.id, "Screenshot report created successfully");
         Ok(report)

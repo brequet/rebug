@@ -15,9 +15,11 @@ use crate::api::{
 };
 
 pub fn user_routes() -> Router<AppState> {
-    Router::new()
-        .route("/users", post(create_user_handler))
-        .route("/users/me", get(get_current_user_handler))
+    let user_routes = Router::new()
+        .route("/", post(create_user_handler))
+        .route("/me", get(get_current_user_handler));
+
+    Router::new().nest("/users", user_routes)
 }
 
 // TODO: create default admin user

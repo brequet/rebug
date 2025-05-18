@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use tracing::instrument;
 use uuid::Uuid;
 
@@ -48,6 +49,20 @@ impl From<PasswordError> for UserServiceError {
 
 pub type UserServiceResult<T> = Result<T, UserServiceError>;
 
+#[async_trait]
+pub trait UserServiceInterface: Send + Sync {
+    async fn create_user(
+        &self,
+        email: &str,
+        password: &str,
+        first_name: Option<&str>,
+        last_name: Option<&str>,
+    ) -> UserServiceResult<User>;
+
+    async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User>;
+    async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User>;
+}
+
 #[derive(Clone)]
 pub struct UserService {
     user_repository: Arc<dyn UserRepository>,
@@ -57,9 +72,12 @@ impl UserService {
     pub fn new(user_repository: Arc<dyn UserRepository>) -> Self {
         Self { user_repository }
     }
+}
 
+#[async_trait]
+impl UserServiceInterface for UserService {
     #[instrument(skip(self, password), fields(email = %email, first_name = ?first_name, last_name = ?last_name), level = "info")]
-    pub async fn create_user(
+    async fn create_user(
         &self,
         email: &str,
         password: &str,
@@ -94,7 +112,7 @@ impl UserService {
     }
 
     #[instrument(skip(self), level = "debug")]
-    pub async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
+    async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User> {
         self.user_repository
             .find_by_id(user_id)
             .await?
@@ -102,7 +120,7 @@ impl UserService {
     }
 
     #[instrument(skip(self), level = "debug")]
-    pub async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
+    async fn get_user_by_email(&self, email: &str) -> UserServiceResult<User> {
         self.user_repository
             .find_by_email(email)
             .await?
