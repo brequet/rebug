@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_7Du4V796sL
 createdAt: 2025-05-17T10:07:16.093068100
-updatedAt: 2025-05-17T16:25:36.327452500
+updatedAt: 2025-05-20T11:06:29.211781400
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_kw6XVpV4FT
 authentication: {}
@@ -13,14 +13,14 @@ description: ''
 headers:
 - enabled: true
   name: Authorization
-  value: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmZjEyYjIyMy01ZDJlLTQ4YjYtYTBmYy0yZDdmNDMwZGI2MzMiLCJyb2xlIjoiVXNlciIsImV4cCI6MTc0ODEwMzczNywiaWF0IjoxNzQ3NDk4OTM3fQ.k45zBpS42MW0NDfS3edhe5wBpqUDyokWTS3hZv67F74
+  value: Bearer ${[ JWT ]}
   id: ExiZA3SGQU
 - enabled: true
   name: ''
   value: ''
-  id: NJNrXavffg
+  id: uYPv7rCMyD
 method: GET
 name: Get me (user)
 sortPriority: 0.0
-url: http://127.0.0.1:3000/api/users/me
+url: ${[ BASE_URL ]}/api/users/me
 urlParameters: []

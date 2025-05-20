@@ -20,7 +20,7 @@ sqlx = { version = "0.8.5", features = ["runtime-tokio-rustls", "sqlite", "uuid"
 thiserror = "2.0.12"
 tokio = { version = "1.45.0", features = ["full"] }
 tower = "0.5.2"
-tower-http = { version = "0.6.4", features = ["cors", "trace", "tracing"] }
+tower-http = { version = "0.6.4", features = ["cors", "fs", "trace", "tracing"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 uuid = { version = "1.16.0", features = ["v4", "serde"] }

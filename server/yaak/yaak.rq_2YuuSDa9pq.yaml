@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_2YuuSDa9pq
 createdAt: 2025-05-18T19:30:38.136110
-updatedAt: 2025-05-18T19:31:48.562324700
+updatedAt: 2025-05-20T11:07:56.773004
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -13,14 +13,14 @@ description: ''
 headers:
 - enabled: true
   name: Authorization
-  value: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmZjEyYjIyMy01ZDJlLTQ4YjYtYTBmYy0yZDdmNDMwZGI2MzMiLCJyb2xlIjoiVXNlciIsImV4cCI6MTc0ODEwMzczNywiaWF0IjoxNzQ3NDk4OTM3fQ.k45zBpS42MW0NDfS3edhe5wBpqUDyokWTS3hZv67F74
+  value: Bearer ${[ JWT ]}
   id: PaKn3QMswH
 - enabled: true
   name: ''
   value: ''
-  id: qiwudQGzHA
+  id: chDXZHHRmk
 method: GET
 name: Get report
 sortPriority: -0.0001
-url: http://localhost:3000/api/reports/fe2964f8-92f9-4b92-bb66-9737a3890551
+url: ${[ BASE_URL ]}/api/reports/59553438-8f05-4b14-9172-79d6a1f25bb3
 urlParameters: []

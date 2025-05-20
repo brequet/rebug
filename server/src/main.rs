@@ -18,7 +18,10 @@ use rebug::{
         storage::file_system_storage::FileSystemStorage,
     },
 };
-use tower_http::trace::{self, TraceLayer};
+use tower_http::{
+    services::ServeDir,
+    trace::{self, TraceLayer},
+};
 use tracing::{Level, info};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
@@ -48,11 +51,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run database migrations");
     info!("Database migrations completed.");
 
+    // TODO: all this in clean config module
     let upload_dir = env::var("UPLOAD_DIRECTORY").unwrap_or_else(|_| "uploads".to_string());
     let base_url =
         env::var("FILE_BASE_URL").unwrap_or_else(|_| "http://localhost:3000/files".to_string());
     let file_system_storage = Arc::new(
-        FileSystemStorage::new(upload_dir, base_url)
+        FileSystemStorage::new(upload_dir.clone(), base_url)
             .expect("Failed to initialize file system storage"),
     );
     let storage_port: Arc<dyn StoragePort> = file_system_storage;
@@ -69,8 +73,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
+    let static_files_service = ServeDir::new(upload_dir);
+
     let router = Router::new()
         .nest("/api", get_api_routes())
+        .nest_service("/files", static_files_service)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),

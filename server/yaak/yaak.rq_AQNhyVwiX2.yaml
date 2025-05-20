@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_y2D3Pkdysb
-createdAt: 2025-05-17T09:53:49.892869500
-updatedAt: 2025-05-20T11:09:07.442442
+id: rq_AQNhyVwiX2
+createdAt: 2025-05-20T11:23:52.170836
+updatedAt: 2025-05-20T11:24:08.196589900
 workspaceId: wk_uEV9dkQtcy
 folderId: null
 authentication: {}
@@ -12,7 +12,7 @@ bodyType: null
 description: ''
 headers: []
 method: GET
-name: health
-sortPriority: 3000.0
-url: ${[ BASE_URL ]}/api/health
+name: Get file
+sortPriority: 2500.0
+url: http://localhost:3000/files/1747739243333_image-1743197808485.png
 urlParameters: []

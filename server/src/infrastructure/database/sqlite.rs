@@ -1,4 +1,4 @@
-use sqlx::SqlitePool;
+use sqlx::{SqlitePool, sqlite::SqliteConnectOptions};
 
 #[derive(Clone)]
 pub struct Sqlite {

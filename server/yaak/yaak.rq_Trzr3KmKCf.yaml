@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_Trzr3KmKCf
 createdAt: 2025-05-17T10:05:42.819660200
-updatedAt: 2025-05-18T13:44:26.408693700
+updatedAt: 2025-05-20T11:06:37.056213100
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_kw6XVpV4FT
 authentication: {}
@@ -10,7 +10,7 @@ authenticationType: null
 body:
   text: |-
     {
-      "email": "test1@example.com",
+      "email": "test@example.com",
       "password": "password123",
       "first_name": "Test",
       "last_name": "User"
@@ -25,5 +25,5 @@ headers:
 method: POST
 name: Create User
 sortPriority: 0.0
-url: http://127.0.0.1:3000/api/users
+url: ${[ BASE_URL ]}/api/users
 urlParameters: []

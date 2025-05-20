@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_syfVMhGcs2
 createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-05-17T16:29:48.677446
+updatedAt: 2025-05-20T11:07:18.213883400
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -22,11 +22,11 @@ body:
     name: url
     value: http://example.com/page-with-bug
   - enabled: true
-    file: C:\dev\projects\rebug\server\yaak\image-1743197808485.png
+    file: C:\shared\code\project\rebug\server\yaak\image-1743197808485.png
     id: JcNnCpVQi4
     name: file
   - enabled: true
-    id: 4pgnHCGeie
+    id: gbBya4nHYm
     name: ''
     value: ''
 bodyType: multipart/form-data
@@ -34,7 +34,7 @@ description: ''
 headers:
 - enabled: true
   name: Authorization
-  value: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmZjEyYjIyMy01ZDJlLTQ4YjYtYTBmYy0yZDdmNDMwZGI2MzMiLCJyb2xlIjoiVXNlciIsImV4cCI6MTc0ODEwMzczNywiaWF0IjoxNzQ3NDk4OTM3fQ.k45zBpS42MW0NDfS3edhe5wBpqUDyokWTS3hZv67F74
+  value: Bearer ${[ JWT ]}
   id: RT9QRSM9t4
 - enabled: true
   name: Content-Type
@@ -43,9 +43,9 @@ headers:
 - enabled: true
   name: ''
   value: ''
-  id: j4vqr3UtiN
+  id: MmZbINkRIR
 method: POST
 name: Upload screenshot
 sortPriority: 0.0
-url: http://localhost:3000/api/reports/screenshots
+url: ${[ BASE_URL ]}/api/reports/screenshots
 urlParameters: []
