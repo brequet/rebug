@@ -43,6 +43,7 @@ async fn create_user_handler(
             &payload.password,
             payload.first_name.as_deref(),
             payload.last_name.as_deref(),
+            payload.role,
         )
         .await?;
 

@@ -57,6 +57,7 @@ pub trait UserServiceInterface: Send + Sync {
         password: &str,
         first_name: Option<&str>,
         last_name: Option<&str>,
+        user_role: UserRole,
     ) -> UserServiceResult<User>;
 
     async fn get_user_by_id(&self, user_id: Uuid) -> UserServiceResult<User>;
@@ -83,6 +84,7 @@ impl UserServiceInterface for UserService {
         password: &str,
         first_name: Option<&str>,
         last_name: Option<&str>,
+        user_role: UserRole,
     ) -> UserServiceResult<User> {
         tracing::debug!("Validating user input.");
 
@@ -103,7 +105,7 @@ impl UserServiceInterface for UserService {
         tracing::debug!("Attempting to save user to repository.");
         let user = self
             .user_repository
-            .create_user(email, &password_hash, first_name, last_name, UserRole::User)
+            .create_user(email, &password_hash, first_name, last_name, user_role)
             .await
             .map_err(UserServiceError::from)?;
 

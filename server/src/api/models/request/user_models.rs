@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use validator::Validate;
 
+use crate::domain::models::user::UserRole;
+
 #[derive(Deserialize, Validate)]
 pub struct CreateUserRequest {
     #[validate(email)]
@@ -11,4 +13,5 @@ pub struct CreateUserRequest {
     pub first_name: Option<String>,
     #[validate(length(min = 1))]
     pub last_name: Option<String>,
+    pub role: UserRole,
 }

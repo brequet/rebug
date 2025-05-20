@@ -4,11 +4,13 @@ use axum::Router;
 use rebug::{
     api::{routers::get_api_routes, state::AppState},
     application::services::{
-        auth_service::AuthService, health_service::HealthService, report_service::ReportService,
-        user_service::UserService,
+        auth_service::AuthService,
+        health_service::HealthService,
+        report_service::ReportService,
+        user_service::{UserService, UserServiceInterface},
     },
     config::app_config::APP_CONFIG,
-    domain::ports::storage_port::StoragePort,
+    domain::{models::user::UserRole, ports::storage_port::StoragePort},
     infrastructure::{
         database::sqlite::Sqlite,
         repositories::{
@@ -22,7 +24,7 @@ use tower_http::{
     services::ServeDir,
     trace::{self, TraceLayer},
 };
-use tracing::{Level, info};
+use tracing::Level;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[tokio::main]
@@ -41,12 +43,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("Failed to create SQLite connection pool");
 
-    info!("Running database migrations...");
+    tracing::info!("Running database migrations...");
     sqlx::migrate!()
         .run(&sqlite_connection.get_pool())
         .await
         .expect("Failed to run database migrations");
-    info!("Database migrations completed.");
+    tracing::info!("Database migrations completed.");
 
     let file_system_storage = Arc::new(
         FileSystemStorage::new(
@@ -67,6 +69,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
     let report_service = Arc::new(ReportService::new(report_repository, storage_port));
 
+    if let Err(e) = setup_initial_admin(user_service.clone()).await {
+        tracing::error!("Failed to setup initial admin user: {}", e);
+        return Err(e);
+    }
+
     let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
     let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
@@ -85,10 +92,58 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parse::<u16>()?;
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
-    info!("Starting server on {}", addr);
+    tracing::info!("Starting server on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, router).await?;
+
+    Ok(())
+}
+
+async fn setup_initial_admin(
+    user_service: Arc<dyn UserServiceInterface>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match user_service
+        .get_user_by_email(&APP_CONFIG.default_admin_email)
+        .await
+    {
+        Ok(_) => {
+            tracing::info!(
+                "Default admin user with email '{}' already exists.",
+                APP_CONFIG.default_admin_email
+            );
+        }
+        Err(e) => {
+            if let rebug::application::services::user_service::UserServiceError::UserNotFound = e {
+                tracing::info!(
+                    "Default admin user with email '{}' not found. Creating...",
+                    APP_CONFIG.default_admin_email
+                );
+                user_service
+                    .create_user(
+                        &APP_CONFIG.default_admin_email,
+                        &APP_CONFIG.default_admin_password,
+                        Some(&APP_CONFIG.default_admin_first_name),
+                        Some(&APP_CONFIG.default_admin_last_name),
+                        UserRole::Admin,
+                    )
+                    .await
+                    .map_err(|create_err| {
+                        format!("Failed to create default admin user: {}", create_err)
+                    })?;
+                tracing::info!(
+                    "Default admin user '{}' created successfully.",
+                    APP_CONFIG.default_admin_email
+                );
+            } else {
+                tracing::error!(
+                    "Error checking for default admin user: {}. Admin not created.",
+                    e
+                );
+                return Err(Box::new(e));
+            }
+        }
+    }
 
     Ok(())
 }

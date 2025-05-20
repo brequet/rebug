@@ -1,0 +1,27 @@
+type: http_request
+model: http_request
+id: rq_26gQDCWdu2
+createdAt: 2025-05-20T19:46:15.982952300
+updatedAt: 2025-05-20T19:46:36.619886800
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_BnL4gQN527
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "email": "admin@rebug.com",
+      "password": "administrator"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: null
+method: POST
+name: Login default admin
+sortPriority: 0.001
+url: http://127.0.0.1:3000/api/auth/login
+urlParameters: []
