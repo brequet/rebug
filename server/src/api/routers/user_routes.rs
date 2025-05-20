@@ -8,7 +8,7 @@ use tracing::instrument;
 use validator::Validate;
 
 use crate::api::{
-    auth::AuthenticatedUser,
+    auth::{AuthenticatedAdmin, AuthenticatedUser},
     error::ApiError,
     models::{request::user_models::CreateUserRequest, response::user_models::UserResponse},
     state::AppState,
@@ -24,9 +24,10 @@ pub fn user_routes() -> Router<AppState> {
 
 // TODO: create default admin user
 // TODO: check admin role
-#[instrument(skip(state, payload), level = "debug")]
+#[instrument(skip(state, payload, authenticated_admin), fields(admin_id = %authenticated_admin.claims.sub), level = "debug")]
 async fn create_user_handler(
     State(state): State<AppState>,
+    authenticated_admin: AuthenticatedAdmin,
     Json(payload): Json<CreateUserRequest>,
 ) -> Result<(StatusCode, Json<UserResponse>), ApiError> {
     tracing::debug!("Creating user.");

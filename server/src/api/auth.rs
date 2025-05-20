@@ -12,7 +12,10 @@ use jsonwebtoken::{Validation, decode};
 use serde_json::json;
 use tracing::instrument;
 
-use crate::{config::app_config::JWT_KEYS, domain::models::auth::TokenClaims};
+use crate::{
+    config::app_config::JWT_KEYS,
+    domain::models::{auth::TokenClaims, user::UserRole},
+};
 
 #[derive(Debug)]
 pub enum AuthError {
@@ -70,5 +73,34 @@ where
         Ok(AuthenticatedUser {
             claims: token_data.claims,
         })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AuthenticatedAdmin {
+    pub claims: TokenClaims,
+}
+
+impl<S> FromRequestParts<S> for AuthenticatedAdmin
+where
+    S: Send + Sync,
+{
+    type Rejection = AuthError;
+
+    #[instrument(name = "authenticate_admin", skip_all, level = "debug")]
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        tracing::debug!("Attempting to extract and validate admin user.");
+
+        let AuthenticatedUser { claims } =
+            AuthenticatedUser::from_request_parts(parts, state).await?;
+
+        if claims.role == UserRole::Admin.to_string() {
+            Ok(AuthenticatedAdmin { claims })
+        } else {
+            tracing::warn!(user_id = %claims.sub, "User is not an admin. Role found: {}. Access denied.", claims.role);
+            Err(AuthError::InvalidToken(
+                "User does not have admin privileges".to_string(),
+            ))
+        }
     }
 }
