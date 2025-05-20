@@ -1,13 +1,13 @@
 use std::{env, net::SocketAddr, sync::Arc};
 
 use axum::Router;
-use dotenv::dotenv;
 use rebug::{
     api::{routers::get_api_routes, state::AppState},
     application::services::{
         auth_service::AuthService, health_service::HealthService, report_service::ReportService,
         user_service::UserService,
     },
+    config::app_config::APP_CONFIG,
     domain::ports::storage_port::StoragePort,
     infrastructure::{
         database::sqlite::Sqlite,
@@ -27,8 +27,6 @@ use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
-
     let subscriber = FmtSubscriber::builder()
         .with_env_filter(
             EnvFilter::try_from_default_env()
@@ -39,8 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::subscriber::set_global_default(subscriber)
         .expect("Setting default tracing subscriber failed");
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
-    let sqlite_connection = Sqlite::new(database_url.clone())
+    let sqlite_connection = Sqlite::new(APP_CONFIG.database_url.clone())
         .await
         .expect("Failed to create SQLite connection pool");
 
@@ -51,13 +48,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run database migrations");
     info!("Database migrations completed.");
 
-    // TODO: all this in clean config module
-    let upload_dir = env::var("UPLOAD_DIRECTORY").unwrap_or_else(|_| "uploads".to_string());
-    let base_url =
-        env::var("FILE_BASE_URL").unwrap_or_else(|_| "http://localhost:3000/files".to_string());
     let file_system_storage = Arc::new(
-        FileSystemStorage::new(upload_dir.clone(), base_url)
-            .expect("Failed to initialize file system storage"),
+        FileSystemStorage::new(
+            APP_CONFIG.upload_directory.clone(),
+            APP_CONFIG.file_base_url.clone(),
+        )
+        .expect("Failed to initialize file system storage"),
     );
     let storage_port: Arc<dyn StoragePort> = file_system_storage;
 
@@ -73,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
-    let static_files_service = ServeDir::new(upload_dir);
+    let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
 
     let router = Router::new()
         .nest("/api", get_api_routes())

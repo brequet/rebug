@@ -1,0 +1,9 @@
+database_url = "sqlite://./rebug.db?mode=rwc"
+upload_directory = "./storage_data/uploads"
+file_base_url = "http://localhost:3000/files"
+jwt_secret = "your-super-secure-and-long-secret-key-here"
+jwt_expiration_seconds = 604800                           # 7 days
+default_admin_email = "admin@example.com"
+default_admin_password = "admin"
+default_admin_first_name = "Admin"
+default_admin_last_name = "User"

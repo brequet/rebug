@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_syfVMhGcs2
 createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-05-20T11:07:18.213883400
+updatedAt: 2025-05-20T19:20:44.015501200
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -22,11 +22,11 @@ body:
     name: url
     value: http://example.com/page-with-bug
   - enabled: true
-    file: C:\shared\code\project\rebug\server\yaak\image-1743197808485.png
+    file: C:\dev\projects\rebug\server\yaak\image-1743197808485.png
     id: JcNnCpVQi4
     name: file
   - enabled: true
-    id: gbBya4nHYm
+    id: Q72WzDvNj9
     name: ''
     value: ''
 bodyType: multipart/form-data

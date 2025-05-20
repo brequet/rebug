@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_AQNhyVwiX2
 createdAt: 2025-05-20T11:23:52.170836
-updatedAt: 2025-05-20T11:24:08.196589900
+updatedAt: 2025-05-20T19:21:24.161299600
 workspaceId: wk_uEV9dkQtcy
 folderId: null
 authentication: {}
@@ -14,5 +14,5 @@ headers: []
 method: GET
 name: Get file
 sortPriority: 2500.0
-url: http://localhost:3000/files/1747739243333_image-1743197808485.png
+url: http://localhost:3000/files/1747768857535_image-1743197808485.png
 urlParameters: []

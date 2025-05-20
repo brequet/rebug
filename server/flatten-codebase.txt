@@ -108,7 +108,10 @@ use rebug::{
         storage::file_system_storage::FileSystemStorage,
     },
 };
-use tower_http::trace::{self, TraceLayer};
+use tower_http::{
+    services::ServeDir,
+    trace::{self, TraceLayer},
+};
 use tracing::{Level, info};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
@@ -138,9 +141,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run database migrations");
     info!("Database migrations completed.");
 
+    // TODO: all this in clean config module
     let upload_dir = env::var("UPLOAD_DIRECTORY").unwrap_or_else(|_| "uploads".to_string());
+    let base_url =
+        env::var("FILE_BASE_URL").unwrap_or_else(|_| "http://localhost:3000/files".to_string());
     let file_system_storage = Arc::new(
-        FileSystemStorage::new(upload_dir).expect("Failed to initialize file system storage"),
+        FileSystemStorage::new(upload_dir.clone(), base_url)
+            .expect("Failed to initialize file system storage"),
     );
     let storage_port: Arc<dyn StoragePort> = file_system_storage;
 
@@ -156,8 +163,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app_state = AppState::new(auth_service, health_service, report_service, user_service);
 
+    let static_files_service = ServeDir::new(upload_dir);
+
     let router = Router::new()
         .nest("/api", get_api_routes())
+        .nest_service("/files", static_files_service)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),
@@ -1139,7 +1149,7 @@ impl ReportServiceInterface for ReportService {
             .await?;
 
         tracing::debug!("Saving report");
-        let report = self
+        let mut report = self
             .report_repository
             .create_report(
                 user_id,
@@ -1151,7 +1161,7 @@ impl ReportServiceInterface for ReportService {
             )
             .await?;
 
-        // TODO: overload file path with full file path URL
+        report.file_path = self.storage_port.get_public_url(&report.file_path);
 
         tracing::info!(report_id = %report.id, "Screenshot report created successfully");
         Ok(report)
@@ -1161,11 +1171,13 @@ impl ReportServiceInterface for ReportService {
     async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report> {
         tracing::debug!("Fetching report with ID: {}", id);
 
-        let report = self
+        let mut report = self
             .report_repository
             .get_report(id)
             .await?
             .ok_or(ReportServiceError::ReportNotFound)?;
+
+        report.file_path = self.storage_port.get_public_url(&report.file_path);
 
         tracing::info!(report_id = %report.id, "Report fetched successfully");
         Ok(report)
@@ -1443,6 +1455,7 @@ impl fmt::Display for ReportType {
     }
 }
 
+// TODO: Add a dedicated field for full url
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Report {
     pub id: Uuid,
@@ -1542,6 +1555,8 @@ pub type StorageResult<T> = Result<T, StorageError>;
 pub trait StoragePort: Send + Sync {
     /// Saves file data and returns a unique identifier or path to the stored file.
     async fn save_file(&self, file_name: &str, data: Bytes) -> StorageResult<String>;
+
+    fn get_public_url(&self, file_path: &str) -> String;
     // Potentially add other methods like:
     // async fn retrieve_file(&self, file_identifier: &str) -> StorageResult<Bytes>;
     // async fn delete_file(&self, file_identifier: &str) -> StorageResult<()>;
@@ -1992,10 +2007,11 @@ use crate::domain::ports::storage_port::{StorageError, StoragePort, StorageResul
 #[derive(Clone)]
 pub struct FileSystemStorage {
     upload_directory: String,
+    base_url: String,
 }
 
 impl FileSystemStorage {
-    pub fn new(upload_directory: String) -> StorageResult<Self> {
+    pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
         let path = Path::new(&upload_directory);
         if !path.exists() {
             std::fs::create_dir_all(path).map_err(|e| {
@@ -2005,7 +2021,11 @@ impl FileSystemStorage {
                 ))
             })?;
         }
-        Ok(Self { upload_directory })
+
+        Ok(Self {
+            upload_directory,
+            base_url,
+        })
     }
 }
 
@@ -2031,6 +2051,11 @@ impl StoragePort for FileSystemStorage {
         tracing::debug!(path = %full_path.display(), "File saved successfully.");
 
         Ok(unique_file_name.to_string())
+    }
+
+    #[instrument(skip(self), level = "debug")]
+    fn get_public_url(&self, file_path: &str) -> String {
+        format!("{}/{}", self.base_url, file_path)
     }
 }
 

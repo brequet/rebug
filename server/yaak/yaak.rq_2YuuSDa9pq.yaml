@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_2YuuSDa9pq
 createdAt: 2025-05-18T19:30:38.136110
-updatedAt: 2025-05-20T11:07:56.773004
+updatedAt: 2025-05-20T19:21:12.888911800
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -21,6 +21,6 @@ headers:
   id: chDXZHHRmk
 method: GET
 name: Get report
-sortPriority: -0.0001
-url: ${[ BASE_URL ]}/api/reports/59553438-8f05-4b14-9172-79d6a1f25bb3
+sortPriority: -0.00009999999747378752
+url: ${[ BASE_URL ]}/api/reports/0902e4c3-d6be-473a-9a00-d3d5ca972583
 urlParameters: []

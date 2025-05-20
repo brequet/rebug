@@ -7,7 +7,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    config::app_config::{JWT_CONFIG, JWT_KEYS},
+    config::app_config::{APP_CONFIG, JWT_KEYS},
     domain::models::{
         auth::TokenClaims,
         user::{User, UserRole},
@@ -63,7 +63,7 @@ impl AuthService {
 
         let now = Utc::now();
         let iat = now.timestamp() as usize;
-        let exp = (now + Duration::seconds(JWT_CONFIG.expiration_seconds)).timestamp() as usize;
+        let exp = (now + Duration::seconds(APP_CONFIG.jwt_expiration_seconds)).timestamp() as usize;
 
         let claims = TokenClaims {
             sub: user_id,
