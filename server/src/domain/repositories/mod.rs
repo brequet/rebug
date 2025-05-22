@@ -1,5 +1,6 @@
 use sqlx::Error as SqlxError;
 
+pub mod board_repository;
 pub mod report_repository;
 pub mod user_repository;
 

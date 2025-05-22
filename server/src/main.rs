@@ -5,6 +5,7 @@ use rebug::{
     api::{routers::get_api_routes, state::AppState},
     application::services::{
         auth_service::AuthService,
+        board_service::BoardService,
         health_service::HealthService,
         report_service::ReportService,
         user_service::{UserService, UserServiceInterface},
@@ -14,6 +15,7 @@ use rebug::{
     infrastructure::{
         database::sqlite::Sqlite,
         repositories::{
+            sqlite_board_repository::SqliteBoardRepository,
             sqlite_report_repository::SqliteReportRepository,
             sqlite_user_repository::SqliteUserRepository,
         },
@@ -61,8 +63,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let health_service = Arc::new(HealthService);
 
+    let board_repository = Arc::new(SqliteBoardRepository::new(sqlite_connection.get_pool()));
+    let board_service = Arc::new(BoardService::new(board_repository));
+
     let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
-    let user_service = Arc::new(UserService::new(user_repository));
+    let user_service = Arc::new(UserService::new(user_repository, board_service.clone()));
 
     let auth_service = Arc::new(AuthService::new(user_service.clone()));
 

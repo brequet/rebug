@@ -22,8 +22,6 @@ pub fn user_routes() -> Router<AppState> {
     Router::new().nest("/users", user_routes)
 }
 
-// TODO: create default admin user
-// TODO: check admin role
 #[instrument(skip(state, payload, authenticated_admin), fields(admin_id = %authenticated_admin.claims.sub), level = "debug")]
 async fn create_user_handler(
     State(state): State<AppState>,

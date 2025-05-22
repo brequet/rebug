@@ -34,7 +34,7 @@ impl UserRepository for SqliteUserRepository {
         let user_id = Uuid::new_v4();
         tracing::debug!(user_id = %user_id, "Executing insert query for new user.");
 
-        let result = sqlx::query_as!(
+        sqlx::query_as!(
             User,
             r#"
             INSERT INTO users (id, email, password_hash, first_name, last_name, role)
@@ -57,12 +57,8 @@ impl UserRepository for SqliteUserRepository {
             role
         )
         .fetch_one(&self.pool)
-        .await;
-
-        match result {
-            Ok(user) => Ok(user),
-            Err(e) => Err(map_sqlx_error(e)),
-        }
+        .await
+        .map_err(map_sqlx_error)
     }
 
     #[instrument(skip(self), fields(email = %email), level = "debug")]
