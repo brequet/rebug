@@ -3,6 +3,8 @@ use bytes::Bytes;
 
 #[derive(Debug, thiserror::Error)]
 pub enum StorageError {
+    #[error("Validation error: {0}")]
+    ValidationError(String),
     #[error("Failed to save file: {0}")]
     SaveFailed(String),
     #[error("Failed to retrieve file: {0}")]

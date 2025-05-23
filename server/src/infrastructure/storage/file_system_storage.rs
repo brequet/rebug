@@ -14,6 +14,9 @@ pub struct FileSystemStorage {
 }
 
 impl FileSystemStorage {
+    const MAX_FILE_SIZE: usize = 50 * 1024 * 1024; // 50MB
+    const ALLOWED_EXTENSIONS: &'static [&'static str] = &[".png"];
+
     pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
         let path = Path::new(&upload_directory);
         if !path.exists() {
@@ -30,20 +33,43 @@ impl FileSystemStorage {
             base_url,
         })
     }
+
+    fn validate_file(&self, file_name: &str, data: &Bytes) -> StorageResult<()> {
+        if data.len() > Self::MAX_FILE_SIZE {
+            return Err(StorageError::ValidationError("File too large".to_string()));
+        }
+
+        let extension = self.get_file_extension(file_name)?;
+
+        if !Self::ALLOWED_EXTENSIONS.contains(&extension.to_lowercase().as_str()) {
+            return Err(StorageError::ValidationError(
+                "Invalid file type".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn get_file_extension(&self, file_name: &str) -> Result<String, StorageError> {
+        Path::new(file_name)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|s| s.to_string())
+            .ok_or_else(|| StorageError::ValidationError("File extension not found".to_string()))
+    }
 }
 
 #[async_trait]
 impl StoragePort for FileSystemStorage {
-    // TODO: maybe just use the file extension from the original file name
     #[instrument(skip(self, data), fields(original_file_name = %original_file_name, file_size = data.len()), level = "debug")]
     async fn save_file(&self, original_file_name: &str, data: Bytes) -> StorageResult<String> {
-        let timestamp = Utc::now().timestamp_millis();
+        self.validate_file(original_file_name, &data)?;
 
-        let safe_original_name = original_file_name
-            .chars()
-            .filter(|c| c.is_alphanumeric() || *c == '.' || *c == '-' || *c == '_')
-            .collect::<String>();
-        let unique_file_name = format!("{}_{}", timestamp, safe_original_name);
+        let unique_file_name = format!(
+            "{}.{}",
+            Utc::now().timestamp_millis(),
+            self.get_file_extension(original_file_name)?
+        );
 
         let full_path = Path::new(&self.upload_directory).join(&unique_file_name);
 

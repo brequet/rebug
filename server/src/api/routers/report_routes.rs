@@ -19,7 +19,7 @@ use crate::{
         state::AppState,
     },
     application::services::report_service::ReportServiceError,
-    domain::models::report::CreateScreenshotReportParams,
+    domain::models::{report::CreateScreenshotReportParams, user::UserRole},
 };
 
 impl From<ReportServiceError> for ApiError {
@@ -54,14 +54,13 @@ async fn get_report_handler(
     tracing::debug!("Fetching report with ID: {}", report_id);
 
     // TODO: Check if the user has permission to access this report
-    let report = state
-        .report_service
-        .get_report(report_id)
-        .await
-        .map_err(|e| {
-            tracing::error!("Report service error: {:?}", e);
-            ApiError::from(e)
-        })?;
+    let report = state.report_service.get_report(report_id).await?;
+
+    if report.user_id != authenticated_user.claims.sub
+        && authenticated_user.claims.role != UserRole::Admin.to_string()
+    {
+        return Err(ApiError::Forbidden);
+    }
 
     let response = ReportResponse {
         id: report.id,
@@ -119,5 +118,3 @@ async fn create_screenshot_report_handler(
 
     Ok((StatusCode::CREATED, Json(response)))
 }
-
-// TODO: Implement a proper file storage solution, separate concern: move this to a service

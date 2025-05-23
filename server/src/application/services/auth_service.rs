@@ -80,7 +80,7 @@ impl AuthService {
 
 #[async_trait]
 impl AuthServiceInterface for AuthService {
-    #[instrument(skip(self, password), fields(email = %email), level = "debug")]
+    #[instrument(skip(self, password), level = "debug")]
     async fn login_user(&self, email: &str, password: &str) -> AuthServiceResult<(User, String)> {
         tracing::debug!("Attempting to authenticate user.");
 
