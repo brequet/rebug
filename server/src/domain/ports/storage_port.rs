@@ -24,7 +24,6 @@ pub trait StoragePort: Send + Sync {
     /// Saves file data and returns a unique identifier or path to the stored file.
     async fn save_file(&self, file_name: &str, data: Bytes) -> StorageResult<String>;
 
-    fn get_public_url(&self, file_path: &str) -> String;
     // Potentially add other methods like:
     // async fn retrieve_file(&self, file_identifier: &str) -> StorageResult<Bytes>;
     // async fn delete_file(&self, file_identifier: &str) -> StorageResult<()>;

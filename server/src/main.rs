@@ -75,8 +75,8 @@ async fn setup_initial_admin(
                     APP_CONFIG.default_admin_email
                 );
                 container
-                    .user_service
-                    .create_user(
+                    .user_onboarding_service
+                    .onboard_user(
                         &APP_CONFIG.default_admin_email,
                         &APP_CONFIG.default_admin_password,
                         Some(&APP_CONFIG.default_admin_first_name),

@@ -15,7 +15,7 @@ pub struct FileSystemStorage {
 
 impl FileSystemStorage {
     const MAX_FILE_SIZE: usize = 50 * 1024 * 1024; // 50MB
-    const ALLOWED_EXTENSIONS: &'static [&'static str] = &[".png"];
+    const ALLOWED_EXTENSIONS: &'static [&'static str] = &["png"];
 
     pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
         let path = Path::new(&upload_directory);
@@ -43,7 +43,7 @@ impl FileSystemStorage {
 
         if !Self::ALLOWED_EXTENSIONS.contains(&extension.to_lowercase().as_str()) {
             return Err(StorageError::ValidationError(
-                "Invalid file type".to_string(),
+                format!("Invalid file type: '{}'", extension).to_string(),
             ));
         }
 
@@ -56,6 +56,10 @@ impl FileSystemStorage {
             .and_then(|ext| ext.to_str())
             .map(|s| s.to_string())
             .ok_or_else(|| StorageError::ValidationError("File extension not found".to_string()))
+    }
+
+    fn get_public_url(&self, file_path: &str) -> String {
+        format!("{}/{}", self.base_url, file_path)
     }
 }
 
@@ -79,11 +83,6 @@ impl StoragePort for FileSystemStorage {
             .map_err(|e| StorageError::SaveFailed(e.to_string()))?;
         tracing::debug!(path = %full_path.display(), "File saved successfully.");
 
-        Ok(unique_file_name.to_string())
-    }
-
-    #[instrument(skip(self), level = "debug")]
-    fn get_public_url(&self, file_path: &str) -> String {
-        format!("{}/{}", self.base_url, file_path)
+        Ok(self.get_public_url(&unique_file_name))
     }
 }

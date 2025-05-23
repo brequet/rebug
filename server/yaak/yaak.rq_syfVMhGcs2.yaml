@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_syfVMhGcs2
 createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-05-23T15:01:05.325391500
+updatedAt: 2025-05-23T17:31:30.261614400
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -28,9 +28,9 @@ body:
   - enabled: true
     id: QGn4kYEtxb
     name: board_id
-    value: ''
+    value: f4e8e157-1e68-4b43-af9d-0cfc557568a8
   - enabled: true
-    id: U0xx3mVhj7
+    id: R0yAX0vuYY
     name: ''
     value: ''
 bodyType: multipart/form-data

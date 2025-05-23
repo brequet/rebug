@@ -103,9 +103,7 @@ impl ReportServiceInterface for ReportService {
             url: params.url,
         };
 
-        let mut report = self.report_repository.create_report(create_params).await?;
-
-        report.file_path = self.storage_port.get_public_url(&report.file_path);
+        let report = self.report_repository.create_report(create_params).await?;
 
         tracing::info!(report_id = %report.id, "Screenshot report created successfully");
         Ok(report)
@@ -115,15 +113,13 @@ impl ReportServiceInterface for ReportService {
     async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report> {
         tracing::debug!("Fetching report with ID: {}", id);
 
-        let mut report = self
+        let report = self
             .report_repository
             .get_report(id)
             .await?
             .ok_or_else(|| ReportServiceError::ReportNotFound {
                 context: format!("Failed to fetch report with ID: {}", id),
             })?;
-
-        report.file_path = self.storage_port.get_public_url(&report.file_path);
 
         tracing::info!(report_id = %report.id, "Report fetched successfully");
         Ok(report)
