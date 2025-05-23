@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_syfVMhGcs2
 createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-05-23T17:31:30.261614400
+updatedAt: 2025-05-23T18:04:05.607805200
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -41,13 +41,13 @@ headers:
   value: Bearer ${[ JWT ]}
   id: RT9QRSM9t4
 - enabled: true
-  name: Content-Type
-  value: multipart/form-data
-  id: sSz8ZfgExa
-- enabled: true
   name: ''
   value: ''
   id: MmZbINkRIR
+- enabled: true
+  name: Content-Type
+  value: multipart/form-data
+  id: BT0m9E5Bdi
 method: POST
 name: Upload screenshot
 sortPriority: 0.0

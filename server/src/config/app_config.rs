@@ -9,6 +9,7 @@ pub struct AppConfig {
     pub database_url: String,
     pub upload_directory: String,
     pub file_base_url: String,
+    pub frontend_directory: String,
     pub jwt_secret: String,
     pub jwt_expiration_seconds: i64,
     pub default_admin_email: String,

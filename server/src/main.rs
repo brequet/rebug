@@ -5,7 +5,10 @@ use rebug::{
     api::{routers::get_api_routes, state::AppState},
     config::app_config::APP_CONFIG,
     domain::models::user::UserRole,
-    infrastructure::{container::service_container::ServiceContainer, database::sqlite::Sqlite},
+    infrastructure::{
+        container::service_container::ServiceContainer, database::sqlite::Sqlite,
+        frontend::frontend_service::FrontendService,
+    },
 };
 use tower_http::{
     services::ServeDir,
@@ -105,11 +108,12 @@ async fn setup_initial_admin(
 }
 
 fn build_router(app_state: AppState) -> Router {
-    let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
+    let uploaded_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
 
     Router::new()
         .nest("/api", get_api_routes())
-        .nest_service("/files", static_files_service)
+        .nest_service("/files", uploaded_files_service)
+        .merge(FrontendService::create_router().with_state(()))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),

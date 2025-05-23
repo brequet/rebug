@@ -1949,7 +1949,6 @@ impl fmt::Display for ReportType {
     }
 }
 
-// TODO: Add a dedicated field for full url
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Report {
     pub id: Uuid,
@@ -2750,7 +2749,7 @@ pub struct FileSystemStorage {
 
 impl FileSystemStorage {
     const MAX_FILE_SIZE: usize = 50 * 1024 * 1024; // 50MB
-    const ALLOWED_EXTENSIONS: &'static [&'static str] = &[".png"];
+    const ALLOWED_EXTENSIONS: &'static [&'static str] = &["png"];
 
     pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
         let path = Path::new(&upload_directory);
@@ -2778,7 +2777,7 @@ impl FileSystemStorage {
 
         if !Self::ALLOWED_EXTENSIONS.contains(&extension.to_lowercase().as_str()) {
             return Err(StorageError::ValidationError(
-                "Invalid file type".to_string(),
+                format!("Invalid file type: '{}'", extension).to_string(),
             ));
         }
 
