@@ -25,7 +25,6 @@ sqlx = { version = "0.8.5", features = [
 ] }
 thiserror = "2.0.12"
 tokio = { version = "1.45.0", features = ["full"] }
-tower = "0.5.2"
 tower-http = { version = "0.6.4", features = [
     "cors",
     "fs",
