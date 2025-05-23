@@ -2,8 +2,8 @@ import { ResultModalType, ShowResultModalMessage, VIDEO_CAPTURE_MIME_TYPE } from
 import { base64ToBlob } from "$lib/messaging/utils/blob-utils";
 import { mount } from "svelte";
 import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import ResultModal from "./components/ResultModal.svelte";
 import { modalStore, ResultModalProps } from "./modal.store";
-import ResultModal from "./ResultModal.svelte";
 
 export async function injectRebugResultModal(ctx: ContentScriptContext): Promise<void> {
     (await createRebugResultModalUi(ctx)).mount();

@@ -1,64 +1,43 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
+	import CardContent from '$lib/components/ui/card/card-content.svelte';
+	import CardFooter from '$lib/components/ui/card/card-footer.svelte';
+	import CardHeader from '$lib/components/ui/card/card-header.svelte';
 	import { SCREENSHOT_FORMAT } from '$lib/messaging/types';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
 	import X from '@lucide/svelte/icons/x';
-	import { ResultModalProps } from '../../entrypoints/content/ui/resultModal/modal.store';
-	import CardContent from './ui/card/card-content.svelte';
-	import CardFooter from './ui/card/card-footer.svelte';
-	import CardHeader from './ui/card/card-header.svelte';
+	import { modalStore } from '../modal.store';
 
 	// TODO: sonner toast
 
-	interface Props {
-		resultModalProps: ResultModalProps;
-		close: () => void;
-	}
-
-	let { resultModalProps, close }: Props = $props();
-
 	let copyButtonState = $state(false);
 
-	let lastNonNullVideoUrl: string | null = null;
 	let videoUrl: string | null = $state(null);
 
-	function updateVideoUrl() {
-		if (lastNonNullVideoUrl) {
-			URL.revokeObjectURL(lastNonNullVideoUrl);
-			lastNonNullVideoUrl = null;
-		}
-		if (resultModalProps.videoBlob) {
-			console.log('Creating video URL...', resultModalProps.videoBlob);
-			const url = URL.createObjectURL(resultModalProps.videoBlob);
-			lastNonNullVideoUrl = url;
-			videoUrl = url;
-		} else {
-			videoUrl = null;
-		}
-	}
-
 	$effect(() => {
-		if (resultModalProps.videoBlob) {
-			updateVideoUrl();
-		} else {
-			videoUrl = null;
+		if ($modalStore.props.videoBlob) {
+			videoUrl = URL.createObjectURL($modalStore.props.videoBlob);
 		}
 	});
 
 	onDestroy(() => {
-		if (lastNonNullVideoUrl) {
-			URL.revokeObjectURL(lastNonNullVideoUrl);
+		if (videoUrl) {
+			URL.revokeObjectURL(videoUrl);
 		}
 	});
 
+	function close() {
+		modalStore.close();
+	}
+
 	const downloadImage = () => {
-		if (!resultModalProps.imageString) return;
+		if (!$modalStore.props.imageString) return;
 
 		const link = document.createElement('a');
-		link.href = resultModalProps.imageString;
+		link.href = $modalStore.props.imageString;
 		link.download = `screenshot_${new Date().toISOString().replace(/:/g, '-')}.${SCREENSHOT_FORMAT}`;
 		document.body.appendChild(link);
 		link.click();
@@ -77,18 +56,18 @@
 	};
 
 	const handleDownload = () => {
-		if (resultModalProps.imageString) {
+		if ($modalStore.props.imageString) {
 			downloadImage();
-		} else if (resultModalProps.videoBlob) {
+		} else if ($modalStore.props.videoBlob) {
 			downloadVideo();
 		}
 	};
 
 	const copyToClipboard = async () => {
-		if (!resultModalProps.imageString) return;
+		if (!$modalStore.props.imageString) return;
 
 		try {
-			const blob = await fetch(resultModalProps.imageString).then((res) => res.blob());
+			const blob = await fetch($modalStore.props.imageString).then((res) => res.blob());
 			await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
 
 			copyButtonState = true;
@@ -103,20 +82,20 @@
 
 <Card class="flex max-h-[90vh] max-w-[95vw] flex-col">
 	<CardHeader class="flex h-16 shrink-0 flex-row items-center justify-between border-b p-4">
-		<h2 class="text-lg font-semibold">Screenshot Preview</h2>
+		<h2 class="text-lg font-semibold">Rebug Capture</h2>
 		<Button variant="ghost" onclick={close}>
 			<X class="size-4" />
 		</Button>
 	</CardHeader>
 
 	<CardContent class="flex min-h-0 flex-1 p-4">
-		{#if resultModalProps.imageString}
+		{#if $modalStore.props.imageString}
 			<img
-				src={resultModalProps.imageString}
+				src={$modalStore.props.imageString}
 				alt="Screenshot preview"
 				class="mx-auto max-h-[calc(90vh-160px)] w-auto max-w-full border border-dashed object-contain"
 			/>
-		{:else if resultModalProps.videoBlob}
+		{:else if $modalStore.props.videoBlob}
 			<div class="flex w-full flex-col items-center">
 				<!-- svelte-ignore a11y_media_has_caption -->
 				<video
@@ -132,7 +111,7 @@
 	</CardContent>
 
 	<CardFooter class="flex h-20 shrink-0 justify-end gap-2 border-t p-4">
-		{#if resultModalProps.imageString}
+		{#if $modalStore.props.imageString}
 			<Button onclick={copyToClipboard} variant="outline">
 				{#if copyButtonState}
 					<CopyCheck class="size-4" />
@@ -145,7 +124,7 @@
 		{/if}
 		<Button onclick={handleDownload}>
 			<Download class="size-4" />
-			Download {resultModalProps.videoBlob ? 'Video' : 'Image'}
+			Download {$modalStore.props.videoBlob ? 'Video' : 'Image'}
 		</Button>
 	</CardFooter>
 </Card>

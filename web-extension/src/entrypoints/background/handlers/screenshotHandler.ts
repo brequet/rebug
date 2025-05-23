@@ -5,9 +5,7 @@ import { backgroundMessagingService } from '../services/background-messaging.ser
 
 const log = logger.getLogger('Background:ScreenshotHandler');
 
-export async function handleCaptureVisibleTab(
-    message: CaptureVisibleTabScreenshotMessage
-): Promise<MessageResponse<{ screenshotDataUrl: string }>> {
+export async function handleCaptureVisibleTab(message: CaptureVisibleTabScreenshotMessage): Promise<MessageResponse<void>> {
     log.info(`Handling ${message.type}`);
     try {
         const dataUrl = await browser.tabs.captureVisibleTab({ format: SCREENSHOT_FORMAT });
@@ -15,16 +13,14 @@ export async function handleCaptureVisibleTab(
             resultType: ResultModalType.IMAGE,
             base64Image: dataUrl
         });
-        return createSuccessResponse({ screenshotDataUrl: dataUrl });
+        return createSuccessResponse();
     } catch (error: any) {
         log.error(`Error capturing visible tab: ${error.message}`, error);
         return createErrorResponse(error.message || 'Failed to capture visible tab');
     }
 }
 
-export async function handleCaptureRegion(
-    message: CaptureRegionScreenshotMessage
-): Promise<MessageResponse<{ screenshotDataUrl: string }>> {
+export async function handleCaptureRegion(message: CaptureRegionScreenshotMessage): Promise<MessageResponse<void>> {
     log.info(`Handling ${message.type}`, message.payload);
     const { region } = message.payload;
     try {
@@ -35,14 +31,13 @@ export async function handleCaptureRegion(
             resultType: ResultModalType.IMAGE,
             base64Image: base64Cropped
         });
-        return createSuccessResponse({ screenshotDataUrl: base64Cropped });
+        return createSuccessResponse();
     } catch (error: any) {
         log.error(`Error capturing region: ${error.message}`, error);
         return createErrorResponse(error.message || 'Failed to capture region');
     }
 }
 
-// TODO: screenshot seems to be blurry
 async function cropImage(dataUrl: string, region: SelectionArea): Promise<string> {
     log.debug('Cropping image for region:', region);
     const response = await fetch(dataUrl);

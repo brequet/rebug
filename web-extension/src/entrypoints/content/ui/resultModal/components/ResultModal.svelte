@@ -1,10 +1,6 @@
 <script lang="ts">
-	import ModalContent from '$lib/components/ModalContent.svelte';
-	import { modalStore } from './modal.store';
-
-	function close() {
-		modalStore.close();
-	}
+	import { modalStore } from '../modal.store';
+	import ModalContent from './ModalContent.svelte';
 </script>
 
 {#if $modalStore.isOpen}
@@ -14,6 +10,6 @@
 		role="dialog"
 		tabindex="0"
 	>
-		<ModalContent resultModalProps={$modalStore.props} {close} />
+		<ModalContent />
 	</div>
 {/if}
