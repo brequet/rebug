@@ -1,5 +1,6 @@
 use std::fmt;
 
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use uuid::Uuid;
@@ -35,4 +36,26 @@ pub struct Report {
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[sqlx(default)]
     pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CreateReportParams {
+    pub user_id: Uuid,
+    pub board_id: Uuid,
+    pub title: String,
+    pub report_type: ReportType,
+    pub description: Option<String>,
+    pub file_path: String,
+    pub url: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CreateScreenshotReportParams {
+    pub user_id: Uuid,
+    pub board_id: Uuid,
+    pub title: String,
+    pub description: Option<String>,
+    pub url: Option<String>,
+    pub original_file_name: String,
+    pub file_data: Bytes,
 }

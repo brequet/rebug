@@ -8,14 +8,17 @@ use axum_typed_multipart::TypedMultipart;
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::api::{
-    auth::AuthenticatedUser,
-    error::ApiError,
-    models::{
-        request::report_models::CreateScreenshotReportRequest,
-        response::report_models::ReportResponse,
+use crate::{
+    api::{
+        auth::AuthenticatedUser,
+        error::ApiError,
+        models::{
+            request::report_models::CreateScreenshotReportRequest,
+            response::report_models::ReportResponse,
+        },
+        state::AppState,
     },
-    state::AppState,
+    domain::models::report::CreateScreenshotReportParams,
 };
 
 pub fn report_routes() -> Router<AppState> {
@@ -65,24 +68,23 @@ async fn create_screenshot_report_handler(
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
     tracing::debug!("Creating screenshot report.");
 
-    let user_id = authenticated_user.claims.sub;
-
     let file_name = payload.file.metadata.file_name.ok_or_else(|| {
         ApiError::Validation("File name is required in the multipart data.".to_string())
     })?;
-    let file_data = payload.file.contents;
+
+    let params = CreateScreenshotReportParams {
+        user_id: authenticated_user.claims.sub,
+        board_id: payload.board_id,
+        title: payload.title,
+        description: payload.description,
+        original_file_name: file_name,
+        file_data: payload.file.contents,
+        url: payload.url,
+    };
 
     let report = state
         .report_service
-        .create_screenshot_report(
-            user_id,
-            payload.board_id,
-            &file_name,
-            file_data,
-            payload.title,
-            payload.description,
-            payload.url,
-        )
+        .create_screenshot_report(params)
         .await
         .map_err(|e| {
             tracing::error!("Report service error: {:?}", e);

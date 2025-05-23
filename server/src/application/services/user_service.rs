@@ -12,7 +12,7 @@ use crate::{
     infrastructure::security::password_hasher::{PasswordError, hash_password},
 };
 
-use super::board_service::{BoardServiceError, BoardServiceInterface};
+use super::board_service::BoardServiceError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum UserServiceError {
@@ -87,19 +87,11 @@ pub trait UserServiceInterface: Send + Sync {
 #[derive(Clone)]
 pub struct UserService {
     user_repository: Arc<dyn UserRepository>,
-
-    board_service: Arc<dyn BoardServiceInterface>,
 }
 
 impl UserService {
-    pub fn new(
-        user_repository: Arc<dyn UserRepository>,
-        board_service: Arc<dyn BoardServiceInterface>,
-    ) -> Self {
-        Self {
-            user_repository,
-            board_service,
-        }
+    pub fn new(user_repository: Arc<dyn UserRepository>) -> Self {
+        Self { user_repository }
     }
 }
 
@@ -136,19 +128,6 @@ impl UserServiceInterface for UserService {
             .create_user(email, &password_hash, first_name, last_name, user_role)
             .await
             .map_err(UserServiceError::from)?;
-
-        tracing::debug!("Creating default board for user.");
-        self.board_service
-            .create_board(
-                &format!(
-                    "{}'s Board",
-                    user.first_name.clone().unwrap_or("User".to_string())
-                ),
-                Some("User's default board"),
-                user.id,
-                true,
-            )
-            .await?;
 
         tracing::info!(user_id = %user.id, "User created successfully.");
         Ok(user)

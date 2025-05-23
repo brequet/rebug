@@ -8,6 +8,7 @@ use rebug::{
         board_service::BoardService,
         health_service::HealthService,
         report_service::ReportService,
+        user_onboarding_service::UserOnboardingService,
         user_service::{UserService, UserServiceInterface},
     },
     config::app_config::APP_CONFIG,
@@ -67,7 +68,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let board_service = Arc::new(BoardService::new(board_repository));
 
     let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
-    let user_service = Arc::new(UserService::new(user_repository, board_service.clone()));
+    let user_service = Arc::new(UserService::new(user_repository));
+
+    let user_onboarding_service = Arc::new(UserOnboardingService::new(
+        user_service.clone(),
+        board_service.clone(),
+    ));
 
     let auth_service = Arc::new(AuthService::new(user_service.clone()));
 
@@ -83,7 +89,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err(e);
     }
 
-    let app_state = AppState::new(auth_service, health_service, report_service, user_service);
+    let app_state = AppState::new(
+        auth_service,
+        health_service,
+        report_service,
+        user_service,
+        user_onboarding_service,
+    );
 
     let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
 

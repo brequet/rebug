@@ -1,11 +1,10 @@
 use async_trait::async_trait;
-use bytes::Bytes;
 use std::sync::Arc;
 use tracing::instrument;
 use uuid::Uuid;
 
 use crate::domain::{
-    models::report::{Report, ReportType},
+    models::report::{CreateReportParams, CreateScreenshotReportParams, Report, ReportType},
     ports::storage_port::{StorageError, StoragePort},
     repositories::{RepositoryError, report_repository::ReportRepository},
 };
@@ -46,13 +45,7 @@ pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 pub trait ReportServiceInterface: Send + Sync {
     async fn create_screenshot_report(
         &self,
-        user_id: Uuid,
-        board_id: Uuid,
-        original_file_name: &str,
-        file_data: Bytes,
-        title: String,
-        description: Option<String>,
-        url: Option<String>,
+        params: CreateScreenshotReportParams,
     ) -> ReportServiceResult<Report>;
 
     async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report>;
@@ -82,40 +75,33 @@ impl ReportService {
 
 #[async_trait]
 impl ReportServiceInterface for ReportService {
-    #[instrument(skip(self, file_data), fields(user_id = %user_id), level="info")]
+    #[instrument(skip(self, params), fields(user_id = %params.user_id), board_id= %params.board_id, level="info")]
     async fn create_screenshot_report(
         &self,
-        user_id: Uuid,
-        board_id: Uuid,
-        original_file_name: &str,
-        file_data: Bytes,
-        title: String,
-        description: Option<String>,
-        url: Option<String>,
+        params: CreateScreenshotReportParams,
     ) -> ReportServiceResult<Report> {
         self.board_service
-            .ensure_user_can_access_board(user_id, board_id)
+            .ensure_user_can_access_board(params.user_id, params.board_id)
             .await?;
 
         tracing::debug!("Saving file to storage");
         let file_path = self
             .storage_port
-            .save_file(original_file_name, file_data)
+            .save_file(&params.original_file_name, params.file_data)
             .await?;
 
         tracing::debug!("Saving report");
-        let mut report = self
-            .report_repository
-            .create_report(
-                user_id,
-                board_id,
-                title,
-                ReportType::Screenshot,
-                description,
-                file_path,
-                url,
-            )
-            .await?;
+        let create_params = CreateReportParams {
+            user_id: params.user_id,
+            board_id: params.board_id,
+            title: params.title,
+            report_type: ReportType::Screenshot,
+            description: params.description,
+            file_path,
+            url: params.url,
+        };
+
+        let mut report = self.report_repository.create_report(create_params).await?;
 
         report.file_path = self.storage_port.get_public_url(&report.file_path);
 

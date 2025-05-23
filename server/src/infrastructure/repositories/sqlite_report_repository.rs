@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use uuid::Uuid;
 
 use crate::domain::{
-    models::report::{Report, ReportType},
+    models::report::{CreateReportParams, Report, ReportType},
     repositories::{RepositoryResult, map_sqlx_error, report_repository::ReportRepository},
 };
 
@@ -22,16 +22,7 @@ impl SqliteReportRepository {
 
 #[async_trait]
 impl ReportRepository for SqliteReportRepository {
-    async fn create_report(
-        &self,
-        user_id: Uuid,
-        board_id: Uuid,
-        title: String,
-        report_type: ReportType,
-        description: Option<String>,
-        file_path: String,
-        url: Option<String>,
-    ) -> RepositoryResult<Report> {
+    async fn create_report(&self, params: CreateReportParams) -> RepositoryResult<Report> {
         let report_id = Uuid::new_v4();
 
         let result = sqlx::query_as!(
@@ -52,13 +43,13 @@ impl ReportRepository for SqliteReportRepository {
                 updated_at as "updated_at: DateTime<Utc>"
             "#,
             report_id,
-            user_id,
-            board_id,
-            report_type,
-            title,
-            description,
-            file_path,
-            url,
+            params.user_id,
+            params.board_id,
+            params.report_type,
+            params.title,
+            params.description,
+            params.file_path,
+            params.url,
         )
         .fetch_one(&self.pool)
         .await;
