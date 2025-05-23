@@ -17,8 +17,8 @@ pub enum ReportServiceError {
     RepositoryError(#[from] RepositoryError),
     #[error("Storage error: {0}")]
     StorageError(#[from] StorageError),
-    #[error("Report not found")]
-    ReportNotFound,
+    #[error("Report not found: {context}")]
+    ReportNotFound { context: String },
     #[error("Internal server error: {0}")]
     InternalError(String),
 }
@@ -30,7 +30,9 @@ impl From<BoardServiceError> for ReportServiceError {
             BoardServiceError::BoardAlreadyExists => {
                 ReportServiceError::InternalError("Board already exists".to_string())
             }
-            BoardServiceError::BoardNotFound => ReportServiceError::ReportNotFound,
+            BoardServiceError::BoardNotFound => {
+                ReportServiceError::InternalError("Board not found".to_string())
+            }
             BoardServiceError::AccessDenied => {
                 ReportServiceError::InternalError("Access denied".to_string())
             }
@@ -117,7 +119,9 @@ impl ReportServiceInterface for ReportService {
             .report_repository
             .get_report(id)
             .await?
-            .ok_or(ReportServiceError::ReportNotFound)?;
+            .ok_or_else(|| ReportServiceError::ReportNotFound {
+                context: format!("Failed to fetch report with ID: {}", id),
+            })?;
 
         report.file_path = self.storage_port.get_public_url(&report.file_path);
 
