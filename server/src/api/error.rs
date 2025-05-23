@@ -1,5 +1,6 @@
 use crate::application::services::{
-    auth_service::AuthServiceError, user_service::UserServiceError,
+    auth_service::AuthServiceError, report_service::ReportServiceError,
+    user_onboarding_service::UserOnboardingServiceError, user_service::UserServiceError,
 };
 use axum::{
     Json,
@@ -20,6 +21,8 @@ pub enum ApiError {
     Forbidden,
     #[error("Conflict: {0}")]
     Conflict(String),
+    #[error("Onboarding conflict: {0}")]
+    OnboardingConflict(String),
     #[error("Internal server error: {0}")]
     InternalServerError(String),
 }
@@ -32,6 +35,50 @@ impl From<AuthServiceError> for ApiError {
             | AuthServiceError::TokenCreationError(msg)
             | AuthServiceError::InternalError(msg) => {
                 tracing::error!("Internal service error: {}", msg);
+                ApiError::InternalServerError("An unexpected error occurred".to_string())
+            }
+        }
+    }
+}
+
+impl From<ReportServiceError> for ApiError {
+    fn from(err: ReportServiceError) -> Self {
+        match err {
+            ReportServiceError::ReportNotFound { context } => ApiError::NotFound(context),
+            ReportServiceError::StorageError(_) => {
+                ApiError::InternalServerError("File storage failed".to_string())
+            }
+            ReportServiceError::RepositoryError(_) => {
+                ApiError::InternalServerError("Repository error".to_string())
+            }
+            ReportServiceError::InternalError(msg) => ApiError::InternalServerError(msg),
+        }
+    }
+}
+
+impl From<UserOnboardingServiceError> for ApiError {
+    fn from(err: UserOnboardingServiceError) -> Self {
+        match err {
+            UserOnboardingServiceError::UserAlreadyExists => {
+                ApiError::OnboardingConflict("User already exists".to_string())
+            }
+            UserOnboardingServiceError::UserNotFound => {
+                ApiError::NotFound("User not found".to_string())
+            }
+            UserOnboardingServiceError::BoardAlreadyExists => {
+                ApiError::OnboardingConflict("Board already exists".to_string())
+            }
+            UserOnboardingServiceError::BoardNotFound => {
+                ApiError::NotFound("Board not found".to_string())
+            }
+            UserOnboardingServiceError::UserCreation(msg) => {
+                ApiError::Validation(format!("User creation failed: {msg}"))
+            }
+            UserOnboardingServiceError::BoardCreation(msg) => {
+                ApiError::Validation(format!("Board creation failed: {msg}"))
+            }
+            UserOnboardingServiceError::InternalError(msg) => {
+                tracing::error!("Internal onboarding error: {}", msg);
                 ApiError::InternalServerError("An unexpected error occurred".to_string())
             }
         }
@@ -66,6 +113,7 @@ impl ApiError {
             ApiError::Forbidden => (StatusCode::FORBIDDEN, "Action forbidden".to_string()),
             ApiError::Conflict(msg) => (StatusCode::CONFLICT, msg.clone()),
             ApiError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.clone()),
+            ApiError::OnboardingConflict(msg) => (StatusCode::CONFLICT, msg.clone()),
         }
     }
 }

@@ -36,8 +36,8 @@ async fn create_user_handler(
     })?;
 
     let user = state
-        .user_service()
-        .create_user(
+        .user_onboarding_service()
+        .onboard_user(
             &payload.email,
             &payload.password,
             payload.first_name.as_deref(),

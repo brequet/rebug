@@ -18,24 +18,8 @@ use crate::{
         },
         state::AppState,
     },
-    application::services::report_service::ReportServiceError,
     domain::models::{report::CreateScreenshotReportParams, user::UserRole},
 };
-
-impl From<ReportServiceError> for ApiError {
-    fn from(err: ReportServiceError) -> Self {
-        match err {
-            ReportServiceError::ReportNotFound { context } => ApiError::NotFound(context),
-            ReportServiceError::StorageError(_) => {
-                ApiError::InternalServerError("File storage failed".to_string())
-            }
-            ReportServiceError::RepositoryError(_) => {
-                ApiError::InternalServerError("Repository error".to_string())
-            }
-            ReportServiceError::InternalError(msg) => ApiError::InternalServerError(msg),
-        }
-    }
-}
 
 pub fn report_routes() -> Router<AppState> {
     let report_routes = Router::new()
@@ -53,7 +37,6 @@ async fn get_report_handler(
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
     tracing::debug!("Fetching report with ID: {}", report_id);
 
-    // TODO: Check if the user has permission to access this report
     let report = state.report_service().get_report(report_id).await?;
 
     if report.user_id != authenticated_user.claims.sub
