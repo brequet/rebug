@@ -123,7 +123,17 @@ async fn start_server(router: Router) -> Result<(), Box<dyn std::error::Error>> 
     tracing::info!("Starting server on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    axum::serve(listener, router).await?;
+
+    let graceful_shutdown = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("Failed to install CTRL+C signal handler");
+        tracing::info!("Received shutdown signal, shutting down gracefully...");
+    };
+
+    axum::serve(listener, router)
+        .with_graceful_shutdown(graceful_shutdown)
+        .await?;
 
     Ok(())
 }
