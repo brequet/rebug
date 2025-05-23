@@ -54,7 +54,7 @@ async fn get_report_handler(
     tracing::debug!("Fetching report with ID: {}", report_id);
 
     // TODO: Check if the user has permission to access this report
-    let report = state.report_service.get_report(report_id).await?;
+    let report = state.report_service().get_report(report_id).await?;
 
     if report.user_id != authenticated_user.claims.sub
         && authenticated_user.claims.role != UserRole::Admin.to_string()
@@ -98,7 +98,7 @@ async fn create_screenshot_report_handler(
     };
 
     let report = state
-        .report_service
+        .report_service()
         .create_screenshot_report(params)
         .await
         .map_err(|e| {

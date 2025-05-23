@@ -23,7 +23,7 @@ async fn login_handler(
     })?;
 
     let (user, token) = state
-        .auth_service
+        .auth_service()
         .login_user(&payload.email, &payload.password)
         .await?;
 

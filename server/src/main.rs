@@ -1,27 +1,11 @@
-use std::{env, net::SocketAddr, sync::Arc};
+use std::net::SocketAddr;
 
 use axum::Router;
 use rebug::{
     api::{routers::get_api_routes, state::AppState},
-    application::services::{
-        auth_service::AuthService,
-        board_service::BoardService,
-        health_service::HealthService,
-        report_service::ReportService,
-        user_onboarding_service::UserOnboardingService,
-        user_service::{UserService, UserServiceInterface},
-    },
     config::app_config::APP_CONFIG,
-    domain::{models::user::UserRole, ports::storage_port::StoragePort},
-    infrastructure::{
-        database::sqlite::Sqlite,
-        repositories::{
-            sqlite_board_repository::SqliteBoardRepository,
-            sqlite_report_repository::SqliteReportRepository,
-            sqlite_user_repository::SqliteUserRepository,
-        },
-        storage::file_system_storage::FileSystemStorage,
-    },
+    domain::models::user::UserRole,
+    infrastructure::{container::service_container::ServiceContainer, database::sqlite::Sqlite},
 };
 use tower_http::{
     services::ServeDir,
@@ -32,6 +16,22 @@ use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    setup_tracing();
+
+    let sqlite_connection = &Sqlite::new(APP_CONFIG.database_url.clone()).await?;
+
+    let container = ServiceContainer::new(sqlite_connection).await?;
+
+    run_migrations(sqlite_connection).await?;
+    setup_initial_admin(&container).await?;
+
+    let app_state = AppState::new(container);
+    let router = build_router(app_state);
+
+    start_server(router).await
+}
+
+fn setup_tracing() {
     let subscriber = FmtSubscriber::builder()
         .with_env_filter(
             EnvFilter::try_from_default_env()
@@ -41,11 +41,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("Setting default tracing subscriber failed");
+}
 
-    let sqlite_connection = Sqlite::new(APP_CONFIG.database_url.clone())
-        .await
-        .expect("Failed to create SQLite connection pool");
-
+async fn run_migrations(sqlite_connection: &Sqlite) -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Running database migrations...");
     sqlx::migrate!()
         .run(&sqlite_connection.get_pool())
@@ -53,78 +51,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run database migrations");
     tracing::info!("Database migrations completed.");
 
-    let file_system_storage = Arc::new(
-        FileSystemStorage::new(
-            APP_CONFIG.upload_directory.clone(),
-            APP_CONFIG.file_base_url.clone(),
-        )
-        .expect("Failed to initialize file system storage"),
-    );
-    let storage_port: Arc<dyn StoragePort> = file_system_storage;
-
-    let health_service = Arc::new(HealthService);
-
-    let board_repository = Arc::new(SqliteBoardRepository::new(sqlite_connection.get_pool()));
-    let board_service = Arc::new(BoardService::new(board_repository));
-
-    let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
-    let user_service = Arc::new(UserService::new(user_repository));
-
-    let user_onboarding_service = Arc::new(UserOnboardingService::new(
-        user_service.clone(),
-        board_service.clone(),
-    ));
-
-    let auth_service = Arc::new(AuthService::new(user_service.clone()));
-
-    let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
-    let report_service = Arc::new(ReportService::new(
-        report_repository,
-        storage_port,
-        board_service,
-    ));
-
-    if let Err(e) = setup_initial_admin(user_service.clone()).await {
-        tracing::error!("Failed to setup initial admin user: {}", e);
-        return Err(e);
-    }
-
-    let app_state = AppState::new(
-        auth_service,
-        health_service,
-        report_service,
-        user_service,
-        user_onboarding_service,
-    );
-
-    let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
-
-    let router = Router::new()
-        .nest("/api", get_api_routes())
-        .nest_service("/files", static_files_service)
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),
-        )
-        .with_state(app_state);
-
-    let port: u16 = env::var("PORT")
-        .unwrap_or_else(|_| "3000".to_string())
-        .parse::<u16>()?;
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
-
-    tracing::info!("Starting server on {}", addr);
-
-    let listener = tokio::net::TcpListener::bind(&addr).await?;
-    axum::serve(listener, router).await?;
-
     Ok(())
 }
 
 async fn setup_initial_admin(
-    user_service: Arc<dyn UserServiceInterface>,
+    container: &ServiceContainer,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    match user_service
+    match container
+        .user_service
         .get_user_by_email(&APP_CONFIG.default_admin_email)
         .await
     {
@@ -140,7 +74,8 @@ async fn setup_initial_admin(
                     "Default admin user with email '{}' not found. Creating...",
                     APP_CONFIG.default_admin_email
                 );
-                user_service
+                container
+                    .user_service
                     .create_user(
                         &APP_CONFIG.default_admin_email,
                         &APP_CONFIG.default_admin_password,
@@ -165,6 +100,30 @@ async fn setup_initial_admin(
             }
         }
     }
+
+    Ok(())
+}
+
+fn build_router(app_state: AppState) -> Router {
+    let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
+
+    Router::new()
+        .nest("/api", get_api_routes())
+        .nest_service("/files", static_files_service)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),
+        )
+        .with_state(app_state)
+}
+
+async fn start_server(router: Router) -> Result<(), Box<dyn std::error::Error>> {
+    let addr = SocketAddr::from(([127, 0, 0, 1], APP_CONFIG.server_port));
+
+    tracing::info!("Starting server on {}", addr);
+
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, router).await?;
 
     Ok(())
 }

@@ -5,6 +5,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
+    pub server_port: u16,
     pub database_url: String,
     pub upload_directory: String,
     pub file_base_url: String,

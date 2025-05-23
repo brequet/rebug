@@ -36,7 +36,7 @@ async fn create_user_handler(
     })?;
 
     let user = state
-        .user_service
+        .user_service()
         .create_user(
             &payload.email,
             &payload.password,
@@ -59,7 +59,7 @@ async fn get_current_user_handler(
     tracing::debug!("Fetching current user.");
     let user_id = authenticated_user.claims.sub;
 
-    let user = state.user_service.get_user_by_id(user_id).await?;
+    let user = state.user_service().get_user_by_id(user_id).await?;
 
     Ok(Json(user.into()))
 }

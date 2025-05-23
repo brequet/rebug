@@ -9,6 +9,6 @@ pub fn health_routes() -> Router<AppState> {
 
 #[instrument(skip(state), level = "debug")]
 async fn health_check_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let response = state.health_service.health_check();
+    let response = state.health_service().health_check();
     Json(response)
 }
