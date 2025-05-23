@@ -59,6 +59,9 @@ impl From<BoardServiceError> for UserServiceError {
             BoardServiceError::BoardNotFound => {
                 UserServiceError::InternalError("Board not found".to_string())
             }
+            BoardServiceError::AccessDenied => {
+                UserServiceError::InternalError("Access denied".to_string())
+            }
             BoardServiceError::InternalError(msg) => UserServiceError::InternalError(msg),
         }
     }
@@ -143,6 +146,7 @@ impl UserServiceInterface for UserService {
                 ),
                 Some("User's default board"),
                 user.id,
+                true,
             )
             .await?;
 

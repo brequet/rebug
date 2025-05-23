@@ -8,6 +8,7 @@ pub struct Board {
     pub name: String,
     pub description: Option<String>,
     pub owner_id: Uuid,
+    pub is_default: bool,
     #[sqlx(default)]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[sqlx(default)]

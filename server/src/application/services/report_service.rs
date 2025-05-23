@@ -10,6 +10,8 @@ use crate::domain::{
     repositories::{RepositoryError, report_repository::ReportRepository},
 };
 
+use super::board_service::{BoardServiceError, BoardServiceInterface};
+
 #[derive(Debug, thiserror::Error)]
 pub enum ReportServiceError {
     #[error("Repository error: {0}")]
@@ -22,6 +24,22 @@ pub enum ReportServiceError {
     InternalError(String),
 }
 
+impl From<BoardServiceError> for ReportServiceError {
+    fn from(err: BoardServiceError) -> Self {
+        match err {
+            BoardServiceError::ValidationError(msg) => ReportServiceError::InternalError(msg),
+            BoardServiceError::BoardAlreadyExists => {
+                ReportServiceError::InternalError("Board already exists".to_string())
+            }
+            BoardServiceError::BoardNotFound => ReportServiceError::ReportNotFound,
+            BoardServiceError::AccessDenied => {
+                ReportServiceError::InternalError("Access denied".to_string())
+            }
+            BoardServiceError::InternalError(msg) => ReportServiceError::InternalError(msg),
+        }
+    }
+}
+
 pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 
 #[async_trait]
@@ -29,6 +47,7 @@ pub trait ReportServiceInterface: Send + Sync {
     async fn create_screenshot_report(
         &self,
         user_id: Uuid,
+        board_id: Uuid,
         original_file_name: &str,
         file_data: Bytes,
         title: String,
@@ -43,16 +62,20 @@ pub trait ReportServiceInterface: Send + Sync {
 pub struct ReportService {
     report_repository: Arc<dyn ReportRepository>,
     storage_port: Arc<dyn StoragePort>,
+
+    board_service: Arc<dyn BoardServiceInterface>,
 }
 
 impl ReportService {
     pub fn new(
         report_repository: Arc<dyn ReportRepository>,
         storage_port: Arc<dyn StoragePort>,
+        board_service: Arc<dyn BoardServiceInterface>,
     ) -> Self {
         Self {
             report_repository,
             storage_port,
+            board_service,
         }
     }
 }
@@ -63,13 +86,16 @@ impl ReportServiceInterface for ReportService {
     async fn create_screenshot_report(
         &self,
         user_id: Uuid,
+        board_id: Uuid,
         original_file_name: &str,
         file_data: Bytes,
         title: String,
         description: Option<String>,
         url: Option<String>,
     ) -> ReportServiceResult<Report> {
-        tracing::debug!("Creating screenshot report");
+        self.board_service
+            .ensure_user_can_access_board(user_id, board_id)
+            .await?;
 
         tracing::debug!("Saving file to storage");
         let file_path = self
@@ -82,6 +108,7 @@ impl ReportServiceInterface for ReportService {
             .report_repository
             .create_report(
                 user_id,
+                board_id,
                 title,
                 ReportType::Screenshot,
                 description,

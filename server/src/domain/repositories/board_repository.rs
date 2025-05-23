@@ -11,6 +11,7 @@ pub trait BoardRepository: Send + Sync {
         name: &str,
         description: Option<&str>,
         owner_id: Uuid,
+        is_default: bool,
     ) -> RepositoryResult<Board>;
 
     async fn find_by_id(&self, id: Uuid) -> RepositoryResult<Option<Board>>;

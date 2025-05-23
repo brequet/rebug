@@ -67,10 +67,6 @@ async fn create_screenshot_report_handler(
 
     let user_id = authenticated_user.claims.sub;
 
-    let title = payload.title;
-    let description = payload.description;
-    let url = payload.url;
-
     let file_name = payload.file.metadata.file_name.ok_or_else(|| {
         ApiError::Validation("File name is required in the multipart data.".to_string())
     })?;
@@ -78,7 +74,15 @@ async fn create_screenshot_report_handler(
 
     let report = state
         .report_service
-        .create_screenshot_report(user_id, &file_name, file_data, title, description, url)
+        .create_screenshot_report(
+            user_id,
+            payload.board_id,
+            &file_name,
+            file_data,
+            payload.title,
+            payload.description,
+            payload.url,
+        )
         .await
         .map_err(|e| {
             tracing::error!("Report service error: {:?}", e);

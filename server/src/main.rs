@@ -72,7 +72,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let auth_service = Arc::new(AuthService::new(user_service.clone()));
 
     let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
-    let report_service = Arc::new(ReportService::new(report_repository, storage_port));
+    let report_service = Arc::new(ReportService::new(
+        report_repository,
+        storage_port,
+        board_service,
+    ));
 
     if let Err(e) = setup_initial_admin(user_service.clone()).await {
         tracing::error!("Failed to setup initial admin user: {}", e);

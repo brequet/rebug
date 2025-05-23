@@ -25,6 +25,7 @@ impl fmt::Display for ReportType {
 pub struct Report {
     pub id: Uuid,
     pub user_id: Uuid,
+    pub board_id: Uuid,
     pub report_type: ReportType,
     pub title: String,
     pub description: Option<String>,

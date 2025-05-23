@@ -28,6 +28,7 @@ impl BoardRepository for SqliteBoardRepository {
         name: &str,
         description: Option<&str>,
         owner_id: Uuid,
+        is_default: bool,
     ) -> RepositoryResult<Board> {
         let board_id = Uuid::new_v4();
         tracing::debug!(board_id = %board_id, "Creating new board.");
@@ -35,20 +36,22 @@ impl BoardRepository for SqliteBoardRepository {
         sqlx::query_as!(
             Board,
             r#"
-            INSERT INTO boards (id, name, description, owner_id)
-             VALUES (?, ?, ?, ?)
+            INSERT INTO boards (id, name, description, owner_id, is_default)
+            VALUES (?, ?, ?, ?, ?)
              RETURNING 
                 id as "id: uuid::Uuid",
                 owner_id as "owner_id: uuid::Uuid",
                 name,
                 description,
+                is_default as "is_default: bool",
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             "#,
             board_id,
             name,
             description,
-            owner_id
+            owner_id,
+            is_default
         )
         .fetch_one(&self.pool)
         .await
@@ -65,6 +68,7 @@ impl BoardRepository for SqliteBoardRepository {
                 owner_id as "owner_id: uuid::Uuid",
                 name,
                 description,
+                is_default as "is_default: bool",
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             FROM boards
@@ -87,6 +91,7 @@ impl BoardRepository for SqliteBoardRepository {
                 owner_id as "owner_id: uuid::Uuid",
                 name,
                 description,
+                is_default as "is_default: bool",
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             FROM boards

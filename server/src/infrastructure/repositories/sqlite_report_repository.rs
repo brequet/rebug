@@ -25,6 +25,7 @@ impl ReportRepository for SqliteReportRepository {
     async fn create_report(
         &self,
         user_id: Uuid,
+        board_id: Uuid,
         title: String,
         report_type: ReportType,
         description: Option<String>,
@@ -36,11 +37,12 @@ impl ReportRepository for SqliteReportRepository {
         let result = sqlx::query_as!(
             Report,
             r#"
-            INSERT INTO reports (id, user_id, report_type, title, description, file_path, url)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING
                 id as "id: uuid::Uuid",
                 user_id as "user_id: uuid::Uuid",
+                board_id as "board_id: uuid::Uuid",
                 report_type as "report_type: ReportType",
                 title,
                 description,
@@ -51,6 +53,7 @@ impl ReportRepository for SqliteReportRepository {
             "#,
             report_id,
             user_id,
+            board_id,
             report_type,
             title,
             description,
@@ -73,6 +76,7 @@ impl ReportRepository for SqliteReportRepository {
             SELECT 
                 id as "id: uuid::Uuid",
                 user_id as "user_id: uuid::Uuid",
+                board_id as "board_id: uuid::Uuid",
                 report_type as "report_type: ReportType",
                 title,
                 description,
