@@ -15,6 +15,9 @@ const config = {
 			strict: true,
 			fallback: 'index.html',
 		}),
+		alias: {
+			"@/*": "./src/lib/*",
+		},
 	}
 };
 
