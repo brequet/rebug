@@ -1,5 +1,0 @@
-- [ ] Instead of associating report to a user, associate user to a board (by default create personal user board)
-  - [ ] Only the user can post report to his own personal board
-  - [ ] Can share read access ?
-  - [ ] If its a board, can even share to some user but its really not a priority at this point
-- Rename Interface to plain name and plain implem into Implem

@@ -21,7 +21,6 @@ impl fmt::Display for ReportType {
     }
 }
 
-// TODO: Add a dedicated field for full url
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Report {
     pub id: Uuid,
