@@ -4,7 +4,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 #[derive(TryFromMultipart, Validate)]
-pub struct CreateScreenshotReportRequest {
+pub struct CreateScreenshotReportRequestMultipart {
     pub board_id: Uuid,
     #[validate(length(min = 1, max = 255))]
     pub title: String,

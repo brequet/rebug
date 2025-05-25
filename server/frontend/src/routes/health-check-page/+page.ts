@@ -1,18 +1,21 @@
-import { fetchHealthStatus } from '$lib/services/apiService';
+import { healthService } from '$lib/services/api';
+import { ApiError } from '$lib/types/api/ApiError';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async () => {
-    try {
-        const status = await fetchHealthStatus();
+    const result = await healthService.fetchHealthStatus();
+
+    if (result.success) {
         return {
-            healthStatus: status,
+            healthStatus: result.data,
             error: null,
         };
-    } catch (e: any) {
-        console.error('Failed to load health status in +page.ts:', e);
+    } else {
+        console.error('Failed to load health status:', result.error);
         return {
             healthStatus: null,
-            error: e.message || 'Failed to load API health status.',
+            error: result.error.message,
+            errorCode: result.error instanceof ApiError ? result.error.status : null,
         };
     }
 };

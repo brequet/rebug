@@ -4,7 +4,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class=" p-2">
+<div class="p-2">
 	<h1>API Health Status (via +page.ts load function)</h1>
 
 	{#if data.healthStatus}

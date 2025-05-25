@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, TS)]
+#[ts(export)]
 pub struct Board {
     pub id: Uuid,
     pub name: String,

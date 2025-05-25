@@ -25,7 +25,7 @@ async fn health_check_handler(
         )),
         Err(e) => {
             tracing::error!("Health check failed: {}", e);
-            Err(ApiError::InternalServerError(e.to_string()))
+            Err(ApiError::internal_error(e.to_string()))
         }
     }
 }

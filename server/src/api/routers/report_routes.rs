@@ -13,7 +13,7 @@ use crate::{
         auth::AuthenticatedUser,
         error::ApiError,
         models::{
-            request::report_models::CreateScreenshotReportRequest,
+            request::report_models::CreateScreenshotReportRequestMultipart,
             response::report_models::ReportResponse,
         },
         state::AppState,
@@ -62,12 +62,12 @@ async fn get_report_handler(
 async fn create_screenshot_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
-    TypedMultipart(payload): TypedMultipart<CreateScreenshotReportRequest>,
+    TypedMultipart(payload): TypedMultipart<CreateScreenshotReportRequestMultipart>,
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
     tracing::debug!("Creating screenshot report.");
 
     let file_name = payload.file.metadata.file_name.ok_or_else(|| {
-        ApiError::Validation("File name is required in the multipart data.".to_string())
+        ApiError::validation("File name is required in the multipart data.".to_string())
     })?;
 
     let params = CreateScreenshotReportParams {

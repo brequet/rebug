@@ -32,7 +32,7 @@ async fn create_user_handler(
 
     payload.validate().map_err(|e| {
         tracing::warn!("User validation failed: {}", e);
-        ApiError::Validation(e.to_string())
+        ApiError::validation(e.to_string())
     })?;
 
     let user = state

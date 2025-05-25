@@ -1,9 +1,11 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 use validator::Validate;
 
 use crate::domain::models::user::UserRole;
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, Debug, Serialize, TS)]
+#[ts(export)]
 pub struct CreateUserRequest {
     #[validate(email)]
     pub email: String,

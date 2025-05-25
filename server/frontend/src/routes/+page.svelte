@@ -1,6 +1,6 @@
 <script lang="ts">
+	import HealthMonitor from '$lib/components/HealthMonitor.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import HealthMonitor from '@/components/HealthMonitor.svelte';
 
 	let count = $state(0);
 </script>

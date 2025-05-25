@@ -22,8 +22,8 @@ api/
             report_models.rs
             user_models.rs
     routers/
-        auth.rs
-        health.rs
+        auth_routes.rs
+        health_routes.rs
         mod.rs
         report_routes.rs
         user_routes.rs
@@ -779,7 +779,7 @@ File End
 --------------------------------------------------
 
 
-./src/api\routers\auth.rs
+./src/api\routers\auth_routes.rs
 File type: .rs
 use axum::{Json, Router, extract::State, routing::post};
 use tracing::instrument;
@@ -826,7 +826,7 @@ File End
 --------------------------------------------------
 
 
-./src/api\routers\health.rs
+./src/api\routers\health_routes.rs
 File type: .rs
 use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use tracing::instrument;
@@ -868,16 +868,16 @@ File End
 
 ./src/api\routers\mod.rs
 File type: .rs
-use auth::auth_routes;
+use auth_routes::auth_routes;
 use axum::Router;
-use health::health_routes;
+use health_routes::health_routes;
 use report_routes::report_routes;
 use user_routes::user_routes;
 
 use super::state::AppState;
 
-pub mod auth;
-pub mod health;
+pub mod auth_routes;
+pub mod health_routes;
 pub mod report_routes;
 pub mod user_routes;
 

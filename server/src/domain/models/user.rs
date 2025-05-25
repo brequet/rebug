@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use std::fmt;
+use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type, TS)]
+#[ts(export)]
 #[sqlx(type_name = "TEXT", rename_all = "PascalCase")]
 pub enum UserRole {
     Admin,
@@ -19,7 +21,8 @@ impl fmt::Display for UserRole {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, TS)]
+#[ts(export)]
 pub struct User {
     pub id: Uuid,
     pub email: String,

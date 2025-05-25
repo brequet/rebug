@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[ts(export)]
 pub struct TokenClaims {
     pub sub: Uuid,    // Subject (user_id)
     pub role: String, // User role (can be UserRole enum if you stringify it)

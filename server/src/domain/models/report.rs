@@ -3,10 +3,12 @@ use std::fmt;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type, TS)]
 #[sqlx(type_name = "TEXT", rename_all = "PascalCase")]
+#[ts(export)]
 pub enum ReportType {
     Screenshot,
     Video,
@@ -21,7 +23,8 @@ impl fmt::Display for ReportType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, TS)]
+#[ts(export)]
 pub struct Report {
     pub id: Uuid,
     pub user_id: Uuid,

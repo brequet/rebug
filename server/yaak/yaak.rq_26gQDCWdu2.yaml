@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_26gQDCWdu2
 createdAt: 2025-05-20T19:46:15.982952300
-updatedAt: 2025-05-20T19:46:36.619886800
+updatedAt: 2025-05-25T15:47:03.264001300
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_BnL4gQN527
 authentication: {}
@@ -23,5 +23,5 @@ headers:
 method: POST
 name: Login default admin
 sortPriority: 0.001
-url: http://127.0.0.1:3000/api/auth/login
+url: ${[ BASE_URL ]}/api/auth/login
 urlParameters: []

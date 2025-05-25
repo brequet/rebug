@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { fetchHealthStatus } from '$lib/services/apiService';
-	import type { HealthStatusResponse } from '$lib/types/api';
+	import { healthService } from '$lib/services/api';
+	import { ApiError } from '$lib/types/api/ApiError';
+	import type { HealthResponse } from '$lib/types/generated/HealthResponse';
+	import { isOk } from '$lib/types/Result';
 	import Button from './ui/button/button.svelte';
 
-	let healthStatus = $state<HealthStatusResponse | null>(null);
+	let healthStatus = $state<HealthResponse | null>(null);
 	let errorMessage = $state<string | null>(null);
 	let isLoading = $state<boolean>(false);
 
@@ -11,14 +13,21 @@
 		isLoading = true;
 		errorMessage = null;
 		healthStatus = null;
-		try {
-			healthStatus = await fetchHealthStatus();
-		} catch (e: any) {
-			errorMessage = e.message || 'An unknown error occurred while fetching health status.';
-			console.error('Error details:', e);
-		} finally {
-			isLoading = false;
+
+		const result = await healthService.fetchHealthStatus();
+
+		if (isOk(result)) {
+			healthStatus = result.data;
+		} else {
+			const error = result.error;
+			if (error instanceof ApiError) {
+				errorMessage = `API Error (${error.status}): ${error.message}`;
+			} else {
+				errorMessage = error.message;
+			}
 		}
+
+		isLoading = false;
 	}
 </script>
 

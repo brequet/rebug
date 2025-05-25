@@ -1,7 +1,9 @@
 use serde::Serialize;
+use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, TS)]
+#[ts(export)]
 pub struct ReportResponse {
     pub id: Uuid,
     pub title: String,

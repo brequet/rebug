@@ -19,7 +19,7 @@ async fn login_handler(
     tracing::debug!("Attempting login.");
     payload.validate().map_err(|e| {
         tracing::warn!("Login validation failed: {}", e);
-        ApiError::Validation(e.to_string())
+        ApiError::validation(e.to_string())
     })?;
 
     let (user, token) = state

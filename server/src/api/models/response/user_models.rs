@@ -1,9 +1,11 @@
 use serde::Serialize;
+use ts_rs::TS;
 use uuid::Uuid;
 
 use crate::domain::models::user::{User, UserRole};
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, TS)]
+#[ts(export)]
 pub struct UserResponse {
     pub id: Uuid,
     pub email: String,
