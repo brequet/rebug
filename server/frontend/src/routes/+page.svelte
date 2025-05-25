@@ -1,30 +1,42 @@
 <script lang="ts">
-	import HealthMonitor from '$lib/components/HealthMonitor.svelte';
+	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
+	import { authStore } from '$lib/stores/auth.svelte.js';
+	import { onMount } from 'svelte';
 
-	let count = $state(0);
+	onMount(() => {
+		if (!authStore.isAuthenticated) {
+			goto('/login');
+		}
+	});
 </script>
 
-<main class="p-4">
-	<h1 class="text-3xl">Welcome to SvelteKit</h1>
-	<p>
-		Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
-	</p>
+<svelte:head>
+	<title>Dashboard</title>
+</svelte:head>
 
-	<div class="flex flex-col">
-		<a href="about" class="text-blue-500">About</a>
-		<a href="dynamic-route" class="text-blue-500">Dynamic route</a>
+{#if authStore.isAuthenticated}
+	<div class="space-y-6">
+		<div>
+			<h1 class="text-foreground text-3xl font-bold">Dashboard</h1>
+			<p class="text-muted-foreground">Welcome to your dashboard</p>
+		</div>
+
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+			<div class="bg-card border-border rounded-lg border p-6">
+				<h3 class="text-foreground mb-2 font-semibold">User Info</h3>
+				<p class="text-muted-foreground text-sm">Email: {authStore.user?.email}</p>
+				<p class="text-muted-foreground text-sm">Role: {authStore.user?.role}</p>
+			</div>
+
+			<div class="bg-card border-border rounded-lg border p-6">
+				<h3 class="text-foreground mb-2 font-semibold">Quick Actions</h3>
+				<Button variant="outline" class="w-full">View Profile</Button>
+			</div>
+		</div>
 	</div>
-
-	<Button onclick={() => count++}>
-		Click: {count}
-	</Button>
-
-	<HealthMonitor />
-
-	<p style="margin-top: 1rem;">
-		<a href="/health-check-page"
-			>View dedicated health status page (data loaded server-side/on navigation)</a
-		>
-	</p>
-</main>
+{:else}
+	<div class="text-center">
+		<p class="text-muted-foreground">Redirecting to login...</p>
+	</div>
+{/if}

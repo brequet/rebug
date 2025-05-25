@@ -15,8 +15,23 @@ lib/
                 index.ts
     hooks/
     services/
-        apiService.ts
+        api/
+            base.ts
+            index.ts
+            auth/
+                auth.service.ts
+                index.ts
+            health/
+                health.service.ts
+                index.ts
+            users/
+                index.ts
+                users.service.ts
     types/
+        Result.ts
+        api/
+            ApiError.ts
+            ApiResult.ts
         generated/
             ApiErrorResponse.ts
             Board.ts
@@ -255,8 +270,10 @@ File End
 ./src/lib\components\HealthMonitor.svelte
 File type: .svelte
 <script lang="ts">
-	import { fetchHealthStatus } from '$lib/services/apiService';
-	import type { HealthResponse } from '@/types/generated/HealthResponse';
+	import { healthService } from '$lib/services/api';
+	import { ApiError } from '$lib/types/api/ApiError';
+	import type { HealthResponse } from '$lib/types/generated/HealthResponse';
+	import { isOk } from '$lib/types/Result';
 	import Button from './ui/button/button.svelte';
 
 	let healthStatus = $state<HealthResponse | null>(null);
@@ -267,14 +284,21 @@ File type: .svelte
 		isLoading = true;
 		errorMessage = null;
 		healthStatus = null;
-		try {
-			healthStatus = await fetchHealthStatus();
-		} catch (e: any) {
-			errorMessage = e.message || 'An unknown error occurred while fetching health status.';
-			console.error('Error details:', e);
-		} finally {
-			isLoading = false;
+
+		const result = await healthService.fetchHealthStatus();
+
+		if (isOk(result)) {
+			healthStatus = result.data;
+		} else {
+			const error = result.error;
+			if (error instanceof ApiError) {
+				errorMessage = `API Error (${error.status}): ${error.message}`;
+			} else {
+				errorMessage = error.message;
+			}
 		}
+
+		isLoading = false;
 	}
 </script>
 
@@ -419,45 +443,240 @@ File End
 --------------------------------------------------
 
 
-./src/lib\services\apiService.ts
+./src/lib\services\api\base.ts
 File type: .ts
-import type { ApiErrorResponse } from "@/types/generated/ApiErrorResponse";
-import type { HealthResponse } from "@/types/generated/HealthResponse";
+import { ApiError, NetworkError } from '$lib/types/api/ApiError';
+import type { ApiResult } from '$lib/types/api/ApiResult';
+import { err, ok } from '$lib/types/Result';
 
 const API_BASE_URL = '/api';
 
-export async function get<T>(endpoint: string): Promise<T> {
+async function makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+): Promise<ApiResult<T>> {
     try {
-        const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+        const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+            ...options,
+        });
+
         if (!response.ok) {
-            let errorData: ApiErrorResponse;
+            let errorData;
             try {
                 errorData = await response.json();
             } catch {
-                errorData = { error: `API request failed with status: ${response.status}` };
+                errorData = { error: `HTTP ${response.status}` };
             }
-            throw { status: response.status, message: errorData.error, data: errorData };
+            return err(new ApiError(errorData.error || 'Request failed', response.status, errorData));
         }
-        return response.json() as Promise<T>;
+
+        const data = await response.json();
+        return ok(data);
     } catch (error) {
-        console.error(`Failed to GET ${endpoint}:`, error);
-        if (typeof error === 'object' && error !== null && 'status' in error && 'message' in error) {
-            throw error;
-        }
-        throw { status: 500, message: `Network error or unexpected issue fetching ${endpoint}.`, data: error };
+        return err(new NetworkError(
+            `Network error or unexpected issue with ${endpoint}`,
+            error
+        ));
     }
 }
 
+export async function get<T>(endpoint: string): Promise<ApiResult<T>> {
+    return makeRequest<T>(endpoint, { method: 'GET' });
+}
 
-/**
- * Fetches the health status from the /api/health endpoint.
- * @param fetchFn - Optional fetch function. SvelteKit's `load` functions provide their own `fetch`.
- * @returns A promise that resolves to the HealthStatusResponse.
- * @throws An error object if the fetch fails or the response is not ok.
- */
-export async function fetchHealthStatus(): Promise<HealthResponse> {
+export async function post<T>(endpoint: string, data?: unknown): Promise<ApiResult<T>> {
+    return makeRequest<T>(endpoint, {
+        method: 'POST',
+        body: data ? JSON.stringify(data) : undefined,
+    });
+}
+
+export async function put<T>(endpoint: string, data?: unknown): Promise<ApiResult<T>> {
+    return makeRequest<T>(endpoint, {
+        method: 'PUT',
+        body: data ? JSON.stringify(data) : undefined,
+    });
+}
+
+export async function del<T>(endpoint: string): Promise<ApiResult<T>> {
+    return makeRequest<T>(endpoint, { method: 'DELETE' });
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\index.ts
+File type: .ts
+export * as authService from './auth';
+export * as healthService from './health';
+export * as usersService from './users';
+
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\auth\auth.service.ts
+File type: .ts
+import type { ApiResult } from "$lib/types/api/ApiResult";
+import type { LoginRequest } from "$lib/types/generated/LoginRequest";
+import type { LoginResponse } from "$lib/types/generated/LoginResponse";
+import { post } from "../base";
+
+export async function login(loginRequest: LoginRequest): Promise<ApiResult<LoginResponse>> {
+    return post<LoginResponse>("/auth/login", loginRequest);
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\auth\index.ts
+File type: .ts
+export * from './auth.service';
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\health\health.service.ts
+File type: .ts
+import type { ApiResult } from '$lib/types/api/ApiResult';
+import type { HealthResponse } from '$lib/types/generated/HealthResponse';
+import { get } from '../base';
+
+export async function fetchHealthStatus(): Promise<ApiResult<HealthResponse>> {
     return get<HealthResponse>('health');
 }
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\health\index.ts
+File type: .ts
+export * from './health.service';
+
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\users\index.ts
+File type: .ts
+export * from './users.service';
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\services\api\users\users.service.ts
+File type: .ts
+import type { ApiResult } from "$lib/types/api/ApiResult";
+import type { UserResponse } from "$lib/types/generated/UserResponse";
+import { get } from "../base";
+
+export async function getMe(): Promise<ApiResult<UserResponse>> {
+    return get<UserResponse>('/users/me');
+}
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\types\Result.ts
+File type: .ts
+export type Result<T, E = Error> =
+    | { success: true; data: T }
+    | { success: false; error: E };
+
+export const ok = <T>(data: T): Result<T, never> => ({ success: true, data });
+export const err = <E>(error: E): Result<never, E> => ({ success: false, error });
+
+export const isOk = <T, E>(result: Result<T, E>): result is { success: true; data: T } =>
+    result.success;
+
+export const isErr = <T, E>(result: Result<T, E>): result is { success: false; error: E } =>
+    !result.success;
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\types\api\ApiError.ts
+File type: .ts
+export class ApiError extends Error {
+    constructor(
+        message: string,
+        public readonly status: number,
+        public readonly data?: unknown
+    ) {
+        super(message);
+        this.name = 'ApiError';
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ('captureStackTrace' in Error && typeof (Error as any).captureStackTrace === 'function') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (Error as any).captureStackTrace(this, this.constructor);
+        }
+    }
+}
+
+export class NetworkError extends Error {
+    constructor(message: string, public readonly cause?: unknown) {
+        super(message);
+        this.name = 'NetworkError';
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ('captureStackTrace' in Error && typeof (Error as any).captureStackTrace === 'function') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (Error as any).captureStackTrace(this, this.constructor);
+        }
+    }
+}
+
+export type ApiErrorType = ApiError | NetworkError
+
+export function isApiError(error: unknown): error is ApiError {
+    return error instanceof ApiError;
+}
+
+export function isNetworkError(error: unknown): error is NetworkError {
+    return error instanceof NetworkError;
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/lib\types\api\ApiResult.ts
+File type: .ts
+import type { ApiErrorType } from "$lib/types/api/ApiError";
+import type { Result } from "../Result";
+
+export type ApiResult<T> = Result<T, ApiErrorType>
 
 
 --------------------------------------------------
@@ -657,8 +876,8 @@ File End
 ./src/routes\+page.svelte
 File type: .svelte
 <script lang="ts">
+	import HealthMonitor from '$lib/components/HealthMonitor.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import HealthMonitor from '@/components/HealthMonitor.svelte';
 
 	let count = $state(0);
 </script>
@@ -739,21 +958,24 @@ File End
 
 ./src/routes\health-check-page\+page.ts
 File type: .ts
-import { fetchHealthStatus } from '$lib/services/apiService';
+import { healthService } from '$lib/services/api';
+import { ApiError } from '$lib/types/api/ApiError';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async () => {
-    try {
-        const status = await fetchHealthStatus();
+    const result = await healthService.fetchHealthStatus();
+
+    if (result.success) {
         return {
-            healthStatus: status,
+            healthStatus: result.data,
             error: null,
         };
-    } catch (e) {
-        console.error('Failed to load health status in +page.ts:', e);
+    } else {
+        console.error('Failed to load health status:', result.error);
         return {
             healthStatus: null,
-            error: e.message || 'Failed to load API health status.',
+            error: result.error.message,
+            errorCode: result.error instanceof ApiError ? result.error.status : null,
         };
     }
 };

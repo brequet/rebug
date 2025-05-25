@@ -26,6 +26,7 @@ impl fmt::Display for UserRole {
 pub struct User {
     pub id: Uuid,
     pub email: String,
+    #[serde(skip)]
     pub password_hash: String,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
