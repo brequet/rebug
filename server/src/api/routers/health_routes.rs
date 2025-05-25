@@ -16,16 +16,13 @@ async fn health_check_handler(
     let health_check = state.health_service().health_check();
 
     match health_check {
-        Ok(check) => {
-            tracing::info!("Health check successful: {:?}", check);
-            Ok((
-                StatusCode::OK,
-                Json(HealthResponse {
-                    status: check.status,
-                    message: check.message,
-                }),
-            ))
-        }
+        Ok(check) => Ok((
+            StatusCode::OK,
+            Json(HealthResponse {
+                status: check.status,
+                message: check.message,
+            }),
+        )),
         Err(e) => {
             tracing::error!("Health check failed: {}", e);
             Err(ApiError::InternalServerError(e.to_string()))

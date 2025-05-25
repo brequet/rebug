@@ -17,6 +17,7 @@ api/
             user_models.rs
         response/
             auth_models.rs
+            health_models.rs
             mod.rs
             report_models.rs
             user_models.rs
@@ -44,6 +45,7 @@ domain/
     models/
         auth.rs
         board.rs
+        health.rs
         mod.rs
         report.rs
         user.rs
@@ -63,6 +65,9 @@ infrastructure/
     database/
         mod.rs
         sqlite.rs
+    frontend/
+        frontend_service.rs
+        mod.rs
     repositories/
         mod.rs
         sqlite_board_repository.rs
@@ -103,7 +108,10 @@ use rebug::{
     api::{routers::get_api_routes, state::AppState},
     config::app_config::APP_CONFIG,
     domain::models::user::UserRole,
-    infrastructure::{container::service_container::ServiceContainer, database::sqlite::Sqlite},
+    infrastructure::{
+        container::service_container::ServiceContainer, database::sqlite::Sqlite,
+        frontend::frontend_service::FrontendService,
+    },
 };
 use tower_http::{
     services::ServeDir,
@@ -203,11 +211,12 @@ async fn setup_initial_admin(
 }
 
 fn build_router(app_state: AppState) -> Router {
-    let static_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
+    let uploaded_files_service = ServeDir::new(&APP_CONFIG.upload_directory);
 
     Router::new()
         .nest("/api", get_api_routes())
-        .nest_service("/files", static_files_service)
+        .nest_service("/uploads", uploaded_files_service)
+        .merge(FrontendService::create_router().with_state(()))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),
@@ -687,9 +696,26 @@ File End
 --------------------------------------------------
 
 
+./src/api\models\response\health_models.rs
+File type: .rs
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub struct HealthResponse {
+    pub status: String,
+    pub message: String,
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
 ./src/api\models\response\mod.rs
 File type: .rs
 pub mod auth_models;
+pub mod health_models;
 pub mod report_models;
 pub mod user_models;
 
@@ -802,19 +828,36 @@ File End
 
 ./src/api\routers\health.rs
 File type: .rs
-use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
+use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use tracing::instrument;
 
-use crate::api::state::AppState;
+use crate::api::{
+    error::ApiError, models::response::health_models::HealthResponse, state::AppState,
+};
 
 pub fn health_routes() -> Router<AppState> {
     Router::new().route("/health", get(health_check_handler))
 }
 
 #[instrument(skip(state), level = "debug")]
-async fn health_check_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let response = state.health_service().health_check();
-    Json(response)
+async fn health_check_handler(
+    State(state): State<AppState>,
+) -> Result<(StatusCode, Json<HealthResponse>), ApiError> {
+    let health_check = state.health_service().health_check();
+
+    match health_check {
+        Ok(check) => Ok((
+            StatusCode::OK,
+            Json(HealthResponse {
+                status: check.status,
+                message: check.message,
+            }),
+        )),
+        Err(e) => {
+            tracing::error!("Health check failed: {}", e);
+            Err(ApiError::InternalServerError(e.to_string()))
+        }
+    }
 }
 
 
@@ -1304,9 +1347,13 @@ File End
 File type: .rs
 use async_trait::async_trait;
 
+use crate::domain::models::health::HealthCheck;
+
+pub type HealthServiceResult<T> = Result<T, Box<dyn std::error::Error>>;
+
 #[async_trait]
 pub trait HealthServiceInterface: Send + Sync {
-    fn health_check(&self) -> serde_json::Value;
+    fn health_check(&self) -> HealthServiceResult<HealthCheck>;
 }
 
 #[derive(Clone)]
@@ -1326,15 +1373,11 @@ impl Default for HealthService {
 
 #[async_trait]
 impl HealthServiceInterface for HealthService {
-    fn health_check(&self) -> serde_json::Value {
-        const HEALTH_CHECK_RESPONSE: &str = "Everything is OK";
-
-        let json_response = serde_json::json!({
-            "status": "success",
-            "message": HEALTH_CHECK_RESPONSE,
-        });
-
-        json_response
+    fn health_check(&self) -> HealthServiceResult<HealthCheck> {
+        Ok(HealthCheck {
+            status: "success".to_string(),
+            message: "Everything is OK".to_string(),
+        })
     }
 }
 
@@ -1797,6 +1840,7 @@ pub struct AppConfig {
     pub database_url: String,
     pub upload_directory: String,
     pub file_base_url: String,
+    pub frontend_directory: String,
     pub jwt_secret: String,
     pub jwt_expiration_seconds: i64,
     pub default_admin_email: String,
@@ -1911,10 +1955,25 @@ File End
 --------------------------------------------------
 
 
+./src/domain\models\health.rs
+File type: .rs
+#[derive(Debug, Clone)]
+pub struct HealthCheck {
+    pub status: String,
+    pub message: String,
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
 ./src/domain\models\mod.rs
 File type: .rs
 pub mod auth;
 pub mod board;
+pub mod health;
 pub mod report;
 pub mod user;
 
@@ -2208,6 +2267,7 @@ File End
 File type: .rs
 pub mod container;
 pub mod database;
+pub mod frontend;
 pub mod repositories;
 pub mod security;
 pub mod storage;
@@ -2340,6 +2400,57 @@ impl Sqlite {
         self.pool.clone()
     }
 }
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\frontend\frontend_service.rs
+File type: .rs
+use crate::config::app_config::APP_CONFIG;
+use axum::Router;
+use std::path::Path;
+use tower_http::services::{ServeDir, ServeFile};
+
+pub struct FrontendService;
+
+impl FrontendService {
+    pub fn create_router() -> Router {
+        let frontend_dir = Path::new(&APP_CONFIG.frontend_directory);
+
+        if !frontend_dir.exists() {
+            tracing::warn!(
+                "Frontend directory '{}' does not exist. Frontend serving disabled.",
+                APP_CONFIG.frontend_directory
+            );
+            return Router::new();
+        }
+
+        let index_file_path = frontend_dir.join("index.html");
+
+        if !index_file_path.exists() {
+            tracing::warn!("Frontend index.html not found. Frontend serving disabled.");
+            return Router::new();
+        }
+
+        let serve_dir = ServeDir::new(&APP_CONFIG.frontend_directory)
+            .not_found_service(ServeFile::new(index_file_path));
+
+        Router::new().fallback_service(serve_dir)
+    }
+}
+
+
+--------------------------------------------------
+File End
+--------------------------------------------------
+
+
+./src/infrastructure\frontend\mod.rs
+File type: .rs
+pub mod frontend_service;
 
 
 --------------------------------------------------

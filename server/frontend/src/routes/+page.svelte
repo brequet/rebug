@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import HealthMonitor from '@/components/HealthMonitor.svelte';
 
 	let count = $state(0);
 </script>
@@ -18,4 +19,12 @@
 	<Button onclick={() => count++}>
 		Click: {count}
 	</Button>
+
+	<HealthMonitor />
+
+	<p style="margin-top: 1rem;">
+		<a href="/health-check-page"
+			>View dedicated health status page (data loaded server-side/on navigation)</a
+		>
+	</p>
 </main>
