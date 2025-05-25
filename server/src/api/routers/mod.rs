@@ -6,14 +6,16 @@ use user_routes::user_routes;
 
 use super::state::AppState;
 
-pub mod auth_routes;
-pub mod health_routes;
-pub mod report_routes;
-pub mod user_routes;
+mod auth_routes;
+mod board_routes;
+mod health_routes;
+mod report_routes;
+mod user_routes;
 
 pub fn get_api_routes() -> Router<AppState> {
     Router::new()
         .merge(auth_routes())
+        .merge(board_routes())
         .merge(health_routes())
         .merge(report_routes())
         .merge(user_routes())
