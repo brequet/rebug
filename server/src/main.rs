@@ -112,7 +112,7 @@ fn build_router(app_state: AppState) -> Router {
 
     Router::new()
         .nest("/api", get_api_routes())
-        .nest_service("/files", uploaded_files_service)
+        .nest_service("/uploads", uploaded_files_service)
         .merge(FrontendService::create_router().with_state(()))
         .layer(
             TraceLayer::new_for_http()

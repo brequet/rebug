@@ -1,8 +1,12 @@
 use async_trait::async_trait;
 
+use crate::domain::models::health::HealthCheck;
+
+pub type HealthServiceResult<T> = Result<T, Box<dyn std::error::Error>>;
+
 #[async_trait]
 pub trait HealthServiceInterface: Send + Sync {
-    fn health_check(&self) -> serde_json::Value;
+    fn health_check(&self) -> HealthServiceResult<HealthCheck>;
 }
 
 #[derive(Clone)]
@@ -22,14 +26,10 @@ impl Default for HealthService {
 
 #[async_trait]
 impl HealthServiceInterface for HealthService {
-    fn health_check(&self) -> serde_json::Value {
-        const HEALTH_CHECK_RESPONSE: &str = "Everything is OK";
-
-        let json_response = serde_json::json!({
-            "status": "success",
-            "message": HEALTH_CHECK_RESPONSE,
-        });
-
-        json_response
+    fn health_check(&self) -> HealthServiceResult<HealthCheck> {
+        Ok(HealthCheck {
+            status: "success".to_string(),
+            message: "Everything is OK".to_string(),
+        })
     }
 }
