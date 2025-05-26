@@ -1,5 +1,6 @@
 use auth_routes::auth_routes;
 use axum::Router;
+use board_routes::board_routes;
 use health_routes::health_routes;
 use report_routes::report_routes;
 use user_routes::user_routes;

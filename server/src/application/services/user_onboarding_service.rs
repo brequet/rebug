@@ -112,7 +112,7 @@ impl UserOnboardingServiceInterface for UserOnboardingService {
         );
 
         self.board_service
-            .create_board(&board_name, Some("User's default board"), user.id, true)
+            .create_board(&board_name, Some("Default board"), user.id, true)
             .await?;
 
         Ok(user)

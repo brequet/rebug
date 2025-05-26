@@ -45,6 +45,10 @@ impl ApiError {
         }
     }
 
+    pub fn unauthorized() -> Self {
+        Self::Unauthorized
+    }
+
     pub fn conflict(message: impl Into<String>) -> Self {
         Self::Conflict {
             message: message.into(),

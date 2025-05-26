@@ -1,6 +1,7 @@
 use crate::application::services::{
-    auth_service::AuthServiceError, report_service::ReportServiceError,
-    user_onboarding_service::UserOnboardingServiceError, user_service::UserServiceError,
+    auth_service::AuthServiceError, board_service::BoardServiceError,
+    report_service::ReportServiceError, user_onboarding_service::UserOnboardingServiceError,
+    user_service::UserServiceError,
 };
 
 use super::api_error::ApiError;
@@ -78,6 +79,21 @@ impl IntoApiError for UserServiceError {
     }
 }
 
+impl IntoApiError for BoardServiceError {
+    fn into_api_error(self) -> ApiError {
+        match self {
+            Self::ValidationError(msg) => ApiError::validation(msg),
+            Self::BoardNotFound => ApiError::not_found("Board"),
+            Self::BoardAlreadyExists => ApiError::conflict("Board already exists"),
+            Self::AccessDenied => ApiError::unauthorized(),
+            Self::InternalError(msg) => {
+                tracing::error!("Board service error: {}", msg);
+                ApiError::internal_error("Board service unavailable")
+            }
+        }
+    }
+}
+
 impl From<AuthServiceError> for ApiError {
     fn from(err: AuthServiceError) -> Self {
         err.into_api_error()
@@ -98,6 +114,12 @@ impl From<UserOnboardingServiceError> for ApiError {
 
 impl From<UserServiceError> for ApiError {
     fn from(err: UserServiceError) -> Self {
+        err.into_api_error()
+    }
+}
+
+impl From<BoardServiceError> for ApiError {
+    fn from(err: BoardServiceError) -> Self {
         err.into_api_error()
     }
 }

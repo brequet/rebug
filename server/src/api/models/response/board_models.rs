@@ -2,6 +2,8 @@ use serde::Serialize;
 use ts_rs::TS;
 use uuid::Uuid;
 
+use crate::domain::models::board::Board;
+
 #[derive(Serialize, Debug, TS)]
 #[ts(export)]
 pub struct BoardResponse {
