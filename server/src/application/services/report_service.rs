@@ -82,6 +82,7 @@ impl ReportServiceInterface for ReportService {
         &self,
         params: CreateScreenshotReportParams,
     ) -> ReportServiceResult<Report> {
+        // TODO: is it okay for report service to depend on board service? Is this clean?
         self.board_service
             .ensure_user_can_access_board(params.user_id, params.board_id)
             .await?;
