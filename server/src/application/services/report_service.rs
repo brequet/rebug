@@ -9,7 +9,10 @@ use crate::domain::{
     repositories::{RepositoryError, report_repository::ReportRepository},
 };
 
-use super::board_service::{BoardServiceError, BoardServiceInterface};
+use super::{
+    authorization_service::{AuthorizationError, AuthorizationServiceInterface},
+    board_service::BoardServiceError,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ReportServiceError {
@@ -17,6 +20,8 @@ pub enum ReportServiceError {
     RepositoryError(#[from] RepositoryError),
     #[error("Storage error: {0}")]
     StorageError(#[from] StorageError),
+    #[error("Authorization error: {0}")]
+    AuthorizationError(#[from] AuthorizationError),
     #[error("Report not found: {context}")]
     ReportNotFound { context: String },
     #[error("Internal server error: {0}")]
@@ -58,19 +63,19 @@ pub struct ReportService {
     report_repository: Arc<dyn ReportRepository>,
     storage_port: Arc<dyn StoragePort>,
 
-    board_service: Arc<dyn BoardServiceInterface>,
+    authorization_service: Arc<dyn AuthorizationServiceInterface>,
 }
 
 impl ReportService {
     pub fn new(
         report_repository: Arc<dyn ReportRepository>,
         storage_port: Arc<dyn StoragePort>,
-        board_service: Arc<dyn BoardServiceInterface>,
+        authorization_service: Arc<dyn AuthorizationServiceInterface>,
     ) -> Self {
         Self {
             report_repository,
             storage_port,
-            board_service,
+            authorization_service,
         }
     }
 }
@@ -82,9 +87,8 @@ impl ReportServiceInterface for ReportService {
         &self,
         params: CreateScreenshotReportParams,
     ) -> ReportServiceResult<Report> {
-        // TODO: is it okay for report service to depend on board service? Is this clean?
-        self.board_service
-            .ensure_user_can_access_board(params.user_id, params.board_id)
+        self.authorization_service
+            .assert_can_user_create_report(params.user_id, params.board_id, &params.user_role)
             .await?;
 
         tracing::debug!("Saving file to storage");

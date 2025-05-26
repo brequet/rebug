@@ -6,6 +6,8 @@ use sqlx::prelude::FromRow;
 use ts_rs::TS;
 use uuid::Uuid;
 
+use super::user::UserRole;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type, TS)]
 #[sqlx(type_name = "TEXT", rename_all = "PascalCase")]
 #[ts(export)]
@@ -54,6 +56,7 @@ pub struct CreateReportParams {
 #[derive(Debug, Clone)]
 pub struct CreateScreenshotReportParams {
     pub user_id: Uuid,
+    pub user_role: UserRole,
     pub board_id: Uuid,
     pub title: String,
     pub description: Option<String>,

@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::{
     api::{
-        auth::AuthenticatedUser,
+        auth::{AuthenticatedUser, parse_user_role},
         error::ApiError,
         models::{
             request::report_models::CreateScreenshotReportRequestMultipart,
@@ -70,8 +70,11 @@ async fn create_screenshot_report_handler(
         ApiError::validation("File name is required in the multipart data.".to_string())
     })?;
 
+    let user_role = parse_user_role(&authenticated_user.claims.role)?;
+
     let params = CreateScreenshotReportParams {
         user_id: authenticated_user.claims.sub,
+        user_role,
         board_id: payload.board_id,
         title: payload.title,
         description: payload.description,

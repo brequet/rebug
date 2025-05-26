@@ -32,6 +32,10 @@ impl IntoApiError for ReportServiceError {
                 tracing::error!("Storage error: {}", err);
                 ApiError::internal_error("File storage unavailable")
             }
+            Self::AuthorizationError(err) => {
+                tracing::error!("Authorization error: {}", err);
+                ApiError::unauthorized()
+            }
             Self::RepositoryError(err) => {
                 tracing::error!("Repository error: {}", err);
                 ApiError::internal_error("Database unavailable")

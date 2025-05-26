@@ -15,7 +15,7 @@ pub enum ApiError {
     #[error("Resource not found: {resource}")]
     NotFound { resource: String },
 
-    #[error("Authentication failed")]
+    #[error("Unauthorized access")]
     Unauthorized,
 
     #[error("Action forbidden")]
@@ -87,7 +87,7 @@ impl ApiError {
         let (error, details) = match self {
             Self::Validation { message } => (message.clone(), None),
             Self::NotFound { resource } => (format!("{} not found", resource), None),
-            Self::Unauthorized => ("Authentication failed".to_string(), None),
+            Self::Unauthorized => ("Unauthorized access".to_string(), None),
             Self::Forbidden => ("Action forbidden".to_string(), None),
             Self::Conflict { message } => (message.clone(), None),
             Self::InternalServerError { .. } => ("An unexpected error occurred".to_string(), None),

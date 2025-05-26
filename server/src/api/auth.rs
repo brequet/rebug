@@ -17,6 +17,8 @@ use crate::{
     domain::models::{auth::TokenClaims, user::UserRole},
 };
 
+use super::error::ApiError;
+
 #[derive(Debug)]
 pub enum AuthError {
     MissingToken,
@@ -103,4 +105,10 @@ where
             ))
         }
     }
+}
+
+pub fn parse_user_role(role_str: &str) -> Result<UserRole, ApiError> {
+    role_str
+        .parse::<UserRole>()
+        .map_err(|_| ApiError::internal_error("failed to parse user role".to_string()))
 }

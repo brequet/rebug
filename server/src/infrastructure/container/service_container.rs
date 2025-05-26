@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::{
     application::services::{
         auth_service::{AuthService, AuthServiceInterface},
+        authorization_service::{AuthorizationService, AuthorizationServiceInterface},
         board_service::{BoardService, BoardServiceInterface},
         health_service::{HealthService, HealthServiceInterface},
         report_service::{ReportService, ReportServiceInterface},
@@ -25,6 +26,7 @@ use crate::{
 pub struct ServiceContainer {
     pub health_service: Arc<dyn HealthServiceInterface>,
     pub auth_service: Arc<dyn AuthServiceInterface>,
+    pub authorization_service: Arc<dyn AuthorizationServiceInterface>,
     pub user_service: Arc<dyn UserServiceInterface>,
     pub board_service: Arc<dyn BoardServiceInterface>,
     pub report_service: Arc<dyn ReportServiceInterface>,
@@ -47,12 +49,13 @@ impl ServiceContainer {
         // Service layer
         let health_service = Arc::new(HealthService::new());
         let user_service = Arc::new(UserService::new(user_repository));
-        let board_service = Arc::new(BoardService::new(board_repository));
+        let board_service = Arc::new(BoardService::new(board_repository.clone()));
         let auth_service = Arc::new(AuthService::new(user_service.clone()));
+        let authorization_service = Arc::new(AuthorizationService::new(board_repository));
         let report_service = Arc::new(ReportService::new(
             report_repository,
             storage_port,
-            board_service.clone(),
+            authorization_service.clone(),
         ));
         let user_onboarding_service = Arc::new(UserOnboardingService::new(
             user_service.clone(),
@@ -62,6 +65,7 @@ impl ServiceContainer {
         Ok(Self {
             health_service,
             auth_service,
+            authorization_service,
             user_service,
             board_service,
             report_service,

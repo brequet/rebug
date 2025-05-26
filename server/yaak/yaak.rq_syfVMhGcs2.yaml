@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_syfVMhGcs2
 createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-05-26T11:25:51.206753100
+updatedAt: 2025-05-26T19:52:14.204553800
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -22,7 +22,7 @@ body:
     name: url
     value: http://example.com/page-with-bug
   - enabled: true
-    file: C:\shared\code\project\rebug\server\yaak\image-1743197808485.png
+    file: C:\dev\projects\rebug\server\yaak\image-1743197808485.png
     id: JcNnCpVQi4
     name: file
   - enabled: true
@@ -30,7 +30,7 @@ body:
     name: board_id
     value: 3f64ffa7-d829-45fe-b81c-7aa910518dc6
   - enabled: true
-    id: Xnk2eewrFz
+    id: XRBkny0cVE
     name: ''
     value: ''
 bodyType: multipart/form-data
