@@ -3,7 +3,8 @@ use std::sync::Arc;
 use crate::{
     application::services::{
         auth_service::AuthServiceInterface, board_service::BoardServiceInterface,
-        health_service::HealthServiceInterface, report_service::ReportServiceInterface,
+        dashboard_service::DashboardServiceInterface, health_service::HealthServiceInterface,
+        report_service::ReportServiceInterface,
         user_onboarding_service::UserOnboardingServiceInterface,
         user_service::UserServiceInterface,
     },
@@ -36,6 +37,10 @@ impl AppState {
 
     pub fn board_service(&self) -> &Arc<dyn BoardServiceInterface> {
         &self.container.board_service
+    }
+
+    pub fn dashboard_service(&self) -> &Arc<dyn DashboardServiceInterface> {
+        &self.container.dashboard_service
     }
 
     pub fn report_service(&self) -> &Arc<dyn ReportServiceInterface> {

@@ -76,11 +76,44 @@ impl ReportRepository for SqliteReportRepository {
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             FROM reports
-            WHERE id = $1
+            WHERE id = ?
             "#,
             id
         )
         .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx_error)
+    }
+
+    async fn get_recent_reports_by_board(
+        &self,
+        board_id: Uuid,
+        limit: usize,
+    ) -> RepositoryResult<Vec<Report>> {
+        let limit_i64 = limit as i64;
+        sqlx::query_as!(
+            Report,
+            r#"
+            SELECT 
+                id as "id: uuid::Uuid",
+                user_id as "user_id: uuid::Uuid",
+                board_id as "board_id: uuid::Uuid",
+                report_type as "report_type: ReportType",
+                title,
+                description,
+                file_path,
+                url,
+                created_at as "created_at: DateTime<Utc>",
+                updated_at as "updated_at: DateTime<Utc>"
+            FROM reports
+            WHERE board_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            "#,
+            board_id,
+            limit_i64
+        )
+        .fetch_all(&self.pool)
         .await
         .map_err(map_sqlx_error)
     }

@@ -1,0 +1,19 @@
+type: http_request
+model: http_request
+id: rq_BB4d7iuuNm
+createdAt: 2025-05-27T11:53:54.402868400
+updatedAt: 2025-05-27T12:26:55.510769700
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_6kszMvcgEn
+authentication:
+  token: ${[ JWT ]}
+authenticationType: bearer
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get dashboard
+sortPriority: -0.0002
+url: ${[ BASE_URL ]}/api/dashboard
+urlParameters: []

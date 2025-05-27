@@ -56,6 +56,12 @@ pub trait ReportServiceInterface: Send + Sync {
     ) -> ReportServiceResult<Report>;
 
     async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report>;
+
+    async fn get_recent_reports_by_board(
+        &self,
+        board_id: Uuid,
+        limit: usize,
+    ) -> ReportServiceResult<Vec<Report>>;
 }
 
 #[derive(Clone)]
@@ -128,5 +134,25 @@ impl ReportServiceInterface for ReportService {
 
         tracing::info!(report_id = %report.id, "Report fetched successfully");
         Ok(report)
+    }
+
+    #[instrument(skip(self), fields(board_id = %board_id, limit = %limit), level = "debug")]
+    async fn get_recent_reports_by_board(
+        &self,
+        board_id: Uuid,
+        limit: usize,
+    ) -> ReportServiceResult<Vec<Report>> {
+        let reports = self
+            .report_repository
+            .get_recent_reports_by_board(board_id, limit)
+            .await?;
+
+        tracing::debug!(
+            board_id = %board_id,
+            reports_count = reports.len(),
+            "Recent reports fetched successfully"
+        );
+
+        Ok(reports)
     }
 }

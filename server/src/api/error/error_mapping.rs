@@ -1,7 +1,7 @@
 use crate::application::services::{
     auth_service::AuthServiceError, board_service::BoardServiceError,
-    report_service::ReportServiceError, user_onboarding_service::UserOnboardingServiceError,
-    user_service::UserServiceError,
+    dashboard_service::DashboardServiceError, report_service::ReportServiceError,
+    user_onboarding_service::UserOnboardingServiceError, user_service::UserServiceError,
 };
 
 use super::api_error::ApiError;
@@ -98,6 +98,19 @@ impl IntoApiError for BoardServiceError {
     }
 }
 
+impl IntoApiError for DashboardServiceError {
+    fn into_api_error(self) -> ApiError {
+        match self {
+            Self::BoardServiceError(err) => err.into_api_error(),
+            Self::ReportServiceError(err) => err.into_api_error(),
+            Self::InternalError(msg) => {
+                tracing::error!("Dashboard service error: {}", msg);
+                ApiError::internal_error("Dashboard service unavailable")
+            }
+        }
+    }
+}
+
 impl From<AuthServiceError> for ApiError {
     fn from(err: AuthServiceError) -> Self {
         err.into_api_error()
@@ -124,6 +137,12 @@ impl From<UserServiceError> for ApiError {
 
 impl From<BoardServiceError> for ApiError {
     fn from(err: BoardServiceError) -> Self {
+        err.into_api_error()
+    }
+}
+
+impl From<DashboardServiceError> for ApiError {
+    fn from(err: DashboardServiceError) -> Self {
         err.into_api_error()
     }
 }

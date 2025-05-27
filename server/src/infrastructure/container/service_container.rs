@@ -5,6 +5,7 @@ use crate::{
         auth_service::{AuthService, AuthServiceInterface},
         authorization_service::{AuthorizationService, AuthorizationServiceInterface},
         board_service::{BoardService, BoardServiceInterface},
+        dashboard_service::{DashboardService, DashboardServiceInterface},
         health_service::{HealthService, HealthServiceInterface},
         report_service::{ReportService, ReportServiceInterface},
         user_onboarding_service::{UserOnboardingService, UserOnboardingServiceInterface},
@@ -29,6 +30,7 @@ pub struct ServiceContainer {
     pub authorization_service: Arc<dyn AuthorizationServiceInterface>,
     pub user_service: Arc<dyn UserServiceInterface>,
     pub board_service: Arc<dyn BoardServiceInterface>,
+    pub dashboard_service: Arc<dyn DashboardServiceInterface>,
     pub report_service: Arc<dyn ReportServiceInterface>,
     pub user_onboarding_service: Arc<dyn UserOnboardingServiceInterface>,
 }
@@ -57,6 +59,10 @@ impl ServiceContainer {
             storage_port,
             authorization_service.clone(),
         ));
+        let dashboard_service = Arc::new(DashboardService::new(
+            board_service.clone(),
+            report_service.clone(),
+        ));
         let user_onboarding_service = Arc::new(UserOnboardingService::new(
             user_service.clone(),
             board_service.clone(),
@@ -68,6 +74,7 @@ impl ServiceContainer {
             authorization_service,
             user_service,
             board_service,
+            dashboard_service,
             report_service,
             user_onboarding_service,
         })

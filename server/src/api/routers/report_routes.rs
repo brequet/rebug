@@ -45,15 +45,9 @@ async fn get_report_handler(
         return Err(ApiError::Forbidden);
     }
 
-    let response = ReportResponse {
-        id: report.id,
-        title: report.title,
-        description: report.description,
-        file_path: report.file_path,
-        url: report.url,
-    };
+    let response = ReportResponse::from(report);
 
-    tracing::info!(report_id = %report.id, "Report fetched successfully.");
+    tracing::info!(report_id = %response.id, "Report fetched successfully.");
 
     Ok((StatusCode::OK, Json(response)))
 }
@@ -92,15 +86,9 @@ async fn create_screenshot_report_handler(
             ApiError::from(e)
         })?;
 
-    let response = ReportResponse {
-        id: report.id,
-        title: report.title,
-        description: report.description,
-        file_path: report.file_path,
-        url: report.url,
-    };
+    let response = ReportResponse::from(report);
 
-    tracing::info!(report_id = %report.id, "Screenshot report created successfully.");
+    tracing::info!(report_id = %response.id, "Screenshot report created successfully.");
 
     Ok((StatusCode::CREATED, Json(response)))
 }
