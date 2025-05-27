@@ -3,7 +3,7 @@ server_port = 3000
 database_url = "sqlite://./rebug.db?mode=rwc"
 
 upload_directory = "./storage_data/uploads"
-file_base_url = "http://localhost:3000/files"
+file_base_url = "http://localhost:3000/uploads"
 
 frontend_directory = "./frontend/build"
 

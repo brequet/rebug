@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE id = $1\n            ",
+  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE board_id = ?\n            ORDER BY created_at DESC\n            LIMIT ?\n            ",
   "describe": {
     "columns": [
       {
@@ -55,7 +55,7 @@
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 2
     },
     "nullable": [
       false,
@@ -70,5 +70,5 @@
       false
     ]
   },
-  "hash": "0cd452b4532abaca0f4b066609549cebdd189ea4b9ccba6a1d17277fb172d995"
+  "hash": "235f4e198be2fe5e2d3cc0733fdc4d6299b7a85465640126d8bd889c1adbb7e4"
 }

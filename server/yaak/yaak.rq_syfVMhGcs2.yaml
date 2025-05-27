@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_syfVMhGcs2
 createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-05-27T11:28:32.563057800
+updatedAt: 2025-05-27T18:55:33.260118400
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -12,25 +12,25 @@ body:
   - enabled: true
     id: abq29XRMiq
     name: title
-    value: My Test Screenshot
+    value: My Test Screenshot 5 a little too long omg stop this
   - enabled: true
     id: rf5fp6ZKk7
     name: description
-    value: This is a detailed description of the bug.
+    value: This is a detailed description of the bug. The description here will be a little too long you see.\nOkayyy again some worfd anj anzjdnajnzdkaj ndkjn alkjzdnkaj ndazjndklazjndk ajznlkjdan zjdknalkjdznakjzdn akljzndlakjndlkaj nd
   - enabled: true
     id: gNvb8SkCFc
     name: url
     value: http://example.com/page-with-bug
   - enabled: true
-    file: C:\shared\code\project\rebug\server\yaak\image-1743197808485.png
+    file: C:\dev\projects\rebug\server\yaak\image-1743197808485.png
     id: JcNnCpVQi4
     name: file
   - enabled: true
     id: QGn4kYEtxb
     name: board_id
-    value: c9585047-8aeb-4e44-85e8-02946e6b2694
+    value: 1134699e-2efb-455a-bdd1-37f27449981d
   - enabled: true
-    id: PD0G0HaaU9
+    id: Wa3pcNAkzq
     name: ''
     value: ''
 bodyType: multipart/form-data

@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_AQNhyVwiX2
 createdAt: 2025-05-20T11:23:52.170836
-updatedAt: 2025-05-20T20:03:10.586465100
+updatedAt: 2025-05-27T18:45:43.701809300
 workspaceId: wk_uEV9dkQtcy
 folderId: null
 authentication: {}
@@ -14,5 +14,5 @@ headers: []
 method: GET
 name: Get file
 sortPriority: 2500.0
-url: ${[ BASE_URL ]}/files/1747768857535_image-1743197808485.png
+url: ${[ BASE_URL ]}/uploads/1748364300534.png
 urlParameters: []

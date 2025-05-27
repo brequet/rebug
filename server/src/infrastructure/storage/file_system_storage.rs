@@ -17,7 +17,10 @@ impl FileSystemStorage {
     const MAX_FILE_SIZE: usize = 50 * 1024 * 1024; // 50MB
     const ALLOWED_EXTENSIONS: &'static [&'static str] = &["png"];
 
+    #[instrument(name = "FileSystemStorage::new", level = "debug")]
     pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
+        tracing::debug!("Initializing FileSystemStorage with upload directory");
+
         let path = Path::new(&upload_directory);
         if !path.exists() {
             std::fs::create_dir_all(path).map_err(|e| {

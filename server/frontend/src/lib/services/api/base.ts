@@ -1,3 +1,4 @@
+import { authStore } from '$lib/stores/auth.svelte';
 import { ApiError, NetworkError } from '$lib/types/api/ApiError';
 import type { ApiResult } from '$lib/types/api/ApiResult';
 import { err, ok } from '$lib/types/Result';
@@ -9,11 +10,20 @@ async function makeRequest<T>(
     options: RequestInit = {}
 ): Promise<ApiResult<T>> {
     try {
+        const authHeader = authStore.getAuthHeader();
+
+        // Build headers with auth if available
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...options.headers as Record<string, string>,
+        };
+
+        if (authHeader) {
+            headers.Authorization = authHeader;
+        }
+
         const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
+            headers,
             ...options,
         });
 
