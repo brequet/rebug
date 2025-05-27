@@ -4,14 +4,92 @@ import type { LoginResponse } from '$lib/types/generated/LoginResponse';
 import type { UserResponse } from '$lib/types/generated/UserResponse';
 import { err, isOk, type Result } from '$lib/types/Result';
 
+interface ExtensionAuthMessage {
+    type: 'AUTH_SUCCESS' | 'AUTH_LOGOUT' | 'AUTH_CHECK' | 'EXTENSION_INSTALLED';
+    token?: string;
+    user?: UserResponse;
+    timestamp?: number;
+}
+
 class AuthStore {
     user: UserResponse | null = $state(null);
     token: string | null = $state(null);
     isAuthenticated = $derived(!!this.token && !!this.user);
     isLoading = $state(false);
+    extensionInstalled = $state(false);
 
     constructor() {
         this.loadFromStorage();
+        this.initializeExtensionCommunication();
+    }
+
+    private initializeExtensionCommunication(): void {
+        window.addEventListener('message', this.handleExtensionMessage.bind(this));
+
+        this.checkExtensionInstalled();
+
+        if (this.isAuthenticated) {
+            this.notifyExtension('AUTH_SUCCESS');
+        }
+    } private checkExtensionInstalled(): void {
+        window.postMessage({
+            type: 'CHECK_EXTENSION_INSTALLED',
+            source: 'website'
+        }, '*');
+
+        // Extension will respond if installed
+        setTimeout(() => {
+            if (!this.extensionInstalled) {
+                console.log('Extension not detected');
+            }
+        }, 1000);
+    }
+
+    private handleExtensionMessage = (event: MessageEvent<ExtensionAuthMessage>): void => {
+        // Only handle messages from our extension
+        if (event.source !== window || !event.data.type) return;
+
+        switch (event.data.type) {
+            case 'EXTENSION_INSTALLED':
+                this.extensionInstalled = true;
+                console.log('Extension detected and connected');
+                if (this.isAuthenticated) {
+                    this.notifyExtension('AUTH_SUCCESS');
+                }
+                break;
+
+            case 'AUTH_LOGOUT':
+                this.handleExtensionLogout();
+                break;
+
+            case 'AUTH_CHECK':
+                if (this.isAuthenticated) {
+                    this.notifyExtension('AUTH_SUCCESS');
+                }
+                break;
+        }
+    };
+
+    private notifyExtension(type: 'AUTH_SUCCESS' | 'AUTH_LOGOUT'): void {
+        const message: ExtensionAuthMessage = {
+            type,
+            timestamp: Date.now()
+        };
+
+        if (type === 'AUTH_SUCCESS' && this.token && this.user) {
+            message.token = this.token;
+            message.user = this.user;
+        }
+
+        window.postMessage({
+            ...message,
+            source: 'website'
+        }, '*');
+    }
+
+    private handleExtensionLogout(): void {
+        this.clearAuth();
+        goto('/login');
     }
 
     loadFromStorage(): void {
@@ -43,6 +121,8 @@ class AuthStore {
             localStorage.setItem('auth_token', access_token);
             localStorage.setItem('auth_user', JSON.stringify(user));
 
+            this.notifyExtension('AUTH_SUCCESS');
+
             this.isLoading = false;
 
             goto('/');
@@ -57,11 +137,9 @@ class AuthStore {
     }
 
     logout(): void {
-        this.token = null;
-        this.user = null;
+        this.notifyExtension('AUTH_LOGOUT');
 
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
+        this.clearAuth();
 
         goto('/login');
     }
@@ -74,7 +152,6 @@ class AuthStore {
         localStorage.removeItem('auth_user');
     }
 
-    // Method to get authorization header for API requests
     getAuthHeader(): string | null {
         return this.token ? `Bearer ${this.token}` : null;
     }
