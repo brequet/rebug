@@ -1,4 +1,6 @@
 .env
+rebug.db*
+storage_data/*
 
 # Added by cargo
 
