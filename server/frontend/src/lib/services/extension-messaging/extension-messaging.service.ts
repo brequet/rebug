@@ -1,9 +1,8 @@
 import {
-    WEB_APP_MESSAGE_SOURCE,
-    EXTENSION_READY_FLAG,
     TARGET_EXTENSION_ORIGIN,
+    WEB_APP_MESSAGE_SOURCE,
 } from './extension-messaging.config';
-import { WebAppMessageType, type BaseWebAppMessage, type WebAppMessage } from './extension-messaging.types';
+import { WebAppMessageType, type BaseWebAppMessage } from './extension-messaging.types';
 
 class ExtensionMessagingService {
     private _isExtensionReady: boolean = false;
@@ -31,20 +30,8 @@ class ExtensionMessagingService {
     }
 
     public checkForExtension(): void {
-        // Check for the flag set by the content script
-        if (typeof window !== 'undefined' && (window as any)[EXTENSION_READY_FLAG]) {
-            this.setExtensionReady(true);
-        } else {
-            // Fallback: check after a small delay in case content script loads later
-            setTimeout(() => {
-                if (typeof window !== 'undefined' && (window as any)[EXTENSION_READY_FLAG]) {
-                    this.setExtensionReady(true);
-                } else {
-                    this.setExtensionReady(false);
-                    console.warn('Rebug extension content script not detected.');
-                }
-            }, 1000);
-        }
+        // TODO: find a way to check if the extension is installed
+        this.setExtensionReady(true);
     }
 
     public sendMessage<T>(
@@ -56,12 +43,12 @@ class ExtensionMessagingService {
             return false;
         }
 
-        // if (!this._isExtensionReady) {
-        //     console.warn(
-        //         `Rebug extension is not ready or not detected. Message of type "${type}" not sent.`
-        //     );
-        //     return false;
-        // }
+        if (!this._isExtensionReady) {
+            console.warn(
+                `Rebug extension is not ready or not detected. Message of type "${type}" not sent.`
+            );
+            return false;
+        }
 
         const message: BaseWebAppMessage<T> = {
             source: WEB_APP_MESSAGE_SOURCE,

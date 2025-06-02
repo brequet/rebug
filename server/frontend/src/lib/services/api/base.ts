@@ -5,6 +5,7 @@ import { err, ok } from '$lib/types/Result';
 
 const API_BASE_URL = '/api';
 
+// TODO: pass fetch function for sveltekit custom fetch
 async function makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}

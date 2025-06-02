@@ -3,6 +3,5 @@ export enum MessageContext {
     CONTENT_SCRIPT = 'CONTENT_SCRIPT',
     OFFSCREEN = 'OFFSCREEN',
     POPUP = 'POPUP',
+    WEB_APP = 'REBUG_WEB_APP',
 }
-
-export const EXPECTED_WEB_APP_SOURCE = 'my-rebug-app';

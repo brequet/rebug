@@ -5,12 +5,11 @@ export interface Message<
     TType extends string,
     TSource extends MessageContext,
     TTarget extends MessageContext,
-    TPayload = void, // Use void for messages without payload
+    TPayload = void,
 > {
     readonly type: TType;
     readonly source: TSource;
     readonly target: TTarget;
-    // Conditionally add payload if TPayload is not void
     readonly payload: TPayload;
 }
 

@@ -1,22 +1,30 @@
 import type { WEB_APP_MESSAGE_SOURCE } from './extension-messaging.config';
 
 export enum WebAppMessageType {
-    USER_ACTION = 'USER_ACTION',
-    SUBMIT_DATA = 'SUBMIT_DATA',
+    LOGIN = 'LOGIN',
+    LOGOUT = 'LOGOUT',
 }
 
-export interface BaseWebAppMessage<T = any> {
-    source: typeof WEB_APP_MESSAGE_SOURCE;
-    type: WebAppMessageType | string;
-    payload?: T;
+export interface Message<
+    TType extends string,
+    TPayload = void,
+> {
+    readonly type: TType;
+    readonly source: typeof WEB_APP_MESSAGE_SOURCE;
+    readonly payload: TPayload;
 }
 
-export interface UserActionMessage extends BaseWebAppMessage<{ actionName: string; details: any }> {
-    type: WebAppMessageType.USER_ACTION;
-}
+export type LoginMessage = Message<
+    WebAppMessageType.LOGIN,
+    // TODO: Define a more specific type for the token, needs the JWT and some user info
+    {
+        userId: string;
+        token: string;
+    }
+>;
 
-export interface SubmitDataMessage extends BaseWebAppMessage<{ data: any; formId: string }> {
-    type: WebAppMessageType.SUBMIT_DATA;
-}
+export type LogoutMessage = Message<WebAppMessageType.LOGOUT>;
 
-export type WebAppMessage = UserActionMessage | SubmitDataMessage | BaseWebAppMessage;
+export type WebAppMessage =
+    | LoginMessage
+    | LogoutMessage;
