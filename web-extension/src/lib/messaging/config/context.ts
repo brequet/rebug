@@ -4,3 +4,5 @@ export enum MessageContext {
     OFFSCREEN = 'OFFSCREEN',
     POPUP = 'POPUP',
 }
+
+export const EXPECTED_WEB_APP_SOURCE = 'my-rebug-app';

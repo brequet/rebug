@@ -10,6 +10,9 @@ export default defineConfig({
   },
   vite: () => ({
     plugins: [tailwindcss()],
+    // server: {
+    //   port: 3001,
+    // },
     resolve: {
       alias: {
         $lib: path.resolve("./src/lib"),
