@@ -1,5 +1,7 @@
 import { MessageContext } from "$lib/messaging/types";
+import { AuthAction, LoginMessagePayload, WebAppMessage } from "$lib/messaging/types/domains/auth.types";
 import { logger } from "$lib/utils/logger";
+import { contentScriptMessagingService } from "../services/content-messaging.service";
 
 const log = logger.getLogger('ContentScript:ExternalMessageHandler');
 
@@ -11,10 +13,8 @@ export async function externalMessageListener(event: MessageEvent): Promise<void
         return;
     }
 
-    const message = event.data;
-    // const message = event.data as Partial<ReceivedMessage>;
+    const message = event.data as WebAppMessage;
 
-    // Validate message structure and source
     if (
         !message ||
         typeof message !== 'object' ||
@@ -27,13 +27,24 @@ export async function externalMessageListener(event: MessageEvent): Promise<void
 
     log.info('Content script received message from web app:', message);
 
-    try {
-        browser.runtime.sendMessage(message).catch((error) => {
-            log.error('Error forwarding message to background:', error, message);
-            // This can happen if the extension is reloaded or background is inactive
-        });
-    } catch (error) {
-        log.error('Failed to send message to background script:', error);
-        // This might indicate the extension context is invalidated (e.g., during an update)
+    switch (message.type) {
+        case AuthAction.LOGIN:
+            await handleLoginMessage(message.payload);
+            break;
+        case AuthAction.LOGOUT:
+            await handleLogoutMessage();
+            break;
+        default:
+            console.warn("Unhandled message type:", message.type);
     }
+}
+
+async function handleLoginMessage(payload: LoginMessagePayload): Promise<void> {
+    log.info("Received login message from web app:", payload);
+    await contentScriptMessagingService.requestJwtTokenSaving(payload.token);
+}
+
+async function handleLogoutMessage(): Promise<void> {
+    log.info("Received logout message from web app, clearing JWT token.");
+    await contentScriptMessagingService.clearJwtToken();
 }

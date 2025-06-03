@@ -36,6 +36,24 @@ export class ContentScriptMessagingService extends BaseMessagingService<MessageC
         }
         return response;
     }
+
+    async requestJwtTokenSaving(token: string): Promise<MessageResponse<unknown>> {
+        log.debug('Sending JWT token for saving...');
+        const response = await this.send(Factories.authMessageFactory.saveToken(token));
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+
+    async clearJwtToken(): Promise<MessageResponse<unknown>> {
+        log.debug('Requesting JWT token revocation...');
+        const response = await this.send(Factories.authMessageFactory.revokeToken());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
 }
 
 export const contentScriptMessagingService = new ContentScriptMessagingService();

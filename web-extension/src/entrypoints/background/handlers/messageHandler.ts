@@ -1,6 +1,7 @@
-import { ScreenshotAction, VideoAction } from '$lib/messaging/types';
+import { AuthAction, ScreenshotAction, VideoAction } from '$lib/messaging/types';
 import { logger } from '$lib/utils/logger';
 import { backgroundMessagingService } from '../services/background-messaging.service';
+import { handleSaveToken, handleTokenRevocation } from './authHandler';
 import { handleCaptureRegion, handleCaptureVisibleTab } from './screenshotHandler';
 import { handleRecordingInProgress, handleRecordingStoppedDataReady, handleSetupVideoCapture } from "./videoCaptureHandler";
 
@@ -34,4 +35,15 @@ export function initializeMessageListener() {
         VideoAction.GET_RECORDING_IN_PROGRESS,
         handleRecordingInProgress
     );
+
+
+    backgroundMessagingService.registerHandler(
+        AuthAction.SAVE_TOKEN,
+        handleSaveToken
+    )
+
+    backgroundMessagingService.registerHandler(
+        AuthAction.REVOKE_TOKEN,
+        handleTokenRevocation
+    )
 }
