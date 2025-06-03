@@ -11,7 +11,7 @@
 		<Header />
 	{/if}
 
-	<main class="mx-auto px-4 py-8">
+	<main>
 		{@render children()}
 	</main>
 </div>

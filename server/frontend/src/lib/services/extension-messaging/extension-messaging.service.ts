@@ -2,23 +2,14 @@ import {
     TARGET_EXTENSION_ORIGIN,
     WEB_APP_MESSAGE_SOURCE,
 } from './extension-messaging.config';
-import { WebAppMessageType, type BaseWebAppMessage } from './extension-messaging.types';
+import { WebAppMessageType, type WebAppMessage } from './extension-messaging.types';
 
 class ExtensionMessagingService {
     private _isExtensionReady: boolean = false;
 
     constructor() {
         console.log('Initializing ExtensionMessagingService...');
-
         this.checkForExtension();
-        setTimeout(() => {
-            this.sendMessage(WebAppMessageType.USER_ACTION, {
-                actionName: 'ExtensionCheck',
-                details: {
-                    status: this._isExtensionReady ? 'ready' : 'not ready',
-                },
-            });
-        }, 1500);
     }
 
     get isExtensionReady(): boolean {
@@ -34,10 +25,7 @@ class ExtensionMessagingService {
         this.setExtensionReady(true);
     }
 
-    public sendMessage<T>(
-        type: WebAppMessageType | string,
-        payload?: T
-    ): boolean {
+    public sendMessage(message: WebAppMessage): boolean {
         if (typeof window === 'undefined') {
             console.error('Cannot send message: window object is not available.');
             return false;
@@ -45,16 +33,10 @@ class ExtensionMessagingService {
 
         if (!this._isExtensionReady) {
             console.warn(
-                `Rebug extension is not ready or not detected. Message of type "${type}" not sent.`
+                `Rebug extension is not ready or not detected. Message of type "${message.type}" not sent.`
             );
             return false;
         }
-
-        const message: BaseWebAppMessage<T> = {
-            source: WEB_APP_MESSAGE_SOURCE,
-            type,
-            payload,
-        };
 
         try {
             window.postMessage(message, TARGET_EXTENSION_ORIGIN);

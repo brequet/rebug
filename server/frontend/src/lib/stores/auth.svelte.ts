@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { authService } from '$lib/services/api';
-import { extensionMessagingService } from '$lib/services/extension-messaging';
+import { extensionMessagingService, MessageFactory, WebAppMessageType, type LoginMessage } from '$lib/services/extension-messaging';
 import type { LoginResponse } from '$lib/types/generated/LoginResponse';
 import type { UserResponse } from '$lib/types/generated/UserResponse';
 import { err, isOk, type Result } from '$lib/types/Result';
@@ -13,9 +13,6 @@ class AuthStore {
 
     constructor() {
         this.loadFromStorage();
-
-        // TODO: remove this when extension messaging is fully implemented
-        extensionMessagingService.checkForExtension();
     }
 
     loadFromStorage(): void {
@@ -26,6 +23,9 @@ class AuthStore {
             try {
                 this.token = storedToken;
                 this.user = JSON.parse(storedUser);
+
+                const loginMessage = MessageFactory.createLoginMessage(this.token);
+                extensionMessagingService.sendMessage(loginMessage);
             } catch (error) {
                 console.error('Failed to parse stored user data:', error);
                 this.clearAuth();
@@ -47,6 +47,9 @@ class AuthStore {
             localStorage.setItem('auth_token', access_token);
             localStorage.setItem('auth_user', JSON.stringify(user));
 
+            const loginMessage = MessageFactory.createLoginMessage(access_token);
+            extensionMessagingService.sendMessage(loginMessage);
+
             this.isLoading = false;
 
             goto('/');
@@ -67,6 +70,9 @@ class AuthStore {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
 
+        const logoutMessage = MessageFactory.createLogoutMessage();
+        extensionMessagingService.sendMessage(logoutMessage);
+
         goto('/login');
     }
 
@@ -78,7 +84,6 @@ class AuthStore {
         localStorage.removeItem('auth_user');
     }
 
-    // Method to get authorization header for API requests
     getAuthHeader(): string | null {
         return this.token ? `Bearer ${this.token}` : null;
     }

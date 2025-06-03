@@ -1,12 +1,12 @@
-import type { WEB_APP_MESSAGE_SOURCE } from './extension-messaging.config';
+import { WEB_APP_MESSAGE_SOURCE } from './extension-messaging.config';
 
 export enum WebAppMessageType {
     LOGIN = 'LOGIN',
     LOGOUT = 'LOGOUT',
 }
 
-export interface Message<
-    TType extends string,
+export interface BaseMessage<
+    TType extends WebAppMessageType,
     TPayload = void,
 > {
     readonly type: TType;
@@ -14,17 +14,29 @@ export interface Message<
     readonly payload: TPayload;
 }
 
-export type LoginMessage = Message<
-    WebAppMessageType.LOGIN,
-    // TODO: Define a more specific type for the token, needs the JWT and some user info
-    {
-        userId: string;
-        token: string;
-    }
->;
+export type LoginMessagePayload = { token: string };
+export type LoginMessage = BaseMessage<WebAppMessageType.LOGIN, LoginMessagePayload>;
 
-export type LogoutMessage = Message<WebAppMessageType.LOGOUT>;
+export type LogoutMessage = BaseMessage<WebAppMessageType.LOGOUT>;
 
 export type WebAppMessage =
     | LoginMessage
     | LogoutMessage;
+
+export class MessageFactory {
+    public static createLoginMessage(token: string): LoginMessage {
+        return {
+            type: WebAppMessageType.LOGIN,
+            source: WEB_APP_MESSAGE_SOURCE,
+            payload: { token },
+        };
+    }
+
+    public static createLogoutMessage(): LogoutMessage {
+        return {
+            type: WebAppMessageType.LOGOUT,
+            source: WEB_APP_MESSAGE_SOURCE,
+            payload: undefined,
+        };
+    }
+}
