@@ -58,7 +58,12 @@ impl AuthService {
     }
 
     #[instrument(skip(self), fields(user_id = %user_id, role = %role), level = "debug")]
-    fn create_jwt(&self, user_id: Uuid, role: &UserRole) -> Result<String, AuthServiceError> {
+    fn create_jwt(
+        &self,
+        user_id: Uuid,
+        user_email: &str,
+        role: &UserRole,
+    ) -> Result<String, AuthServiceError> {
         tracing::debug!("Creating JWT for user.");
 
         let now = Utc::now();
@@ -67,6 +72,7 @@ impl AuthService {
 
         let claims = TokenClaims {
             sub: user_id,
+            email: user_email.to_string(),
             role: role.to_string(),
             exp,
             iat,
@@ -97,7 +103,7 @@ impl AuthServiceInterface for AuthService {
 
         if verify_password(password, &user.password_hash)? {
             tracing::debug!(user_id = %user.id, "Password verification successful.");
-            let token = self.create_jwt(user.id, &user.role)?;
+            let token = self.create_jwt(user.id, email, &user.role)?;
             Ok((user, token))
         } else {
             tracing::warn!(user_id = %user.id, "Password verification failed.");

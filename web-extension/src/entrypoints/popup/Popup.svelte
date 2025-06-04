@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { WEB_APP_LOGIN_URL } from '$lib/auth/auth.config';
+	import { AuthService } from '$lib/auth/auth.service';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
 	import Monitor from '@lucide/svelte/icons/monitor';
@@ -10,8 +12,19 @@
 
 	let popupActionState: PopupActionState = $state({ disabled: false });
 
+	let connectedUser = $state<string | null>(null);
+
 	onMount(() => {
 		computePopupActionState();
+
+		AuthService.getCurrentUser()
+			.then((user) => {
+				connectedUser = user?.email || null;
+			})
+			.catch((error) => {
+				console.error('Error fetching connected user:', error);
+				connectedUser = null;
+			});
 	});
 
 	function computePopupActionState() {
@@ -70,9 +83,37 @@
 		// TODO: implement isResultModalOpened
 		return false;
 	}
+
+	function handleLoginClick(event: MouseEvent) {
+		event.preventDefault();
+
+		chrome.tabs.create(
+			{
+				url: WEB_APP_LOGIN_URL,
+				active: true
+			},
+			(_tab) => {
+				if (chrome.runtime.lastError) {
+					console.error('Error opening login tab:', chrome.runtime.lastError);
+				}
+			}
+		);
+
+		closePopup();
+	}
 </script>
 
-<main class="w-100 flex h-40 flex-col gap-2 bg-white p-2">
+<main class="w-100 h-45 flex flex-col gap-2 bg-white p-2">
+	<div class="flex w-full flex-row justify-end">
+		{#if !connectedUser}
+			<a href={WEB_APP_LOGIN_URL} onclick={handleLoginClick} class="text-blue-500 hover:underline">
+				Login to Rebug
+			</a>
+		{:else}
+			<span class="right-0 text-gray-700">Connected as: {connectedUser}</span>
+		{/if}
+	</div>
+
 	<h1 class="pb-2 text-center text-4xl font-bold">Rebug</h1>
 
 	{#if popupActionState.disabled}

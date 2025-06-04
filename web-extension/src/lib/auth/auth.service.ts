@@ -1,24 +1,21 @@
 import { logger } from "$lib/utils/logger";
 import { authStorage } from "./auth.storage";
-import { AuthTokenData } from "./types";
+import { AuthTokenData, JwtTokenPayload, User, UserRole } from "./types";
 
 const log = logger.getLogger('AuthService');
 
 export class AuthService {
-    /**
-     * Save JWT token to storage
-     */
     static async saveToken(token: string): Promise<void> {
         try {
-            const { issuedAt, expiration } = this.parseToken(token) || {};
-            if (!issuedAt || !expiration) {
-                throw new Error('Invalid JWT token format');
-            }
+            const payload = this.parseTokenPayload(token);
 
             const tokenData: AuthTokenData = {
                 token,
-                issuedAt: issuedAt,
-                expiresAt: expiration
+                userId: payload.sub,
+                userEmail: payload.email,
+                userRole: payload.role,
+                issuedAt: payload.iat * 1000,
+                expiresAt: payload.exp * 1000
             };
 
             await authStorage.jwtToken.setValue(tokenData);
@@ -29,9 +26,6 @@ export class AuthService {
         }
     }
 
-    /**
-     * Retrieve JWT token from storage
-     */
     static async getToken(): Promise<string | null> {
         try {
             const tokenData = await authStorage.jwtToken.getValue();
@@ -40,8 +34,7 @@ export class AuthService {
                 return null;
             }
 
-            // Check if token is expired
-            if (tokenData.expiresAt && Date.now() > tokenData.expiresAt) {
+            if (this.isTokenExpired(tokenData)) {
                 log.warn('JWT token has expired, removing from storage');
                 await this.revokeToken();
                 return null;
@@ -54,9 +47,27 @@ export class AuthService {
         }
     }
 
-    /**
-     * Revoke (remove) JWT token from storage
-     */
+    static async getTokenData(): Promise<AuthTokenData | null> {
+        try {
+            const tokenData = await authStorage.jwtToken.getValue();
+
+            if (!tokenData) {
+                return null;
+            }
+
+            if (this.isTokenExpired(tokenData)) {
+                log.warn('JWT token has expired, removing from storage');
+                await this.revokeToken();
+                return null;
+            }
+
+            return tokenData;
+        } catch (error) {
+            log.error('Failed to retrieve JWT token data', error);
+            return null;
+        }
+    }
+
     static async revokeToken(): Promise<void> {
         try {
             await authStorage.jwtToken.removeValue();
@@ -67,32 +78,59 @@ export class AuthService {
         }
     }
 
-    /**
-     * Check if user is authenticated
-     */
     static async isAuthenticated(): Promise<boolean> {
         const token = await this.getToken();
         return token !== null;
     }
 
-    /**
-     * Parse JWT token to extract expiration time
-     * This is a basic implementation - you might want to use a JWT library
-     */
-    private static parseToken(token: string): { issuedAt: number, expiration: number } | undefined {
-        try {
-            const payload = token.split('.')[1];
-            if (!payload) return undefined;
+    static async getCurrentUser(): Promise<User | null> {
+        const tokenData = await this.getTokenData();
 
-            const decoded = JSON.parse(atob(payload));
-
-            return {
-                issuedAt: decoded.iat * 1000,
-                expiration: decoded.exp * 1000
-            }
-        } catch (error) {
-            log.warn('Failed to parse JWT expiration', error);
-            return undefined;
+        if (!tokenData) {
+            return null;
         }
+
+        return {
+            userId: tokenData.userId,
+            email: tokenData.userEmail,
+            role: tokenData.userRole
+        };
+    }
+
+    static async hasRole(requiredRole: UserRole): Promise<boolean> {
+        const user = await this.getCurrentUser();
+        return user?.role === requiredRole;
+    }
+
+    static async isAdmin(): Promise<boolean> {
+        return this.hasRole(UserRole.ADMIN);
+    }
+
+    private static parseTokenPayload(token: string): JwtTokenPayload {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid JWT format');
+            }
+
+            const payload = JSON.parse(atob(parts[1]));
+
+            if (!payload.sub || !payload.email || !payload.role || !payload.iat || !payload.exp) {
+                throw new Error('Missing required JWT payload fields');
+            }
+
+            if (!Object.values(UserRole).includes(payload.role)) {
+                throw new Error('Invalid user role in JWT payload');
+            }
+
+            return payload as JwtTokenPayload;
+        } catch (error) {
+            log.error('Failed to parse JWT token', error);
+            throw new Error('Invalid JWT token format');
+        }
+    }
+
+    private static isTokenExpired(tokenData: AuthTokenData): boolean {
+        return Date.now() > tokenData.expiresAt;
     }
 }
