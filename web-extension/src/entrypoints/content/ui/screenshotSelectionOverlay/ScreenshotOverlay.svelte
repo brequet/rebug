@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { SelectionArea } from '$lib/messaging/types';
+	import type { SelectionArea } from '$lib/messaging/types';
 	import { cn } from '$lib/utils';
 
 	interface Props {
