@@ -1,4 +1,4 @@
-import { AuthService } from "$lib/auth/auth.service";
+import { AuthUtils } from "$lib/auth/auth.utils";
 import { createErrorResponse, createSuccessResponse, MessageResponse, RevokeTokenMessage, SaveTokenMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 
@@ -15,7 +15,7 @@ export async function handleSaveToken(message: SaveTokenMessage): Promise<Messag
     }
 
     try {
-        await AuthService.saveToken(token);
+        await AuthUtils.saveToken(token);
         log.info('Token saved successfully');
         return createSuccessResponse();
     } catch (error) {
@@ -28,7 +28,7 @@ export async function handleTokenRevocation(message: RevokeTokenMessage): Promis
     log.info(`Handling ${message.type}`, message.payload);
 
     try {
-        await AuthService.revokeToken();
+        await AuthUtils.revokeToken();
         log.info('Token revoked successfully');
         return createSuccessResponse();
     } catch (error) {

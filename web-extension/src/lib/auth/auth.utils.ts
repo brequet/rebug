@@ -4,7 +4,7 @@ import { AuthTokenData, JwtTokenPayload, User, UserRole } from "./types";
 
 const log = logger.getLogger('AuthService');
 
-export class AuthService {
+export class AuthUtils {
     static async saveToken(token: string): Promise<void> {
         try {
             const payload = this.parseTokenPayload(token);

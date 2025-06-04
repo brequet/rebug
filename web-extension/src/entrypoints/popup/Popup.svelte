@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { WEB_APP_LOGIN_URL } from '$lib/auth/auth.config';
-	import { AuthService } from '$lib/auth/auth.service';
+	import { AuthUtils } from '$lib/auth/auth.utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
 	import Monitor from '@lucide/svelte/icons/monitor';
@@ -17,7 +17,7 @@
 	onMount(() => {
 		computePopupActionState();
 
-		AuthService.getCurrentUser()
+		AuthUtils.getCurrentUser()
 			.then((user) => {
 				connectedUser = user?.email || null;
 			})
