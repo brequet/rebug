@@ -1,6 +1,7 @@
+import { BoardResponse } from "$lib/board";
 import * as Factories from "$lib/messaging/factories";
 import { BaseMessagingService } from "$lib/messaging/handlers/base-messaging.service";
-import { isErrorResponse, MessageContext, MessageResponse, RecordingState, SelectionArea } from "$lib/messaging/types";
+import { isErrorResponse, MessageContext, MessageResponse, RecordingState, SelectionArea, SendReportPayload } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 
 const log = logger.getLogger('ContentScriptMessagingService');
@@ -49,6 +50,24 @@ export class ContentScriptMessagingService extends BaseMessagingService<MessageC
     async clearJwtToken(): Promise<MessageResponse<unknown>> {
         log.debug('Requesting JWT token revocation...');
         const response = await this.send(Factories.authMessageFactory.revokeToken());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+
+    async requestBoards(): Promise<MessageResponse<BoardResponse[]>> {
+        log.debug('Requesting boards...');
+        const response = await this.send<BoardResponse[]>(Factories.boardMessageFactory.getBoards());
+        if (isErrorResponse(response)) {
+            log.error(`Failed: ${response.error}`);
+        }
+        return response;
+    }
+
+    async sendReport(report: SendReportPayload): Promise<MessageResponse<unknown>> {
+        log.debug('Sending report...');
+        const response = await this.send(Factories.reportingMessageFactory.sendReport(report));
         if (isErrorResponse(response)) {
             log.error(`Failed: ${response.error}`);
         }

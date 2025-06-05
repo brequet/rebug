@@ -1,6 +1,7 @@
+import { User, UserRole } from "$lib/user";
 import { logger } from "$lib/utils/logger";
 import { authStorage } from "./auth.storage";
-import { AuthTokenData, JwtTokenPayload, User, UserRole } from "./types";
+import { AuthTokenData, JwtTokenPayload } from "./auth.types";
 
 const log = logger.getLogger('AuthService');
 
@@ -104,6 +105,14 @@ export class AuthUtils {
 
     static async isAdmin(): Promise<boolean> {
         return this.hasRole(UserRole.ADMIN);
+    }
+
+    static async getAuthHeader(): Promise<string | null> {
+        const token = await this.getToken();
+        if (!token) {
+            return null;
+        }
+        return `Bearer ${token}`;
     }
 
     private static parseTokenPayload(token: string): JwtTokenPayload {

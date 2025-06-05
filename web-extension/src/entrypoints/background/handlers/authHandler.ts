@@ -2,8 +2,6 @@ import { AuthUtils } from "$lib/auth/auth.utils";
 import { createErrorResponse, createSuccessResponse, MessageResponse, RevokeTokenMessage, SaveTokenMessage } from "$lib/messaging/types";
 import { logger } from "$lib/utils/logger";
 
-const OFFSCREEN_DOCUMENT_PATH = '/offscreen.html';
-
 const log = logger.getLogger('Background:AuthHandler');
 
 export async function handleSaveToken(message: SaveTokenMessage): Promise<MessageResponse<void>> {

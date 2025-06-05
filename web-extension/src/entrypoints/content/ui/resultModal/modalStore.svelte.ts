@@ -1,9 +1,11 @@
 import { User } from "$lib/auth";
+import { BoardResponse } from "$lib/board/board.types";
 
 export interface ResultModalProps {
     imageString?: string;
     videoBlob?: Blob;
     user?: User;
+    boards?: BoardResponse[];
 }
 
 type ModalState = {

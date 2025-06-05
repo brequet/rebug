@@ -1,7 +1,9 @@
-import { AuthAction, ScreenshotAction, VideoAction } from '$lib/messaging/types';
+import { AuthAction, BoardAction, ReportingAction, ScreenshotAction, VideoAction } from '$lib/messaging/types';
 import { logger } from '$lib/utils/logger';
 import { backgroundMessagingService } from '../services/background-messaging.service';
 import { handleSaveToken, handleTokenRevocation } from './authHandler';
+import { handleGetBoards } from './boardHandler';
+import { handleSendReport } from './reportHandler';
 import { handleCaptureRegion, handleCaptureVisibleTab } from './screenshotHandler';
 import { handleRecordingInProgress, handleRecordingStoppedDataReady, handleSetupVideoCapture } from "./videoCaptureHandler";
 
@@ -46,4 +48,16 @@ export function initializeMessageListener() {
         AuthAction.REVOKE_TOKEN,
         handleTokenRevocation
     )
+
+
+    backgroundMessagingService.registerHandler(
+        BoardAction.GET_BOARDS,
+        handleGetBoards
+    )
+
+
+    backgroundMessagingService.registerHandler(
+        ReportingAction.SEND_REPORT,
+        handleSendReport
+    );
 }

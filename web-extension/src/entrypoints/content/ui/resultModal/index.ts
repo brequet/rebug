@@ -1,8 +1,9 @@
+import { ContentScriptContext } from "#imports";
 import { AuthUtils } from "$lib/auth/auth.utils";
 import { ResultModalType, ShowResultModalMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
 import { base64ToBlob } from "$lib/messaging/utils/blob-utils";
 import { mount } from "svelte";
-import { ContentScriptContext, ShadowRootContentScriptUi } from "wxt/client";
+import { contentScriptMessagingService } from "../../services/content-messaging.service";
 import ResultModal from "./components/ResultModal.svelte";
 import { modalStore, ResultModalProps } from "./modalStore.svelte";
 
@@ -29,15 +30,30 @@ async function createRebugResultModalUi(ctx: ContentScriptContext): Promise<Shad
 }
 
 async function getResultModalProps(message: ShowResultModalMessage): Promise<ResultModalProps> {
-    const user = await AuthUtils.getCurrentUser() || undefined;
+    const [user, userBoardsResponse] = await Promise.all([
+        AuthUtils.getCurrentUser(),
+        contentScriptMessagingService.requestBoards()
+    ]);
+
+    const userBoards = userBoardsResponse.success ? userBoardsResponse.data : undefined;
+    console.log('DE>BUGGIN LALA', userBoardsResponse, userBoards);
+
     if (message.payload.resultType === ResultModalType.IMAGE) {
-        return { imageString: message.payload.base64Image, user };
+        return {
+            imageString: message.payload.base64Image,
+            user: user || undefined,
+            boards: userBoards
+        };
     } else if (message.payload.resultType === ResultModalType.VIDEO) {
         if (!message.payload.base64Video) {
             throw new Error('No blob URL provided for video result modal');
         }
         const videoBlob = base64ToBlob(message.payload.base64Video, VIDEO_CAPTURE_MIME_TYPE)
-        return { videoBlob, user };
+        return {
+            videoBlob,
+            user: user || undefined,
+            boards: userBoards
+        };
     }
 
     throw new Error(`Unsupported result modal type: ${message}`);

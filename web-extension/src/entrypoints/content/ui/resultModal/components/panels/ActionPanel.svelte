@@ -1,10 +1,15 @@
 <script lang="ts">
+	import type { BoardResponse } from '$lib/board';
 	import { Button } from '$lib/components/ui/button';
-	import { SCREENSHOT_FORMAT } from '$lib/messaging/types';
+	import { SCREENSHOT_FORMAT, type SendReportPayload } from '$lib/messaging/types';
+	import { blobToBase64 } from '$lib/messaging/utils/blob-utils';
+	import type { ReportType } from '$lib/report';
+	import { formatPrettyDate } from '$lib/utils/date-utils';
 	import CloudUpload from '@lucide/svelte/icons/cloud-upload';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
+	import { contentScriptMessagingService } from '../../../../services/content-messaging.service';
 	import type { ResultModalProps } from '../../modalStore.svelte';
 	import UserInfo from '../user/UserInfo.svelte';
 
@@ -15,6 +20,7 @@
 
 	let { props, videoUrl }: Props = $props();
 
+	let selectedBoard = $state<BoardResponse | null>(props.boards?.[0] || null);
 	let copyButtonState = $state(false);
 
 	const downloadImage = () => {
@@ -47,10 +53,41 @@
 		}
 	};
 
-	const handleReportUpload = () => {
-		// TODO: Implement report upload functionality
+	const handleReportUpload = async () => {
+		if (!selectedBoard || !props.user) {
+			console.error('No board selected or user not authenticated');
+			return;
+		}
+
+		const { mediaData, mediaType } = await getMediaData();
+
+		const currentDate = formatPrettyDate(new Date());
+
+		const reportingPayload: SendReportPayload = {
+			boardId: selectedBoard.id,
+			title: `Report ${currentDate}`, // TODO: customizable
+			description: `Report generated on ${currentDate}`,
+			// originUrl: , TODO: add origin URL if available
+			mediaData: mediaData,
+			mediaType
+		};
+
+		const sendReportReponse = await contentScriptMessagingService.sendReport(reportingPayload);
+		console.log('DEBUUG ICI AUSSI, sendReportReponse:', sendReportReponse);
 	};
 
+	const getMediaData = async (): Promise<{
+		mediaData: string;
+		mediaType: ReportType;
+	}> => {
+		if (props.imageString) {
+			return { mediaData: props.imageString, mediaType: 'Screenshot' };
+		} else if (props.videoBlob) {
+			return { mediaData: await blobToBase64(props.videoBlob), mediaType: 'Video' };
+		} else {
+			throw new Error('No media available for reporting');
+		}
+	};
 	const copyToClipboard = async () => {
 		if (!props.imageString) return;
 

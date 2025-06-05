@@ -1,7 +1,4 @@
-export enum UserRole {
-    ADMIN = 'Admin',
-    USER = 'User'
-}
+import { UserRole } from "$lib/user";
 
 export interface JwtTokenPayload {
     sub: string; // Subject (user ID)
@@ -25,9 +22,3 @@ export interface StorageError {
     message: string;
 }
 
-// TODO: see if here or user domain
-export interface User {
-    userId: string;
-    email: string;
-    role: UserRole
-}
