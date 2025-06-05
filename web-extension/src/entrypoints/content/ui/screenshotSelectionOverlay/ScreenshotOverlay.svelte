@@ -53,7 +53,8 @@
 		try {
 			if (!selection) return;
 
-			selection.style.visibility = 'hidden';
+			selection.style.display = 'none';
+			await new Promise((resolve) => requestAnimationFrame(resolve));
 
 			const devicePixelRatio = window.devicePixelRatio || 1;
 

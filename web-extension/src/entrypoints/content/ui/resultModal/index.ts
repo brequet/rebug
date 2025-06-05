@@ -1,3 +1,4 @@
+import { AuthUtils } from "$lib/auth/auth.utils";
 import { ResultModalType, ShowResultModalMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
 import { base64ToBlob } from "$lib/messaging/utils/blob-utils";
 import { mount } from "svelte";
@@ -28,14 +29,15 @@ async function createRebugResultModalUi(ctx: ContentScriptContext): Promise<Shad
 }
 
 async function getResultModalProps(message: ShowResultModalMessage): Promise<ResultModalProps> {
+    const user = await AuthUtils.getCurrentUser() || undefined;
     if (message.payload.resultType === ResultModalType.IMAGE) {
-        return { imageString: message.payload.base64Image };
+        return { imageString: message.payload.base64Image, user };
     } else if (message.payload.resultType === ResultModalType.VIDEO) {
         if (!message.payload.base64Video) {
             throw new Error('No blob URL provided for video result modal');
         }
         const videoBlob = base64ToBlob(message.payload.base64Video, VIDEO_CAPTURE_MIME_TYPE)
-        return { videoBlob };
+        return { videoBlob, user };
     }
 
     throw new Error(`Unsupported result modal type: ${message}`);

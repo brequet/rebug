@@ -6,8 +6,8 @@
 	import X from '@lucide/svelte/icons/x';
 	import { onDestroy } from 'svelte';
 	import { modalStore } from '../modalStore.svelte';
-	import ActionPanel from './ActionPanel.svelte';
-	import MediaPreview from './MediaPreview.svelte';
+	import ActionPanel from './panels/ActionPanel.svelte';
+	import MediaPreview from './panels/MediaPreviewPanel.svelte';
 
 	let videoUrl: string | null = $state(null);
 

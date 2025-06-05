@@ -1,7 +1,9 @@
+import { User } from "$lib/auth";
+
 export interface ResultModalProps {
     imageString?: string;
     videoBlob?: Blob;
-    userName?: string;
+    user?: User;
 }
 
 type ModalState = {

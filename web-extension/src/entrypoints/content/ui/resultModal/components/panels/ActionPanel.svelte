@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { SCREENSHOT_FORMAT } from '$lib/messaging/types';
+	import CloudUpload from '@lucide/svelte/icons/cloud-upload';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
-	import type { ResultModalProps } from '../modal.store';
-	import CommentsSection from './CommentsSection.svelte';
-	import UserInfo from './UserInfo.svelte';
+	import type { ResultModalProps } from '../../modalStore.svelte';
+	import UserInfo from '../user/UserInfo.svelte';
 
 	interface Props {
 		props: ResultModalProps;
@@ -47,6 +47,10 @@
 		}
 	};
 
+	const handleReportUpload = () => {
+		// TODO: Implement report upload functionality
+	};
+
 	const copyToClipboard = async () => {
 		if (!props.imageString) return;
 
@@ -65,9 +69,11 @@
 </script>
 
 <div class="bg-background flex h-full w-80 flex-col border-l">
-	<UserInfo userName={props.userName} />
+	<UserInfo user={props.user} />
+	<!-- TODO: add a comment section -->
+	<!-- <CommentsSection /> -->
 
-	<CommentsSection />
+	<div class="flex flex-1 flex-col overflow-y-auto"></div>
 
 	<div class="border-t p-4">
 		<div class="flex flex-col gap-2">
@@ -85,6 +91,10 @@
 			<Button onclick={handleDownload} class="w-full">
 				<Download class="size-4" />
 				Download {props.videoBlob ? 'Video' : 'Image'}
+			</Button>
+			<Button onclick={handleReportUpload} class="w-full" disabled={props.user == undefined}>
+				<CloudUpload class="size-4" />
+				Share report
 			</Button>
 		</div>
 	</div>

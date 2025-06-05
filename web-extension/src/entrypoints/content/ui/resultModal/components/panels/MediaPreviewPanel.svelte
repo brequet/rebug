@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { ResultModalProps } from '../modalStore.svelte';
+	import type { ResultModalProps } from '../../modalStore.svelte';
 
 	interface Props {
 		props: ResultModalProps;
@@ -28,16 +28,11 @@
 		<img
 			src={props.imageString}
 			alt="Screenshot preview"
-			class="max-h-full max-w-full rounded-lg border border-dashed object-contain shadow-sm"
+			class="max-h-full max-w-full rounded-lg object-contain shadow-sm"
 		/>
 	{:else if props.videoBlob && videoUrl}
 		<!-- svelte-ignore a11y_media_has_caption -->
-		<video
-			src={videoUrl}
-			controls
-			autoplay
-			class="max-h-full max-w-full rounded-lg border border-dashed shadow-sm"
-		>
+		<video src={videoUrl} controls autoplay class="max-h-full max-w-full rounded-lg shadow-sm">
 			Your browser does not support the video tag.
 		</video>
 	{:else}
