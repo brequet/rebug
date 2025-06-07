@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { modalStore } from '../modalStore.svelte';
 	import ModalContent from './ModalContent.svelte';
 
@@ -8,6 +9,8 @@
 		}
 	}
 </script>
+
+<Toaster />
 
 {#if modalStore.isOpen}
 	<div

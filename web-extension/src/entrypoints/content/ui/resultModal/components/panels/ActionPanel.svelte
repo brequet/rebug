@@ -9,6 +9,7 @@
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
 	import Download from '@lucide/svelte/icons/download';
+	import { toast } from 'svelte-sonner';
 	import { contentScriptMessagingService } from '../../../../services/content-messaging.service';
 	import type { ResultModalProps } from '../../modalStore.svelte';
 	import UserInfo from '../user/UserInfo.svelte';
@@ -73,7 +74,19 @@
 		};
 
 		const sendReportReponse = await contentScriptMessagingService.sendReport(reportingPayload);
-		console.log('DEBUUG ICI AUSSI, sendReportReponse:', sendReportReponse);
+		if (!sendReportReponse || !sendReportReponse.success) {
+			console.error('Failed to send report:', sendReportReponse);
+			toast.error('Failed to send report', {
+				description: 'There was an error sending your report. Please try again later.'
+			});
+			return;
+		}
+
+		toast.success('Report sent successfully!', {
+			description: 'Opening the report in a new tab.'
+		});
+
+		close();
 	};
 
 	const getMediaData = async (): Promise<{
@@ -88,6 +101,7 @@
 			throw new Error('No media available for reporting');
 		}
 	};
+
 	const copyToClipboard = async () => {
 		if (!props.imageString) return;
 

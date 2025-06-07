@@ -36,7 +36,6 @@ async function getResultModalProps(message: ShowResultModalMessage): Promise<Res
     ]);
 
     const userBoards = userBoardsResponse.success ? userBoardsResponse.data : undefined;
-    console.log('DE>BUGGIN LALA', userBoardsResponse, userBoards);
 
     if (message.payload.resultType === ResultModalType.IMAGE) {
         return {

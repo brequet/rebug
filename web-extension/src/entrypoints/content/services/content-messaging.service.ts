@@ -2,6 +2,7 @@ import { BoardResponse } from "$lib/board";
 import * as Factories from "$lib/messaging/factories";
 import { BaseMessagingService } from "$lib/messaging/handlers/base-messaging.service";
 import { isErrorResponse, MessageContext, MessageResponse, RecordingState, SelectionArea, SendReportPayload } from "$lib/messaging/types";
+import { ReportResponse } from "$lib/report";
 import { logger } from "$lib/utils/logger";
 
 const log = logger.getLogger('ContentScriptMessagingService');
@@ -65,9 +66,9 @@ export class ContentScriptMessagingService extends BaseMessagingService<MessageC
         return response;
     }
 
-    async sendReport(report: SendReportPayload): Promise<MessageResponse<unknown>> {
+    async sendReport(report: SendReportPayload): Promise<MessageResponse<ReportResponse>> {
         log.debug('Sending report...');
-        const response = await this.send(Factories.reportingMessageFactory.sendReport(report));
+        const response = await this.send<ReportResponse>(Factories.reportingMessageFactory.sendReport(report));
         if (isErrorResponse(response)) {
             log.error(`Failed: ${response.error}`);
         }
