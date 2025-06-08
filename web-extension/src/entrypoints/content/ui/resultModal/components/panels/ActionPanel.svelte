@@ -5,6 +5,7 @@
 	import { blobToBase64 } from '$lib/messaging/utils/blob-utils';
 	import type { ReportType } from '$lib/report';
 	import { formatPrettyDate } from '$lib/utils/date-utils';
+	import { WEBAPP_BASE_URL } from '$lib/webapp';
 	import CloudUpload from '@lucide/svelte/icons/cloud-upload';
 	import Copy from '@lucide/svelte/icons/copy';
 	import CopyCheck from '@lucide/svelte/icons/copy-check';
@@ -12,6 +13,7 @@
 	import { toast } from 'svelte-sonner';
 	import { contentScriptMessagingService } from '../../../../services/content-messaging.service';
 	import type { ResultModalProps } from '../../modalStore.svelte';
+	import DescriptionSection from '../description/DescriptionSection.svelte';
 	import UserInfo from '../user/UserInfo.svelte';
 
 	interface Props {
@@ -19,10 +21,14 @@
 		videoUrl?: string | null;
 	}
 
+	const REPORT_BASE_URL = `${WEBAPP_BASE_URL}/reports`;
+
 	let { props, videoUrl }: Props = $props();
 
 	let selectedBoard = $state<BoardResponse | null>(props.boards?.[0] || null);
 	let copyButtonState = $state(false);
+
+	let userDescription = $state<string | null>(null);
 
 	const downloadImage = () => {
 		if (!props.imageString) return;
@@ -67,7 +73,7 @@
 		const reportingPayload: SendReportPayload = {
 			boardId: selectedBoard.id,
 			title: `Report ${currentDate}`, // TODO: customizable
-			description: `Report generated on ${currentDate}`,
+			description: getDescription(),
 			// originUrl: , TODO: add origin URL if available
 			mediaData: mediaData,
 			mediaType
@@ -85,6 +91,7 @@
 		toast.success('Report sent successfully!', {
 			description: 'Opening the report in a new tab.'
 		});
+		window.open(`${REPORT_BASE_URL}/${sendReportReponse.data?.id}`, '_blank'); // TODO: create this page
 
 		close();
 	};
@@ -117,14 +124,22 @@
 			console.error('Failed to copy image to clipboard:', error);
 		}
 	};
+
+	function getDescription() {
+		if (userDescription && userDescription.trim() !== '') {
+			return userDescription;
+		}
+
+		return `Report generated on ${formatPrettyDate(new Date())}`;
+	}
 </script>
 
 <div class="bg-background flex h-full w-80 flex-col border-l">
 	<UserInfo user={props.user} />
-	<!-- TODO: add a comment section -->
-	<!-- <CommentsSection /> -->
 
-	<div class="flex flex-1 flex-col overflow-y-auto"></div>
+	<div class="flex flex-1 flex-col overflow-y-auto">
+		<DescriptionSection bind:description={userDescription} />
+	</div>
 
 	<div class="border-t p-4">
 		<div class="flex flex-col gap-2">

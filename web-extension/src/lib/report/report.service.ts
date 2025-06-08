@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "$lib/api/api.conf"
+import { API_BASE_URL } from "$lib/api"
 import { AuthUtils } from "$lib/auth/auth.utils"
 import { SCREENSHOT_MIME_TYPE, SendReportPayload, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types"
 import { base64ToBlob } from "$lib/messaging/utils/blob-utils"

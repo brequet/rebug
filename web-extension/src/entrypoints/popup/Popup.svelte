@@ -2,7 +2,7 @@
 	import { WEB_APP_LOGIN_URL } from '$lib/auth/auth.config';
 	import { AuthUtils } from '$lib/auth/auth.utils';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
+	import { getCurrentTab, isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';
@@ -13,6 +13,9 @@
 	let popupActionState: PopupActionState = $state({ disabled: false });
 
 	let connectedUser = $state<string | null>(null);
+
+	let currentTab = $state<Browser.tabs.Tab | undefined>(undefined);
+	let plateformInfo = $state<Browser.runtime.PlatformInfo | undefined>(undefined);
 
 	onMount(() => {
 		computePopupActionState();
@@ -25,6 +28,12 @@
 				console.error('Error fetching connected user:', error);
 				connectedUser = null;
 			});
+
+		getCurrentTab().then((tab) => (currentTab = tab));
+
+		browser.runtime.getPlatformInfo().then((info) => {
+			plateformInfo = info;
+		});
 	});
 
 	function computePopupActionState() {

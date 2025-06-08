@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "$lib/api/api.conf"
+import { API_BASE_URL } from "$lib/api"
 import { AuthUtils } from "$lib/auth/auth.utils"
 import type { BoardResponse } from "./board.types"
 

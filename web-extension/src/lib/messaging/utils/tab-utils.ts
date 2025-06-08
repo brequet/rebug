@@ -27,7 +27,7 @@ export async function isCaptureAllowed(): Promise<boolean> {
   }
 }
 
-export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
+export async function getActiveTab(): Promise<Browser.tabs.Tab | undefined> {
   try {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     if (tabs.length === 0) {
@@ -55,7 +55,7 @@ export async function getActiveTabId(): Promise<number | undefined> {
   }
 }
 
-export async function getCurrentTab(): Promise<chrome.tabs.Tab | undefined> {
+export async function getCurrentTab(): Promise<Browser.tabs.Tab | undefined> {
   try {
     const tabs = await browser.tabs.query({ currentWindow: true });
     if (tabs.length === 0) {
