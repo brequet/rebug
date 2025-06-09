@@ -5,6 +5,7 @@
 
 <header class="border-border bg-card border-b">
 	<div class="mx-auto flex items-center justify-between px-4 py-4">
+		<!-- TODO: redirect to root on click -->
 		<h1 class="text-foreground text-xl font-semibold">Rebug</h1>
 
 		<div class="flex items-center gap-4">

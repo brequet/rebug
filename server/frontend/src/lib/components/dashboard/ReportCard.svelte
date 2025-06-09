@@ -39,6 +39,7 @@
 			<!-- Media Preview -->
 			<div class="bg-muted relative h-32 overflow-hidden rounded-md">
 				{#if isScreenshot}
+					<!-- TODO: Idea: lazy loads image, only if visible on user screen -->
 					<img
 						src={report.file_path}
 						alt={report.title}

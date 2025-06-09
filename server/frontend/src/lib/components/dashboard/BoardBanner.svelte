@@ -55,6 +55,7 @@
 					{#each recent_reports as report (report.id)}
 						<ReportCard {report} />
 					{/each}
+					<!-- TODO: add a last element if more than 5 to say how many more are in the board-->
 				</div>
 
 				<!-- Scroll indicator gradient -->
