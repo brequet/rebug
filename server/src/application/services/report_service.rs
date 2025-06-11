@@ -112,6 +112,9 @@ impl ReportServiceInterface for ReportService {
             description: params.description,
             file_path,
             url: params.url,
+            browser_name: params.browser_name,
+            browser_version: params.browser_version,
+            os_name: params.os_name,
         };
 
         let report = self.report_repository.create_report(create_params).await?;

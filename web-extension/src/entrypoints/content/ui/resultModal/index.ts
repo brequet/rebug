@@ -1,7 +1,7 @@
 import { ContentScriptContext } from "#imports";
 import { AuthUtils } from "$lib/auth/auth.utils";
 import { ResultModalType, ShowResultModalMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
-import { base64ToBlob } from "$lib/messaging/utils/blob-utils";
+import { base64ToBlob } from "$lib/utils/blob-utils";
 import { mount } from "svelte";
 import { contentScriptMessagingService } from "../../services/content-messaging.service";
 import ResultModal from "./components/ResultModal.svelte";

@@ -75,6 +75,9 @@ async fn create_screenshot_report_handler(
         original_file_name: file_name,
         file_data: payload.file.contents,
         url: payload.url,
+        browser_name: payload.browser_name,
+        browser_version: payload.browser_version,
+        os_name: payload.os_name,
     };
 
     let report = state

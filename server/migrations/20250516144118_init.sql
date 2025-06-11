@@ -40,6 +40,7 @@ CREATE TABLE
 
 CREATE INDEX idx_boards_owner_id ON boards (owner_id);
 
+-- TODO: remove all triggers and update from code ? In that case alse remove the default value for created_at and updated_at
 CREATE TRIGGER IF NOT EXISTS update_boards_updated_at AFTER
 UPDATE ON boards FOR EACH ROW BEGIN
 UPDATE boards
@@ -61,6 +62,9 @@ CREATE TABLE
         description TEXT,
         file_path TEXT NOT NULL,
         url TEXT,
+        browser_name TEXT,
+        browser_version TEXT,
+        os_name TEXT,
         created_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%d %H:%M:%f', 'now')),
         updated_at TEXT NOT NULL DEFAULT (strftime ('%Y-%m-%d %H:%M:%f', 'now')),
         FOREIGN KEY (user_id) REFERENCES users (id),

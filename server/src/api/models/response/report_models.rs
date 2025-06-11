@@ -14,6 +14,9 @@ pub struct ReportResponse {
     pub description: Option<String>,
     pub file_path: String,
     pub url: Option<String>,
+    pub browser_name: Option<String>,
+    pub browser_version: Option<String>,
+    pub os_name: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -28,6 +31,9 @@ impl From<Report> for ReportResponse {
             description: report.description,
             file_path: report.file_path,
             url: report.url,
+            browser_name: report.browser_name,
+            browser_version: report.browser_version,
+            os_name: report.os_name,
             created_at: report.created_at,
             updated_at: report.updated_at,
         }

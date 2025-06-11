@@ -11,5 +11,8 @@ pub struct CreateScreenshotReportRequestMultipart {
     pub description: Option<String>,
     #[validate(url)]
     pub url: Option<String>,
+    pub browser_name: Option<String>,
+    pub browser_version: Option<String>,
+    pub os_name: Option<String>,
     pub file: FieldData<Bytes>,
 }

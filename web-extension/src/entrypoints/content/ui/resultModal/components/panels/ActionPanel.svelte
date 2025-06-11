@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { BoardResponse } from '$lib/board';
 	import { Button } from '$lib/components/ui/button';
-	import { SCREENSHOT_FORMAT, type SendReportPayload } from '$lib/messaging/types';
-	import { blobToBase64 } from '$lib/messaging/utils/blob-utils';
-	import type { ReportType } from '$lib/report';
+	import { SCREENSHOT_FORMAT } from '$lib/messaging/types';
+	import type { ReportType, SendReportPayload } from '$lib/report';
+	import { blobToBase64 } from '$lib/utils/blob-utils';
+	import { getBrowserInfo, getOS } from '$lib/utils/browser-utils';
 	import { formatPrettyDate } from '$lib/utils/date-utils';
 	import { WEBAPP_BASE_URL } from '$lib/webapp';
 	import CloudUpload from '@lucide/svelte/icons/cloud-upload';
@@ -12,7 +13,7 @@
 	import Download from '@lucide/svelte/icons/download';
 	import { toast } from 'svelte-sonner';
 	import { contentScriptMessagingService } from '../../../../services/content-messaging.service';
-	import type { ResultModalProps } from '../../modalStore.svelte';
+	import { modalStore, type ResultModalProps } from '../../modalStore.svelte';
 	import DescriptionSection from '../description/DescriptionSection.svelte';
 	import UserInfo from '../user/UserInfo.svelte';
 
@@ -69,14 +70,17 @@
 		const { mediaData, mediaType } = await getMediaData();
 
 		const currentDate = formatPrettyDate(new Date());
+		const currentPageUrl: string = window.location.href;
 
 		const reportingPayload: SendReportPayload = {
 			boardId: selectedBoard.id,
 			title: `Report ${currentDate}`, // TODO: customizable
 			description: getDescription(),
-			// originUrl: , TODO: add origin URL if available
+			originUrl: currentPageUrl,
 			mediaData: mediaData,
-			mediaType
+			mediaType,
+			browserInfo: getBrowserInfo(),
+			os: getOS()
 		};
 
 		const sendReportReponse = await contentScriptMessagingService.sendReport(reportingPayload);
@@ -91,9 +95,10 @@
 		toast.success('Report sent successfully!', {
 			description: 'Opening the report in a new tab.'
 		});
+		// TODO: this is too abrupt, either wait before opening or set link in the toast
 		window.open(`${REPORT_BASE_URL}/${sendReportReponse.data?.id}`, '_blank'); // TODO: create this page
 
-		close();
+		modalStore.close();
 	};
 
 	const getMediaData = async (): Promise<{

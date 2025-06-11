@@ -1,4 +1,4 @@
-import { getActiveTabId } from '$lib/messaging/utils/tab-utils';
+import { getActiveTabId } from '$lib/utils/browser-utils';
 import { logger } from '$lib/utils/logger';
 import { AppMessage, MessageContext, MessageResponse, createErrorResponse, isSuccessResponse } from '../types';
 

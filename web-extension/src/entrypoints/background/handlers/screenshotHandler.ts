@@ -1,5 +1,5 @@
 import { CaptureRegionScreenshotMessage, CaptureVisibleTabScreenshotMessage, createErrorResponse, createSuccessResponse, MessageResponse, ResultModalType, SCREENSHOT_FORMAT, SCREENSHOT_MIME_TYPE, SelectionArea } from "$lib/messaging/types";
-import { blobToBase64 } from "$lib/messaging/utils/blob-utils";
+import { blobToBase64 } from "$lib/utils/blob-utils";
 import { logger } from "$lib/utils/logger";
 import { backgroundMessagingService } from '../services/background-messaging.service';
 

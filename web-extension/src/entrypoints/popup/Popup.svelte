@@ -2,7 +2,7 @@
 	import { WEB_APP_LOGIN_URL } from '$lib/auth/auth.config';
 	import { AuthUtils } from '$lib/auth/auth.utils';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { getCurrentTab, isCaptureAllowed } from '$lib/messaging/utils/tab-utils';
+	import { getCurrentTab, isCaptureAllowed } from '$lib/utils/browser-utils';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import SquareDashedMousePointer from '@lucide/svelte/icons/square-dashed-mouse-pointer';
 	import Video from '@lucide/svelte/icons/video';

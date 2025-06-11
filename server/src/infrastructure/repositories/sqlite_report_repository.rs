@@ -28,8 +28,8 @@ impl ReportRepository for SqliteReportRepository {
         let result = sqlx::query_as!(
             Report,
             r#"
-            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url, browser_name, browser_version, os_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING
                 id as "id: uuid::Uuid",
                 user_id as "user_id: uuid::Uuid",
@@ -39,6 +39,9 @@ impl ReportRepository for SqliteReportRepository {
                 description,
                 file_path,
                 url,
+                browser_name,
+                browser_version,
+                os_name,
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             "#,
@@ -50,6 +53,9 @@ impl ReportRepository for SqliteReportRepository {
             params.description,
             params.file_path,
             params.url,
+            params.browser_name,
+            params.browser_version,
+            params.os_name
         )
         .fetch_one(&self.pool)
         .await;
@@ -73,6 +79,9 @@ impl ReportRepository for SqliteReportRepository {
                 description,
                 file_path,
                 url,
+                browser_name,
+                browser_version,
+                os_name,
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             FROM reports
@@ -103,6 +112,9 @@ impl ReportRepository for SqliteReportRepository {
                 description,
                 file_path,
                 url,
+                browser_name,
+                browser_version,
+                os_name,
                 created_at as "created_at: DateTime<Utc>",
                 updated_at as "updated_at: DateTime<Utc>"
             FROM reports

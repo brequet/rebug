@@ -11,3 +11,19 @@ export type ReportResponse = {
     created_at: string,
     updated_at: string,
 };
+
+export type SendReportPayload = {
+    boardId: string;
+    title: string;
+    description?: string;
+    originUrl?: string;
+    mediaData: string; // Base64 encoded data
+    mediaType: ReportType;
+    browserInfo?: BrowserInfo;
+    os?: string;
+}
+
+export interface BrowserInfo {
+    name: string;
+    version: string;
+}

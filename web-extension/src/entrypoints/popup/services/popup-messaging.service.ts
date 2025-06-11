@@ -2,7 +2,7 @@ import { logger } from "$lib/utils/logger";
 import * as Factories from "../../../lib/messaging/factories";
 import { BaseMessagingService } from "../../../lib/messaging/handlers/base-messaging.service";
 import { createErrorResponse, isErrorResponse, MessageContext, MessageResponse } from "../../../lib/messaging/types";
-import { getActiveTabId } from "../../../lib/messaging/utils/tab-utils";
+import { getActiveTabId } from "../../../lib/utils/browser-utils";
 
 const log = logger.getLogger('PopupMessagingService');
 

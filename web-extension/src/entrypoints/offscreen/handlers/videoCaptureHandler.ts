@@ -1,5 +1,5 @@
 import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, MessageResponse, RecordingState, StartRecordingRequestMessage, StopRecordingRequestMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
-import { blobToBase64 } from "$lib/messaging/utils/blob-utils";
+import { blobToBase64 } from "$lib/utils/blob-utils";
 import { logger } from "$lib/utils/logger";
 import { offscreenMessagingService } from '../services/offscreen-messaging.service';
 

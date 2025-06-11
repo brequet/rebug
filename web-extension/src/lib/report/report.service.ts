@@ -1,8 +1,8 @@
 import { API_BASE_URL } from "$lib/api"
 import { AuthUtils } from "$lib/auth/auth.utils"
-import { SCREENSHOT_MIME_TYPE, SendReportPayload, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types"
-import { base64ToBlob } from "$lib/messaging/utils/blob-utils"
-import { ReportResponse } from "./report.types"
+import { SCREENSHOT_MIME_TYPE, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types"
+import { base64ToBlob } from "$lib/utils/blob-utils"
+import { ReportResponse, SendReportPayload } from "./report.types"
 
 class ReportService {
     private static readonly ENDPOINT = `${API_BASE_URL}/reports`
@@ -33,6 +33,15 @@ class ReportService {
 
         if (report.originUrl) {
             formData.append("url", report.originUrl);
+        }
+
+        if (report.browserInfo) {
+            formData.append("browser_name", report.browserInfo.name);
+            formData.append("browser_version", report.browserInfo.version);
+        }
+
+        if (report.os) {
+            formData.append("os_name", report.os);
         }
 
         const file = base64ToBlob(report.mediaData, report.mediaType === "Screenshot" ? SCREENSHOT_MIME_TYPE : VIDEO_CAPTURE_MIME_TYPE);

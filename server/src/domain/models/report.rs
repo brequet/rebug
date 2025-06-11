@@ -36,6 +36,9 @@ pub struct Report {
     pub description: Option<String>,
     pub file_path: String,
     pub url: Option<String>,
+    pub browser_name: Option<String>,
+    pub browser_version: Option<String>,
+    pub os_name: Option<String>,
     #[sqlx(default)]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[sqlx(default)]
@@ -51,6 +54,9 @@ pub struct CreateReportParams {
     pub description: Option<String>,
     pub file_path: String,
     pub url: Option<String>,
+    pub browser_name: Option<String>,
+    pub browser_version: Option<String>,
+    pub os_name: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -61,6 +67,9 @@ pub struct CreateScreenshotReportParams {
     pub title: String,
     pub description: Option<String>,
     pub url: Option<String>,
+    pub browser_name: Option<String>,
+    pub browser_version: Option<String>,
+    pub os_name: Option<String>,
     pub original_file_name: String,
     pub file_data: Bytes,
 }
