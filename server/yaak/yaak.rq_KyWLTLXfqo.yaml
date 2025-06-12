@@ -1,0 +1,36 @@
+type: http_request
+model: http_request
+id: rq_KyWLTLXfqo
+createdAt: 2025-06-12T16:39:02.449912200
+updatedAt: 2025-06-12T16:41:00.715698900
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_qLymZYfs2R
+authentication:
+  token: ${[ JWT ]}
+authenticationType: bearer
+body:
+  text: |-
+    {
+      "page": 1,
+      "per_page": 1
+    }
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get Board Reports
+sortPriority: 0.0008
+url: ${[ BASE_URL ]}/api/boards/35b1ac62-af6a-4375-9ca7-eea4c9f1cf1a/reports
+urlParameters:
+- enabled: true
+  name: page
+  value: '1'
+  id: 4utYm6KdsG
+- enabled: true
+  name: per_page
+  value: '10'
+  id: 0afK0EMxHZ
+- enabled: true
+  name: ''
+  value: ''
+  id: HxYEY3zdAf

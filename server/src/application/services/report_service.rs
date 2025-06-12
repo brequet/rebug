@@ -57,11 +57,19 @@ pub trait ReportServiceInterface: Send + Sync {
 
     async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report>;
 
+    // TODO: remove this method and use pagination instead
     async fn get_recent_reports_by_board(
         &self,
         board_id: Uuid,
         limit: usize,
     ) -> ReportServiceResult<Vec<Report>>;
+
+    async fn get_reports_by_board_paginated(
+        &self,
+        board_id: Uuid,
+        page: i64,
+        per_page: i64,
+    ) -> ReportServiceResult<(Vec<Report>, i64)>;
 }
 
 #[derive(Clone)]
@@ -157,5 +165,22 @@ impl ReportServiceInterface for ReportService {
         );
 
         Ok(reports)
+    }
+
+    #[instrument(skip(self), fields(board_id = %board_id, page = %page, per_page = %per_page), level = "debug")]
+    async fn get_reports_by_board_paginated(
+        &self,
+        board_id: Uuid,
+        page: i64,
+        per_page: i64,
+    ) -> ReportServiceResult<(Vec<Report>, i64)> {
+        let reports = self
+            .report_repository
+            .find_by_board_id_paginated(board_id, page, per_page)
+            .await?;
+
+        let total_items = self.report_repository.count_by_board_id(board_id).await?;
+
+        Ok((reports, total_items))
     }
 }

@@ -1,0 +1,19 @@
+type: http_request
+model: http_request
+id: rq_LsNKEhDJrb
+createdAt: 2025-06-12T16:37:58.582262600
+updatedAt: 2025-06-12T16:38:40.677183200
+workspaceId: wk_uEV9dkQtcy
+folderId: fl_qLymZYfs2R
+authentication:
+  token: ${[ JWT ]}
+authenticationType: bearer
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get Board
+sortPriority: -0.0002
+url: ${[ BASE_URL ]}/api/boards/35b1ac62-af6a-4375-9ca7-eea4c9f1cf1a
+urlParameters: []

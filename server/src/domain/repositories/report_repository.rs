@@ -16,4 +16,13 @@ pub trait ReportRepository: Send + Sync {
         board_id: Uuid,
         limit: usize,
     ) -> RepositoryResult<Vec<Report>>;
+
+    async fn find_by_board_id_paginated(
+        &self,
+        board_id: Uuid,
+        page: i64,
+        per_page: i64,
+    ) -> RepositoryResult<Vec<Report>>;
+
+    async fn count_by_board_id(&self, board_id: Uuid) -> RepositoryResult<i64>;
 }
