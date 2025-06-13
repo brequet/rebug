@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE board_id = ?\n            ORDER BY created_at DESC\n            LIMIT ?\n            ",
+  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE board_id = ?\n            ORDER BY created_at DESC\n            LIMIT ?\n            ",
   "describe": {
     "columns": [
       {
@@ -44,13 +44,28 @@
         "type_info": "Text"
       },
       {
-        "name": "created_at: DateTime<Utc>",
+        "name": "browser_name",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "updated_at: DateTime<Utc>",
+        "name": "browser_version",
         "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "os_name",
+        "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at: DateTime<Utc>",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at: DateTime<Utc>",
+        "ordinal": 12,
         "type_info": "Text"
       }
     ],
@@ -66,9 +81,12 @@
       true,
       false,
       true,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "235f4e198be2fe5e2d3cc0733fdc4d6299b7a85465640126d8bd889c1adbb7e4"
+  "hash": "e622bc4389c2530ecdae544b4fbee347ad09a5240311a6c873821b42b186e39d"
 }

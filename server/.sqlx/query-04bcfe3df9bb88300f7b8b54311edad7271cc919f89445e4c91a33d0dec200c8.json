@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n            RETURNING\n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            ",
+  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -44,18 +44,33 @@
         "type_info": "Text"
       },
       {
-        "name": "created_at: DateTime<Utc>",
+        "name": "browser_name",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "updated_at: DateTime<Utc>",
+        "name": "browser_version",
         "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "os_name",
+        "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at: DateTime<Utc>",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at: DateTime<Utc>",
+        "ordinal": 12,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 8
+      "Right": 1
     },
     "nullable": [
       false,
@@ -66,9 +81,12 @@
       true,
       false,
       true,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "313dcab1ec71d33ba40926d4e9e50ef30c9ca64d610ed4ac81a07f0af7599642"
+  "hash": "04bcfe3df9bb88300f7b8b54311edad7271cc919f89445e4c91a33d0dec200c8"
 }

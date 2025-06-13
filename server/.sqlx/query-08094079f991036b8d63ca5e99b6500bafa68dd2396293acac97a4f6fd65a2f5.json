@@ -1,0 +1,92 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url, browser_name, browser_version, os_name)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n            RETURNING\n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: uuid::Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "user_id: uuid::Uuid",
+        "ordinal": 1,
+        "type_info": "Blob"
+      },
+      {
+        "name": "board_id: uuid::Uuid",
+        "ordinal": 2,
+        "type_info": "Blob"
+      },
+      {
+        "name": "report_type: ReportType",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "title",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "file_path",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "url",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "browser_name",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "browser_version",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "os_name",
+        "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at: DateTime<Utc>",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at: DateTime<Utc>",
+        "ordinal": 12,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "08094079f991036b8d63ca5e99b6500bafa68dd2396293acac97a4f6fd65a2f5"
+}

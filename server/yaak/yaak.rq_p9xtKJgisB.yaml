@@ -1,8 +1,8 @@
 type: http_request
 model: http_request
-id: rq_syfVMhGcs2
-createdAt: 2025-05-17T16:25:11.070480600
-updatedAt: 2025-06-13T20:37:44.292828800
+id: rq_p9xtKJgisB
+createdAt: 2025-06-13T20:40:46.514544800
+updatedAt: 2025-06-13T20:41:43.835267800
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_9f4nSTRAxu
 authentication: {}
@@ -12,7 +12,7 @@ body:
   - enabled: true
     id: abq29XRMiq
     name: title
-    value: My Test Screenshot 5 a little too long omg stop this
+    value: Video
   - enabled: true
     id: rf5fp6ZKk7
     name: description
@@ -22,7 +22,7 @@ body:
     name: url
     value: http://example.com/page-with-bug
   - enabled: true
-    file: C:\code\rebug\server\yaak\image-1743197808485.png
+    file: C:\code\rebug\server\yaak\recording_2025-06-13T20-39-32.344Z.webm
     id: JcNnCpVQi4
     name: file
   - enabled: true
@@ -42,7 +42,7 @@ body:
     name: os_name
     value: Windows
   - enabled: true
-    id: dZzgNJ0K6g
+    id: ufsIv5gdwr
     name: ''
     value: ''
 bodyType: multipart/form-data
@@ -61,7 +61,7 @@ headers:
   value: multipart/form-data
   id: BT0m9E5Bdi
 method: POST
-name: Upload screenshot
-sortPriority: 0.0
+name: Upload video
+sortPriority: 0.001
 url: ${[ BASE_URL ]}/api/reports
 urlParameters: []
