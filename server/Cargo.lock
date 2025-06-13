@@ -1775,6 +1775,7 @@ dependencies = [
  "chrono",
  "config",
  "jsonwebtoken",
+ "mime_guess",
  "once_cell",
  "serde",
  "serde_json",

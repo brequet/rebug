@@ -1,10 +1,11 @@
 use async_trait::async_trait;
+use mime_guess::MimeGuess;
 use std::sync::Arc;
 use tracing::instrument;
 use uuid::Uuid;
 
 use crate::domain::{
-    models::report::{CreateReportParams, CreateScreenshotReportParams, Report, ReportType},
+    models::report::{CreateReportParams, CreateReportServiceParams, Report, ReportType},
     ports::storage_port::{StorageError, StoragePort},
     repositories::{RepositoryError, report_repository::ReportRepository},
 };
@@ -50,10 +51,8 @@ pub type ReportServiceResult<T> = Result<T, ReportServiceError>;
 
 #[async_trait]
 pub trait ReportServiceInterface: Send + Sync {
-    async fn create_screenshot_report(
-        &self,
-        params: CreateScreenshotReportParams,
-    ) -> ReportServiceResult<Report>;
+    async fn create_report(&self, params: CreateReportServiceParams)
+    -> ReportServiceResult<Report>;
 
     async fn get_report(&self, id: Uuid) -> ReportServiceResult<Report>;
 
@@ -97,13 +96,26 @@ impl ReportService {
 #[async_trait]
 impl ReportServiceInterface for ReportService {
     #[instrument(skip(self, params), fields(user_id = %params.user_id), board_id= %params.board_id, level="info")]
-    async fn create_screenshot_report(
+    async fn create_report(
         &self,
-        params: CreateScreenshotReportParams,
+        params: CreateReportServiceParams,
     ) -> ReportServiceResult<Report> {
         self.authorization_service
             .assert_can_user_create_report(params.user_id, params.board_id, &params.user_role)
             .await?;
+
+        let guess = MimeGuess::from_path(&params.original_file_name).first_or_octet_stream();
+        let report_type = match guess.type_().as_str() {
+            "image" => ReportType::Screenshot,
+            "video" => ReportType::Video,
+            _ => {
+                return Err(ReportServiceError::InternalError(
+                    "Unsupported file type.".to_string(),
+                ));
+            }
+        };
+
+        tracing::debug!(?report_type, "Determined report type from file MIME type.");
 
         tracing::debug!("Saving file to storage");
         let file_path = self
@@ -116,7 +128,7 @@ impl ReportServiceInterface for ReportService {
             user_id: params.user_id,
             board_id: params.board_id,
             title: params.title,
-            report_type: ReportType::Screenshot,
+            report_type,
             description: params.description,
             file_path,
             url: params.url,

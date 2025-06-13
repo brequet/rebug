@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::Utc;
+use mime_guess::MimeGuess;
 use std::path::Path;
 use tokio::fs;
 use tracing::instrument;
@@ -14,8 +15,8 @@ pub struct FileSystemStorage {
 }
 
 impl FileSystemStorage {
-    const MAX_FILE_SIZE: usize = 50 * 1024 * 1024; // 50MB
-    const ALLOWED_EXTENSIONS: &'static [&'static str] = &["png"];
+    const MAX_IMAGE_SIZE: usize = 10 * 1024 * 1024; // 10MB
+    const MAX_VIDEO_SIZE: usize = 50 * 1024 * 1024; // 50MB
 
     #[instrument(name = "FileSystemStorage::new", level = "debug")]
     pub fn new(upload_directory: String, base_url: String) -> StorageResult<Self> {
@@ -38,16 +39,30 @@ impl FileSystemStorage {
     }
 
     fn validate_file(&self, file_name: &str, data: &Bytes) -> StorageResult<()> {
-        if data.len() > Self::MAX_FILE_SIZE {
-            return Err(StorageError::ValidationError("File too large".to_string()));
-        }
+        let guess = MimeGuess::from_path(file_name).first_or_octet_stream();
 
-        let extension = self.get_file_extension(file_name)?;
-
-        if !Self::ALLOWED_EXTENSIONS.contains(&extension.to_lowercase().as_str()) {
-            return Err(StorageError::ValidationError(
-                format!("Invalid file type: '{}'", extension).to_string(),
-            ));
+        match guess.type_().as_str() {
+            "image" => {
+                if data.len() > Self::MAX_IMAGE_SIZE {
+                    return Err(StorageError::ValidationError(format!(
+                        "Image file size exceeds the limit of {}MB",
+                        Self::MAX_IMAGE_SIZE / (1024 * 1024)
+                    )));
+                }
+            }
+            "video" => {
+                if data.len() > Self::MAX_VIDEO_SIZE {
+                    return Err(StorageError::ValidationError(format!(
+                        "Video file size exceeds the limit of {}MB",
+                        Self::MAX_VIDEO_SIZE / (1024 * 1024)
+                    )));
+                }
+            }
+            _ => {
+                return Err(StorageError::ValidationError(
+                    "Unsupported file type. Only images and videos are allowed.".to_string(),
+                ));
+            }
         }
 
         Ok(())

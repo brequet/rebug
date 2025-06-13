@@ -13,17 +13,17 @@ use crate::{
         auth::{AuthenticatedUser, parse_user_role},
         error::ApiError,
         models::{
-            request::report_models::CreateScreenshotReportRequestMultipart,
+            request::report_models::CreateReportRequestMultipart,
             response::report_models::ReportResponse,
         },
         state::AppState,
     },
-    domain::models::{report::CreateScreenshotReportParams, user::UserRole},
+    domain::models::{report::CreateReportServiceParams, user::UserRole},
 };
 
 pub fn report_routes() -> Router<AppState> {
     let report_routes = Router::new()
-        .route("/screenshots", post(create_screenshot_report_handler))
+        .route("/", post(create_report_handler))
         .route("/{report_id}", get(get_report_handler));
 
     Router::new().nest("/reports", report_routes)
@@ -53,10 +53,10 @@ async fn get_report_handler(
 }
 
 #[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
-async fn create_screenshot_report_handler(
+async fn create_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
-    TypedMultipart(payload): TypedMultipart<CreateScreenshotReportRequestMultipart>,
+    TypedMultipart(payload): TypedMultipart<CreateReportRequestMultipart>,
 ) -> Result<(StatusCode, Json<ReportResponse>), ApiError> {
     tracing::debug!("Creating screenshot report.");
 
@@ -66,7 +66,7 @@ async fn create_screenshot_report_handler(
 
     let user_role = parse_user_role(&authenticated_user.claims.role)?;
 
-    let params = CreateScreenshotReportParams {
+    let params = CreateReportServiceParams {
         user_id: authenticated_user.claims.sub,
         user_role,
         board_id: payload.board_id,
@@ -82,7 +82,7 @@ async fn create_screenshot_report_handler(
 
     let report = state
         .report_service()
-        .create_screenshot_report(params)
+        .create_report(params)
         .await
         .map_err(|e| {
             tracing::error!("Report service error: {:?}", e);
@@ -91,7 +91,7 @@ async fn create_screenshot_report_handler(
 
     let response = ReportResponse::from(report);
 
-    tracing::info!(report_id = %response.id, "Screenshot report created successfully.");
+    tracing::info!(report_id = %response.id, "Report created successfully.");
 
     Ok((StatusCode::CREATED, Json(response)))
 }

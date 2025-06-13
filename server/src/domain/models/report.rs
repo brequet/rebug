@@ -60,7 +60,7 @@ pub struct CreateReportParams {
 }
 
 #[derive(Debug, Clone)]
-pub struct CreateScreenshotReportParams {
+pub struct CreateReportServiceParams {
     pub user_id: Uuid,
     pub user_role: UserRole,
     pub board_id: Uuid,
