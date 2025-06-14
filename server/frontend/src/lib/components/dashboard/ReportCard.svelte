@@ -20,7 +20,7 @@
 
 <Card class="w-72 flex-shrink-0 overflow-hidden transition-all duration-200 hover:shadow-md">
 	<CardHeader>
-		<CardTitle class="flex min-w-0 items-center gap-2 truncate text-sm font-medium">
+		<CardTitle class="flex min-w-0 items-center justify-between gap-2 truncate text-sm font-medium">
 			<span class="truncate">
 				{report.title}
 			</span>
@@ -55,6 +55,8 @@
 							</div>
 						</div>
 					{/if}
+				{:else if isVideo}
+					<!-- TODO -->
 				{/if}
 			</div>
 
