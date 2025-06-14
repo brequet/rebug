@@ -1,6 +1,7 @@
 import { createErrorResponse, createSuccessResponse, GetRecordingInProgressMessage, MessageResponse, RecordingState, StartRecordingRequestMessage, StopRecordingRequestMessage, VIDEO_CAPTURE_MIME_TYPE } from "$lib/messaging/types";
 import { blobToBase64 } from "$lib/utils/blob-utils";
 import { logger } from "$lib/utils/logger";
+import { fixVideoBlob } from "$lib/utils/video-utils";
 import { offscreenMessagingService } from '../services/offscreen-messaging.service';
 
 const log = logger.getLogger('OffscreenScript:VideoCaptureHandler');
@@ -103,9 +104,11 @@ async function processRecordedData() {
 
   log.info(`Processing ${recordedChunks.length} chunks.`);
   const videoBlob = new Blob(recordedChunks, { type: VIDEO_CAPTURE_MIME_TYPE });
+  const fixedBlob = await fixVideoBlob(videoBlob);
+
   recordedChunks = [];
 
-  await offscreenMessagingService.notifyRecordingStoppedDataReady(await blobToBase64(videoBlob));
+  await offscreenMessagingService.notifyRecordingStoppedDataReady(await blobToBase64(fixedBlob));
 }
 
 function cleanupStream() {

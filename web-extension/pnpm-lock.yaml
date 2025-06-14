@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      webm-duration-fix:
+        specifier: ^1.0.4
+        version: 1.0.4
     devDependencies:
       '@internationalized/date':
         specifier: ^3.8.1
@@ -1138,6 +1142,9 @@ packages:
     resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
 
+  ebml-block@1.1.2:
+    resolution: {integrity: sha512-HgNlIsRFP6D9VKU5atCeHRJY7XkJP8bOe8yEhd8NB7B3b4++VWTyauz6g650iiPmLfPLGlVpoJmGSgMfXDYusg==}
+
   emoji-regex@10.4.0:
     resolution: {integrity: sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw==}
 
@@ -1262,6 +1269,10 @@ packages:
 
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
+
+  events@3.3.0:
+    resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
+    engines: {node: '>=0.8.x'}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -1481,6 +1492,9 @@ packages:
 
   inline-style-parser@0.2.4:
     resolution: {integrity: sha512-0aO8FkhNZlj/ZIbNi7Lxxr12obT7cL1moPfE4tg1LkX7LlLfC6DeX4l2ZEud1ukP9jNQyNnfzQVqwbwmAATY4Q==}
+
+  int64-buffer@1.1.0:
+    resolution: {integrity: sha512-94smTCQOvigN4d/2R/YDjz8YVG0Sufvv2aAh8P5m42gwhCsDAJqnbNOrxJsrADuAFAA69Q/ptGzxvNcNuIJcvw==}
 
   is-absolute@0.1.7:
     resolution: {integrity: sha512-Xi9/ZSn4NFapG8RP98iNPMOeaV3mXPisxKxzKtHVqr3g56j/fBn+yZmnxSVAA8lmZbl2J9b/a4kJvfU3hqQYgA==}
@@ -2696,6 +2710,9 @@ packages:
     resolution: {integrity: sha512-u/IiZaZ7dHFqTM1MLF27rBy8mS9fEEsqoOKL0u+kQdOLmEioA/0Szp67ADd3WAJZLd8/hO8cFST1IC/YMXKIjQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
 
+  webm-duration-fix@1.0.4:
+    resolution: {integrity: sha512-kvhmSmEnuohtK+j+mJswqCCM2ViKb9W8Ch0oAxcaeUvpok5CsMORQLnea+CYKDXPG6JH12H0CbRK85qhfeZLew==}
+
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -3750,6 +3767,8 @@ snapshots:
 
   dotenv@16.5.0: {}
 
+  ebml-block@1.1.2: {}
+
   emoji-regex@10.4.0: {}
 
   emoji-regex@8.0.0: {}
@@ -3915,6 +3934,8 @@ snapshots:
   esutils@2.0.3: {}
 
   eventemitter3@5.0.1: {}
+
+  events@3.3.0: {}
 
   execa@5.1.1:
     dependencies:
@@ -4124,6 +4145,8 @@ snapshots:
   ini@4.1.3: {}
 
   inline-style-parser@0.2.4: {}
+
+  int64-buffer@1.1.0: {}
 
   is-absolute@0.1.7:
     dependencies:
@@ -5293,6 +5316,13 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  webm-duration-fix@1.0.4:
+    dependencies:
+      buffer: 6.0.3
+      ebml-block: 1.1.2
+      events: 3.3.0
+      int64-buffer: 1.1.0
 
   webpack-virtual-modules@0.6.2: {}
 
