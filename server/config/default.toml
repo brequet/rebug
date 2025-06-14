@@ -1,5 +1,7 @@
 server_port = 3000
 
+max_body_size_mb = 50
+
 database_url = "sqlite://./rebug.db?mode=rwc"
 
 upload_directory = "./storage_data/uploads"

@@ -1,6 +1,6 @@
 use axum::{
     Json, Router,
-    extract::{Path, State},
+    extract::{DefaultBodyLimit, Path, State},
     http::StatusCode,
     routing::{get, post},
 };
@@ -18,13 +18,17 @@ use crate::{
         },
         state::AppState,
     },
+    config::app_config::APP_CONFIG,
     domain::models::{report::CreateReportServiceParams, user::UserRole},
 };
 
 pub fn report_routes() -> Router<AppState> {
     let report_routes = Router::new()
         .route("/", post(create_report_handler))
-        .route("/{report_id}", get(get_report_handler));
+        .route("/{report_id}", get(get_report_handler))
+        .layer(DefaultBodyLimit::max(
+            (APP_CONFIG.max_body_size_mb * 1024 * 1024) as usize,
+        ));
 
     Router::new().nest("/reports", report_routes)
 }
