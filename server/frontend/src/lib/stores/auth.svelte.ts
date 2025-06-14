@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { authService } from '$lib/services/api';
-import { extensionMessagingService, MessageFactory, WebAppMessageType, type LoginMessage } from '$lib/services/extension-messaging';
+import { extensionMessagingService, MessageFactory } from '$lib/services/extension-messaging';
 import type { LoginResponse } from '$lib/types/generated/LoginResponse';
 import type { UserResponse } from '$lib/types/generated/UserResponse';
 import { err, isOk, type Result } from '$lib/types/Result';

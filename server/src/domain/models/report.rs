@@ -35,6 +35,7 @@ pub struct Report {
     pub title: String,
     pub description: Option<String>,
     pub file_path: String,
+    pub thumbnail_file_path: Option<String>,
     pub url: Option<String>,
     pub browser_name: Option<String>,
     pub browser_version: Option<String>,
@@ -53,6 +54,7 @@ pub struct CreateReportParams {
     pub report_type: ReportType,
     pub description: Option<String>,
     pub file_path: String,
+    pub thumbnail_file_path: Option<String>,
     pub url: Option<String>,
     pub browser_name: Option<String>,
     pub browser_version: Option<String>,
@@ -72,4 +74,5 @@ pub struct CreateReportServiceParams {
     pub os_name: Option<String>,
     pub original_file_name: String,
     pub file_data: Bytes,
+    pub thumbnail_data: Option<Bytes>,
 }

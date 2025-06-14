@@ -19,6 +19,7 @@ export type SendReportPayload = {
     originUrl?: string;
     mediaData: string; // Base64 encoded data
     mediaType: ReportType;
+    thumbnail?: string; // Base64 encoded thumbnail image
     browserInfo?: BrowserInfo;
     os?: string;
 }

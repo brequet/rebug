@@ -82,6 +82,7 @@ async fn create_report_handler(
         browser_name: payload.browser_name,
         browser_version: payload.browser_version,
         os_name: payload.os_name,
+        thumbnail_data: payload.thumbnail.map(|t| t.contents),
     };
 
     let report = state

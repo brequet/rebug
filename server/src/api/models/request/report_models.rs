@@ -15,4 +15,5 @@ pub struct CreateReportRequestMultipart {
     pub browser_version: Option<String>,
     pub os_name: Option<String>,
     pub file: FieldData<Bytes>,
+    pub thumbnail: Option<FieldData<Bytes>>,
 }

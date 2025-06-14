@@ -6,6 +6,7 @@
 	import { blobToBase64 } from '$lib/utils/blob-utils';
 	import { getBrowserInfo, getOS } from '$lib/utils/browser-utils';
 	import { formatPrettyDate } from '$lib/utils/date-utils';
+	import { generateThumbnailFromVideoBlob } from '$lib/utils/video-utils';
 	import { WEBAPP_BASE_URL } from '$lib/webapp';
 	import CloudUpload from '@lucide/svelte/icons/cloud-upload';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -67,7 +68,7 @@
 			return;
 		}
 
-		const { mediaData, mediaType } = await getMediaData();
+		const { mediaData, mediaType, thumbnail } = await getMediaData();
 
 		const currentDate = formatPrettyDate(new Date());
 		const currentPageUrl: string = window.location.href;
@@ -79,6 +80,7 @@
 			originUrl: currentPageUrl,
 			mediaData: mediaData,
 			mediaType,
+			thumbnail,
 			browserInfo: getBrowserInfo(),
 			os: getOS()
 		};
@@ -104,11 +106,19 @@
 	const getMediaData = async (): Promise<{
 		mediaData: string;
 		mediaType: ReportType;
+		thumbnail?: string;
 	}> => {
 		if (props.imageString) {
-			return { mediaData: props.imageString, mediaType: 'Screenshot' };
+			return {
+				mediaData: props.imageString,
+				mediaType: 'Screenshot'
+			};
 		} else if (props.videoBlob) {
-			return { mediaData: await blobToBase64(props.videoBlob), mediaType: 'Video' };
+			return {
+				mediaData: await blobToBase64(props.videoBlob),
+				mediaType: 'Video',
+				thumbnail: await generateThumbnailFromVideoBlob(props.videoBlob)
+			};
 		} else {
 			throw new Error('No media available for reporting');
 		}

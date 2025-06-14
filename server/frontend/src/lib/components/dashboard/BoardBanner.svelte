@@ -1,19 +1,16 @@
 <script lang="ts">
 	import type { BoardWithRecentReports } from '$lib/types/generated/BoardWithRecentReports';
-	import { formatDateFromString } from '$lib/utils/date';
 	import ReportCard from './ReportCard.svelte';
 
 	let { boardWithReports }: { boardWithReports: BoardWithRecentReports } = $props();
 
 	const { board, recent_reports } = boardWithReports;
-
-	const formattedDate = $state(formatDateFromString(board.created_at));
 </script>
 
 <div class="w-full">
 	<div class="pb-4">
 		<div class="flex items-start justify-between">
-			<div class="space-y-1">
+			<a class="space-y-1" href="/boards/{board.id}">
 				<h2 class="text-xl font-semibold">
 					{board.name}
 					{#if board.is_default}
@@ -29,7 +26,7 @@
 						{board.description}
 					</p>
 				{/if}
-			</div>
+			</a>
 		</div>
 	</div>
 

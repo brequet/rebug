@@ -4,7 +4,7 @@
 </script>
 
 <header class="border-border bg-card border-b">
-	<div class="mx-auto flex items-center justify-between px-4 py-4">
+	<div class="container mx-auto flex items-center justify-between px-4 py-4">
 		<a
 			href="/"
 			class="text-foreground focus-visible:ring-primary rounded text-xl font-semibold focus:outline-none focus-visible:ring-2"

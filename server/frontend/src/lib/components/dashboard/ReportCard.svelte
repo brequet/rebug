@@ -2,7 +2,8 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import type { ReportResponse } from '$lib/types/generated/ReportResponse';
 	import { formatDateFromString } from '$lib/utils/date';
-	import { ExternalLink, Film, Image, TriangleAlert } from '@lucide/svelte';
+	import { Film, Image, TriangleAlert } from '@lucide/svelte';
+	import 'hover-video-player';
 
 	let { report }: { report: ReportResponse } = $props();
 
@@ -18,61 +19,70 @@
 	}
 </script>
 
-<Card class="w-72 flex-shrink-0 overflow-hidden transition-all duration-200 hover:shadow-md">
-	<CardHeader>
-		<CardTitle class="flex min-w-0 items-center justify-between gap-2 truncate text-sm font-medium">
-			<span class="truncate">
-				{report.title}
-			</span>
-			<span class="text-muted-foreground flex-shrink-0">
-				{#if isScreenshot}
-					<Image class="h-4 w-4" />
-				{:else if isVideo}
-					<Film class="h-4 w-4" />
-				{/if}
-			</span>
-		</CardTitle>
-	</CardHeader>
-
-	<CardContent>
-		<div class="space-y-1">
-			<!-- Media Preview -->
-			<div class="bg-muted relative h-32 overflow-hidden rounded-md">
-				{#if isScreenshot}
-					<!-- TODO: Idea: lazy loads image, only if visible on user screen -->
-					<img
-						src={report.file_path}
-						alt={report.title}
-						class="h-full w-full object-cover"
-						onerror={handleImageError}
-					/>
-					<!-- Fallback for broken images -->
-					{#if isImageError}
-						<div class="bg-muted absolute inset-0 flex items-center justify-center">
-							<div class="text-muted-foreground flex flex-col items-center space-y-2 text-center">
-								<TriangleAlert />
-								<p class="text-xs">Image not found</p>
-							</div>
-						</div>
+<a href={`/reports/${report.id}`} class="block">
+	<Card class="w-72 flex-shrink-0 overflow-hidden transition-all duration-200 hover:shadow-md">
+		<CardHeader>
+			<CardTitle
+				class="flex min-w-0 items-center justify-between gap-2 truncate text-sm font-medium"
+			>
+				<span class="truncate">
+					{report.title}
+				</span>
+				<span class="text-muted-foreground flex-shrink-0">
+					{#if isScreenshot}
+						<Image class="h-4 w-4" />
+					{:else if isVideo}
+						<Film class="h-4 w-4" />
 					{/if}
-				{:else if isVideo}
-					<!-- TODO -->
-				{/if}
-			</div>
+				</span>
+			</CardTitle>
+		</CardHeader>
 
-			<!-- Metadata -->
-			<div class="text-muted-foreground flex items-center justify-between text-xs">
-				<span>{formattedDate}</span>
-				<!-- TODO: dedicated report page -->
-				<a
-					href={report.url}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="text-primary hover:text-primary/80 transition-colors"
-				>
-					<ExternalLink class="h-4 w-4" />
-				</a>
+		<CardContent>
+			<div class="space-y-1">
+				<!-- Media Preview -->
+				<div class="bg-muted relative h-32 overflow-hidden rounded-md">
+					{#if isScreenshot}
+						<!-- TODO: Idea: lazy loads image, only if visible on user screen -->
+						<img
+							src={report.file_path}
+							alt={report.title}
+							class="h-full w-full object-cover"
+							onerror={handleImageError}
+						/>
+						<!-- Fallback for broken images -->
+						{#if isImageError}
+							<div class="bg-muted absolute inset-0 flex items-center justify-center">
+								<div class="text-muted-foreground flex flex-col items-center space-y-2 text-center">
+									<TriangleAlert />
+									<p class="text-xs">Image not found</p>
+								</div>
+							</div>
+						{/if}
+					{:else if isVideo}
+						<hover-video-player class="h-full w-full">
+							<video
+								src={report.file_path}
+								loop
+								muted
+								playsinline
+								class="h-full w-full object-cover"
+							></video>
+							<img
+								src={report.thumbnail_file_path}
+								alt="Video thumbnail for {report.title}"
+								slot="paused-overlay"
+								class="h-full w-full object-cover"
+							/>
+						</hover-video-player>
+					{/if}
+				</div>
+
+				<!-- Metadata -->
+				<div class="text-muted-foreground flex items-center justify-between text-xs">
+					<span>{formattedDate}</span>
+				</div>
 			</div>
-		</div>
-	</CardContent>
-</Card>
+		</CardContent>
+	</Card>
+</a>

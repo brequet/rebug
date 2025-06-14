@@ -123,6 +123,16 @@ impl ReportServiceInterface for ReportService {
             .save_file(&params.original_file_name, params.file_data)
             .await?;
 
+        let thumbnail_file_path = if let Some(thumbnail_data) = params.thumbnail_data {
+            Some(
+                self.storage_port
+                    .save_file("thumbnail.jpeg", thumbnail_data)
+                    .await?,
+            )
+        } else {
+            None
+        };
+
         tracing::debug!("Saving report");
         let create_params = CreateReportParams {
             user_id: params.user_id,
@@ -131,6 +141,7 @@ impl ReportServiceInterface for ReportService {
             report_type,
             description: params.description,
             file_path,
+            thumbnail_file_path,
             url: params.url,
             browser_name: params.browser_name,
             browser_version: params.browser_version,

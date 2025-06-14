@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url, browser_name, browser_version, os_name)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n            RETURNING\n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            ",
+  "query": "\n            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, thumbnail_file_path, url, browser_name, browser_version, os_name)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n            RETURNING\n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                thumbnail_file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            ",
   "describe": {
     "columns": [
       {
@@ -39,38 +39,43 @@
         "type_info": "Text"
       },
       {
-        "name": "url",
+        "name": "thumbnail_file_path",
         "ordinal": 7,
         "type_info": "Text"
       },
       {
-        "name": "browser_name",
+        "name": "url",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "browser_version",
+        "name": "browser_name",
         "ordinal": 9,
         "type_info": "Text"
       },
       {
-        "name": "os_name",
+        "name": "browser_version",
         "ordinal": 10,
         "type_info": "Text"
       },
       {
-        "name": "created_at: DateTime<Utc>",
+        "name": "os_name",
         "ordinal": 11,
         "type_info": "Text"
       },
       {
-        "name": "updated_at: DateTime<Utc>",
+        "name": "created_at: DateTime<Utc>",
         "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at: DateTime<Utc>",
+        "ordinal": 13,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 11
+      "Right": 12
     },
     "nullable": [
       false,
@@ -84,9 +89,10 @@
       true,
       true,
       true,
+      true,
       false,
       false
     ]
   },
-  "hash": "08094079f991036b8d63ca5e99b6500bafa68dd2396293acac97a4f6fd65a2f5"
+  "hash": "2bcffa93e02c9a5c0b4ee5f499c98f7907500ceeda07ee2a8f627021ba8091a3"
 }

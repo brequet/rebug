@@ -48,6 +48,15 @@ class ReportService {
 			console.error('File is not a Blob:', typeof report.mediaData);
 			return null;
 		}
+		if (report.thumbnail) {
+			const thumbnailBlob = base64ToBlob(report.thumbnail, 'image/jpeg');
+			if (thumbnailBlob) {
+				formData.append('thumbnail', thumbnailBlob, 'thumbnail.jpg');
+			} else {
+				console.error('Thumbnail is not a Blob:', typeof report.thumbnail);
+				return null;
+			}
+		}
 
 		const url = `${this.ENDPOINT}`;
 		const headers = {
@@ -71,3 +80,4 @@ class ReportService {
 }
 
 export { ReportService };
+

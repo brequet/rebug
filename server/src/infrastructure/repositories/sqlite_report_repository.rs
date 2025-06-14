@@ -28,8 +28,8 @@ impl ReportRepository for SqliteReportRepository {
         let result = sqlx::query_as!(
             Report,
             r#"
-            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, url, browser_name, browser_version, os_name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO reports (id, user_id, board_id, report_type, title, description, file_path, thumbnail_file_path, url, browser_name, browser_version, os_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING
                 id as "id: uuid::Uuid",
                 user_id as "user_id: uuid::Uuid",
@@ -38,6 +38,7 @@ impl ReportRepository for SqliteReportRepository {
                 title,
                 description,
                 file_path,
+                thumbnail_file_path,
                 url,
                 browser_name,
                 browser_version,
@@ -52,6 +53,7 @@ impl ReportRepository for SqliteReportRepository {
             params.title,
             params.description,
             params.file_path,
+            params.thumbnail_file_path,
             params.url,
             params.browser_name,
             params.browser_version,
@@ -78,6 +80,7 @@ impl ReportRepository for SqliteReportRepository {
                 title,
                 description,
                 file_path,
+                thumbnail_file_path,
                 url,
                 browser_name,
                 browser_version,
@@ -111,6 +114,7 @@ impl ReportRepository for SqliteReportRepository {
                 title,
                 description,
                 file_path,
+                thumbnail_file_path,
                 url,
                 browser_name,
                 browser_version,
@@ -149,6 +153,7 @@ impl ReportRepository for SqliteReportRepository {
                 title,
                 description,
                 file_path,
+                thumbnail_file_path,
                 url,
                 browser_name,
                 browser_version,

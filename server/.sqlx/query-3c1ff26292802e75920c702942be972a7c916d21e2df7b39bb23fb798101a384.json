@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE board_id = ?\n            ORDER BY created_at DESC\n            LIMIT ?\n            ",
+  "query": "\n            SELECT \n                id as \"id: uuid::Uuid\",\n                user_id as \"user_id: uuid::Uuid\",\n                board_id as \"board_id: uuid::Uuid\",\n                report_type as \"report_type: ReportType\",\n                title,\n                description,\n                file_path,\n                thumbnail_file_path,\n                url,\n                browser_name,\n                browser_version,\n                os_name,\n                created_at as \"created_at: DateTime<Utc>\",\n                updated_at as \"updated_at: DateTime<Utc>\"\n            FROM reports\n            WHERE board_id = ?\n            ORDER BY created_at DESC\n            LIMIT ?\n            OFFSET ?\n            ",
   "describe": {
     "columns": [
       {
@@ -39,38 +39,43 @@
         "type_info": "Text"
       },
       {
-        "name": "url",
+        "name": "thumbnail_file_path",
         "ordinal": 7,
         "type_info": "Text"
       },
       {
-        "name": "browser_name",
+        "name": "url",
         "ordinal": 8,
         "type_info": "Text"
       },
       {
-        "name": "browser_version",
+        "name": "browser_name",
         "ordinal": 9,
         "type_info": "Text"
       },
       {
-        "name": "os_name",
+        "name": "browser_version",
         "ordinal": 10,
         "type_info": "Text"
       },
       {
-        "name": "created_at: DateTime<Utc>",
+        "name": "os_name",
         "ordinal": 11,
         "type_info": "Text"
       },
       {
-        "name": "updated_at: DateTime<Utc>",
+        "name": "created_at: DateTime<Utc>",
         "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at: DateTime<Utc>",
+        "ordinal": 13,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 2
+      "Right": 3
     },
     "nullable": [
       false,
@@ -84,9 +89,10 @@
       true,
       true,
       true,
+      true,
       false,
       false
     ]
   },
-  "hash": "e622bc4389c2530ecdae544b4fbee347ad09a5240311a6c873821b42b186e39d"
+  "hash": "3c1ff26292802e75920c702942be972a7c916d21e2df7b39bb23fb798101a384"
 }

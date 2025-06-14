@@ -61,6 +61,7 @@ CREATE TABLE
         title TEXT NOT NULL,
         description TEXT,
         file_path TEXT NOT NULL,
+        thumbnail_file_path TEXT,
         url TEXT,
         browser_name TEXT,
         browser_version TEXT,
