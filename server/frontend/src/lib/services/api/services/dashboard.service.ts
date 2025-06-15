@@ -1,4 +1,4 @@
-import type { ApiResult } from "$lib/types/api/ApiResult";
+import type { ApiResult } from "$lib/services/api/types/ApiResult";
 import type { DashboardResponse } from "$lib/types/generated/DashboardResponse";
 import { get } from "../base";
 

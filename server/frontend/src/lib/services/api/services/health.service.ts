@@ -1,4 +1,4 @@
-import type { ApiResult } from '$lib/types/api/ApiResult';
+import type { ApiResult } from '$lib/services/api/types/ApiResult';
 import type { HealthResponse } from '$lib/types/generated/HealthResponse';
 import { get } from '../base';
 

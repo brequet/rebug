@@ -1,6 +1,8 @@
+import { ApiError, NetworkError } from '$lib/services/api/types/ApiError';
+import type { ApiResult } from '$lib/services/api/types/ApiResult';
+import type { PaginationParams } from '$lib/services/api/types/PaginationParams';
 import { authStore } from '$lib/stores/auth.svelte';
-import { ApiError, NetworkError } from '$lib/types/api/ApiError';
-import type { ApiResult } from '$lib/types/api/ApiResult';
+import type { PaginatedResponse } from '$lib/types/generated/PaginatedResponse';
 import { err, ok } from '$lib/types/Result';
 
 const API_BASE_URL = '/api';
@@ -50,6 +52,26 @@ async function makeRequest<T>(
 
 export async function get<T>(endpoint: string): Promise<ApiResult<T>> {
     return makeRequest<T>(endpoint, { method: 'GET' });
+}
+
+export async function getPaginated<ItemType>(
+    endpoint: string,
+    params: PaginationParams = {}
+): Promise<ApiResult<PaginatedResponse<ItemType>>> {
+    const { page, pageSize } = params;
+    const queryParams = new URLSearchParams();
+
+    if (page !== undefined) {
+        queryParams.append('page', page.toString());
+    }
+    if (pageSize !== undefined) {
+        queryParams.append('per_page', pageSize.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+    return get<PaginatedResponse<ItemType>>(url);
 }
 
 export async function post<T>(endpoint: string, data?: unknown): Promise<ApiResult<T>> {

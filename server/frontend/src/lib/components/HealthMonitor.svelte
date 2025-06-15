@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { healthService } from '$lib/services/api';
-	import { ApiError } from '$lib/types/api/ApiError';
+	import { ApiError } from '$lib/services/api/types/ApiError';
 	import type { HealthResponse } from '$lib/types/generated/HealthResponse';
 	import { isOk } from '$lib/types/Result';
 	import Button from './ui/button/button.svelte';

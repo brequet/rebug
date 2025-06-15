@@ -2,7 +2,7 @@ use serde::Deserialize;
 use validator::Validate;
 
 const DEFAULT_PAGE: i64 = 1;
-const DEFAULT_PER_PAGE: i64 = 10;
+const DEFAULT_PER_PAGE: i64 = 20;
 const MAX_PER_PAGE: i64 = 100;
 
 #[derive(Deserialize, Validate, Debug)]

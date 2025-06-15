@@ -1,6 +1,6 @@
 import { dashboardService } from '$lib/services/api';
+import { isApiError } from '$lib/services/api/types/ApiError';
 import { authStore } from '$lib/stores/auth.svelte';
-import { isApiError } from '$lib/types/api/ApiError';
 import { isOk } from '$lib/types/Result';
 import { requireAuth } from '$lib/utils/auth';
 import { error, redirect } from '@sveltejs/kit';
