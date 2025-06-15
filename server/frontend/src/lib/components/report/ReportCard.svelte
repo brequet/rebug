@@ -9,7 +9,7 @@
 	const isScreenshot = $derived(report.report_type === 'Screenshot');
 	const isVideo = $derived(report.report_type === 'Video');
 
-	const formattedDate = $state(formatDateFromString(report.created_at));
+	const formattedDate = $derived(formatDateFromString(report.created_at));
 
 	let isImageError = $state(false);
 
