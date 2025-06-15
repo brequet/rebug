@@ -48,7 +48,8 @@
 				<Breadcrumb>
 					<BreadcrumbList>
 						<BreadcrumbItem>
-							<BreadcrumbLink href="/boards/{report.board_id}">TODO: board name</BreadcrumbLink>
+							<!-- TODO: board name -->
+							<BreadcrumbLink href="/boards/{report.board_id}">Board</BreadcrumbLink>
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>

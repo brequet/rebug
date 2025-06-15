@@ -26,6 +26,7 @@
 			/>
 		{/if}
 	{:else if isVideo}
+		<!-- svelte-ignore a11y_media_has_caption -->
 		<video src={report.file_path} controls class="size-full object-contain"></video>
 	{:else}
 		<div class="text-muted-foreground flex flex-col items-center gap-4">
