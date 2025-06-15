@@ -5,18 +5,18 @@ use ts_rs::TS;
 #[ts(export)]
 pub struct PaginatedResponse<T> {
     pub items: Vec<T>,
-    pub page: i64,
-    pub per_page: i64,
-    pub total_items: i64,
-    pub total_pages: i64,
+    pub page: i32,
+    pub per_page: i32,
+    pub total_items: i32,
+    pub total_pages: i32,
 }
 
 impl<T> PaginatedResponse<T> {
-    pub fn new(items: Vec<T>, page: i64, per_page: i64, total_items: i64) -> Self {
+    pub fn new(items: Vec<T>, page: i32, per_page: i32, total_items: i32) -> Self {
         let total_pages = if total_items == 0 {
             0
         } else {
-            (total_items as f64 / per_page as f64).ceil() as i64
+            (total_items as f32 / per_page as f32).ceil() as i32
         };
         Self {
             items,

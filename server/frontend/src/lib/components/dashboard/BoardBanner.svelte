@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { BoardWithRecentReports } from '$lib/types/generated/BoardWithRecentReports';
-	import ReportCard from './ReportCard.svelte';
+	import ReportCard from '../report/ReportCard.svelte';
 
 	let { boardWithReports }: { boardWithReports: BoardWithRecentReports } = $props();
 

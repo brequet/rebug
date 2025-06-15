@@ -1,4 +1,8 @@
-export class ApiError extends Error {
+export interface ErrorInterface {
+    getErrorStatus(): number;
+}
+
+export class ApiError extends Error implements ErrorInterface {
     constructor(
         message: string,
         public readonly status: number,
@@ -13,9 +17,13 @@ export class ApiError extends Error {
             (Error as any).captureStackTrace(this, this.constructor);
         }
     }
+
+    getErrorStatus(): number {
+        return this.status;
+    }
 }
 
-export class NetworkError extends Error {
+export class NetworkError extends Error implements ErrorInterface {
     constructor(message: string, public readonly cause?: unknown) {
         super(message);
         this.name = 'NetworkError';
@@ -25,6 +33,10 @@ export class NetworkError extends Error {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (Error as any).captureStackTrace(this, this.constructor);
         }
+    }
+
+    getErrorStatus(): number {
+        return 0; // Network errors do not have a specific HTTP status code
     }
 }
 

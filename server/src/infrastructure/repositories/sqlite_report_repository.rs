@@ -137,8 +137,8 @@ impl ReportRepository for SqliteReportRepository {
     async fn find_by_board_id_paginated(
         &self,
         board_id: Uuid,
-        page: i64,
-        per_page: i64,
+        page: i32,
+        per_page: i32,
     ) -> RepositoryResult<Vec<Report>> {
         let offset = (page - 1) * per_page;
 
@@ -175,7 +175,7 @@ impl ReportRepository for SqliteReportRepository {
         .map_err(map_sqlx_error)
     }
 
-    async fn count_by_board_id(&self, board_id: Uuid) -> RepositoryResult<i64> {
+    async fn count_by_board_id(&self, board_id: Uuid) -> RepositoryResult<i32> {
         let result = sqlx::query!(
             "SELECT COUNT(*) as count FROM reports WHERE board_id = ?",
             board_id
@@ -184,6 +184,6 @@ impl ReportRepository for SqliteReportRepository {
         .await
         .map_err(map_sqlx_error)?;
 
-        Ok(result.count as i64)
+        Ok(result.count as i32)
     }
 }

@@ -66,9 +66,9 @@ pub trait ReportServiceInterface: Send + Sync {
     async fn get_reports_by_board_paginated(
         &self,
         board_id: Uuid,
-        page: i64,
-        per_page: i64,
-    ) -> ReportServiceResult<(Vec<Report>, i64)>;
+        page: i32,
+        per_page: i32,
+    ) -> ReportServiceResult<(Vec<Report>, i32)>;
 }
 
 #[derive(Clone)]
@@ -194,9 +194,9 @@ impl ReportServiceInterface for ReportService {
     async fn get_reports_by_board_paginated(
         &self,
         board_id: Uuid,
-        page: i64,
-        per_page: i64,
-    ) -> ReportServiceResult<(Vec<Report>, i64)> {
+        page: i32,
+        per_page: i32,
+    ) -> ReportServiceResult<(Vec<Report>, i32)> {
         let reports = self
             .report_repository
             .find_by_board_id_paginated(board_id, page, per_page)

@@ -20,9 +20,9 @@ pub trait ReportRepository: Send + Sync {
     async fn find_by_board_id_paginated(
         &self,
         board_id: Uuid,
-        page: i64,
-        per_page: i64,
+        page: i32,
+        per_page: i32,
     ) -> RepositoryResult<Vec<Report>>;
 
-    async fn count_by_board_id(&self, board_id: Uuid) -> RepositoryResult<i64>;
+    async fn count_by_board_id(&self, board_id: Uuid) -> RepositoryResult<i32>;
 }
