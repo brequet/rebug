@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BoardWithRecentReports } from '$lib/types/generated/BoardWithRecentReports';
+	import { FileText } from '@lucide/svelte';
 	import ReportCard from '../report/ReportCard.svelte';
 
 	let { boardWithReports }: { boardWithReports: BoardWithRecentReports } = $props();
@@ -11,7 +12,7 @@
 	<div class="pb-4">
 		<div class="flex items-start justify-between">
 			<a class="space-y-1" href="/boards/{board.id}">
-				<h2 class="text-xl font-semibold">
+				<h2 class="text-xl font-semibold tracking-tight">
 					{board.name}
 					{#if board.is_default}
 						<span
@@ -32,33 +33,26 @@
 
 	<div>
 		{#if recent_reports.length === 0}
-			<div class="text-muted-foreground py-8 text-center">
-				<svg class="mx-auto mb-2 h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-					/>
-				</svg>
-				<p class="text-sm">No reports yet</p>
+			<div
+				class="text-muted-foreground flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-8"
+			>
+				<FileText class="mb-2 size-8" />
+				<p class="text-sm">No recent reports</p>
 			</div>
 		{:else}
-			<!-- Horizontal scrolling container -->
 			<div class="relative">
 				<div
-					class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border flex gap-4 overflow-x-auto pb-4"
+					class="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border -mx-1 flex gap-4 overflow-x-auto px-1 pb-4"
 				>
 					{#each recent_reports as report (report.id)}
-						<ReportCard {report} />
+						<ReportCard {report} class="w-72 flex-shrink-0" />
 					{/each}
-					<!-- TODO: add a last element if more than 5 to say how many more are in the board-->
 				</div>
 
-				<!-- Scroll indicator gradient -->
+				<!-- Right fade -->
 				{#if recent_reports.length > 3}
 					<div
-						class="from-background pointer-events-none absolute bottom-4 right-0 top-0 w-8 bg-gradient-to-l to-transparent"
+						class="from-background pointer-events-none absolute bottom-4 right-0 top-0 w-16 bg-gradient-to-l to-transparent"
 					></div>
 				{/if}
 			</div>

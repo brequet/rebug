@@ -7,6 +7,7 @@ pub struct PaginatedResponse<T> {
     pub items: Vec<T>,
     pub page: i32,
     pub per_page: i32,
+    pub has_next_page: bool,
     pub total_items: i32,
     pub total_pages: i32,
 }
@@ -22,6 +23,7 @@ impl<T> PaginatedResponse<T> {
             items,
             page,
             per_page,
+            has_next_page: page < total_pages,
             total_items,
             total_pages,
         }
