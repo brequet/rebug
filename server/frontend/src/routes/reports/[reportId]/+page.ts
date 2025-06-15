@@ -1,8 +1,10 @@
-import { error } from '@sveltejs/kit';
+import { reportsService } from '$lib/services/api';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = ({ params }) => {
-    return { reportId: params.reportId };
+export const load: PageLoad = async ({ params }) => {
+    const { reportId } = params;
 
-    error(404, 'Not found');
+    return {
+        reportPromise: reportsService.getReport(reportId),
+    };
 };
