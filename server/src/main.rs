@@ -6,8 +6,7 @@ use rebug::{
     config::app_config::APP_CONFIG,
     domain::models::user::UserRole,
     infrastructure::{
-        container::service_container::ServiceContainer, database::sqlite::Sqlite,
-        frontend::frontend_service::FrontendService,
+        container::service_container::ServiceContainer, database::sqlite::Sqlite, frontend,
     },
 };
 use tower_http::{
@@ -113,7 +112,7 @@ fn build_router(app_state: AppState) -> Router {
     Router::new()
         .nest("/api", get_api_routes())
         .nest_service("/uploads", uploaded_files_service)
-        .merge(FrontendService::create_router().with_state(()))
+        .fallback(frontend::frontend_service::frontend_handler)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO)),

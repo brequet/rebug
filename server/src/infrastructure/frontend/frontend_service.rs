@@ -1,32 +1,41 @@
-use crate::config::app_config::APP_CONFIG;
-use axum::Router;
-use std::path::Path;
-use tower_http::services::{ServeDir, ServeFile};
+use axum::{
+    http::{StatusCode, Uri, header},
+    response::IntoResponse,
+};
+use rust_embed::RustEmbed;
 
-pub struct FrontendService;
+#[derive(RustEmbed)]
+#[folder = "frontend/build/"]
+struct Assets;
 
-impl FrontendService {
-    pub fn create_router() -> Router {
-        let frontend_dir = Path::new(&APP_CONFIG.frontend_directory);
+pub async fn frontend_handler(uri: Uri) -> impl IntoResponse {
+    let mut path = uri.path().trim_start_matches('/').to_string();
+    if path.is_empty() {
+        path = "index.html".to_string();
+    }
 
-        if !frontend_dir.exists() {
-            tracing::warn!(
-                "Frontend directory '{}' does not exist. Frontend serving disabled.",
-                APP_CONFIG.frontend_directory
-            );
-            return Router::new();
+    match Assets::get(&path) {
+        Some(content) => {
+            let mime = mime_guess::from_path(&path).first_or_octet_stream();
+            (
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, mime.as_ref())],
+                content.data,
+            )
+                .into_response()
         }
-
-        let index_file_path = frontend_dir.join("index.html");
-
-        if !index_file_path.exists() {
-            tracing::warn!("Frontend index.html not found. Frontend serving disabled.");
-            return Router::new();
+        None => {
+            if let Some(content) = Assets::get("index.html") {
+                let mime = mime_guess::from_path("index.html").first_or_octet_stream();
+                (
+                    StatusCode::OK,
+                    [(header::CONTENT_TYPE, mime.as_ref())],
+                    content.data,
+                )
+                    .into_response()
+            } else {
+                (StatusCode::NOT_FOUND, "404 Not Found").into_response()
+            }
         }
-
-        let serve_dir = ServeDir::new(&APP_CONFIG.frontend_directory)
-            .not_found_service(ServeFile::new(index_file_path));
-
-        Router::new().fallback_service(serve_dir)
     }
 }
