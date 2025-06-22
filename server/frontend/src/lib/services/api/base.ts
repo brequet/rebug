@@ -15,7 +15,6 @@ async function makeRequest<T>(
     try {
         const authHeader = authStore.getAuthHeader();
 
-        // Build headers with auth if available
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...options.headers as Record<string, string>,
@@ -31,6 +30,10 @@ async function makeRequest<T>(
         });
 
         if (!response.ok) {
+            if (response.status === 401 && authHeader) {
+                authStore.logout();
+            }
+
             let errorData;
             try {
                 errorData = await response.json();

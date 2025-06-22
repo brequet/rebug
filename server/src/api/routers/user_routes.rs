@@ -22,7 +22,7 @@ pub fn user_routes() -> Router<AppState> {
     Router::new().nest("/users", user_routes)
 }
 
-#[instrument(skip(state, payload, authenticated_admin), fields(admin_id = %authenticated_admin.claims.sub), level = "debug")]
+#[instrument(skip(state, payload, authenticated_admin), fields(admin_id = %authenticated_admin.id), level = "debug")]
 async fn create_user_handler(
     State(state): State<AppState>,
     authenticated_admin: AuthenticatedAdmin,
@@ -51,15 +51,16 @@ async fn create_user_handler(
     Ok((StatusCode::CREATED, Json(user.into())))
 }
 
-#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.id), level = "debug")]
 async fn get_current_user_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
 ) -> Result<Json<UserResponse>, ApiError> {
     tracing::debug!("Fetching current user.");
-    let user_id = authenticated_user.claims.sub;
-
-    let user = state.user_service().get_user_by_id(user_id).await?;
+    let user = state
+        .user_service()
+        .get_user_by_id(authenticated_user.id)
+        .await?;
 
     Ok(Json(user.into()))
 }

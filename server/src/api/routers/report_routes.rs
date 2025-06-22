@@ -33,7 +33,7 @@ pub fn report_routes() -> Router<AppState> {
     Router::new().nest("/reports", report_routes)
 }
 
-#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub, report_id = %report_id), level = "debug")]
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.id, report_id = %report_id), level = "debug")]
 async fn get_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
@@ -43,8 +43,8 @@ async fn get_report_handler(
 
     let report = state.report_service().get_report(report_id).await?;
 
-    if report.user_id != authenticated_user.claims.sub
-        && authenticated_user.claims.role != UserRole::Admin.to_string()
+    if report.user_id != authenticated_user.id
+        && authenticated_user.role != UserRole::Admin.to_string()
     {
         return Err(ApiError::Forbidden);
     }
@@ -56,7 +56,7 @@ async fn get_report_handler(
     Ok((StatusCode::OK, Json(response)))
 }
 
-#[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
+#[instrument(skip(state, authenticated_user, payload), fields(user_id = %authenticated_user.id), level = "debug")]
 async fn create_report_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
@@ -68,10 +68,10 @@ async fn create_report_handler(
         ApiError::validation("File name is required in the multipart data.".to_string())
     })?;
 
-    let user_role = parse_user_role(&authenticated_user.claims.role)?;
+    let user_role = parse_user_role(&authenticated_user.role)?;
 
     let params = CreateReportServiceParams {
-        user_id: authenticated_user.claims.sub,
+        user_id: authenticated_user.id,
         user_role,
         board_id: payload.board_id,
         title: payload.title,

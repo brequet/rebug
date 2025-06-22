@@ -12,16 +12,14 @@ pub fn dashboard_routes() -> Router<AppState> {
     Router::new().route("/dashboard", get(get_dashboard_handler))
 }
 
-#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.id), level = "debug")]
 async fn get_dashboard_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
 ) -> Result<Json<DashboardResponse>, ApiError> {
-    let user_id = authenticated_user.claims.sub;
-
     let dashboard_data = state
         .dashboard_service()
-        .get_user_dashboard(user_id)
+        .get_user_dashboard(authenticated_user.id)
         .await?;
 
     let boards_with_reports = dashboard_data
@@ -41,6 +39,6 @@ async fn get_dashboard_handler(
         boards: boards_with_reports,
     };
 
-    tracing::info!(user_id = %user_id, "Dashboard retrieved successfully");
+    tracing::info!(user_id = %authenticated_user.id, "Dashboard retrieved successfully");
     Ok(Json(response))
 }

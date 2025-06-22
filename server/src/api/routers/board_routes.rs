@@ -29,20 +29,21 @@ pub fn board_routes() -> Router<AppState> {
     Router::new().nest("/boards", board_routes)
 }
 
-#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub), level = "debug")]
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.id), level = "debug")]
 async fn get_all_boards_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
 ) -> Result<Json<Vec<BoardResponse>>, ApiError> {
     tracing::debug!("Fetching current user.");
-    let user_id = authenticated_user.claims.sub;
-
-    let boards = state.board_service().get_boards_by_user_id(user_id).await?;
+    let boards = state
+        .board_service()
+        .get_boards_by_user_id(authenticated_user.id)
+        .await?;
 
     Ok(Json(boards.into_iter().map(|board| board.into()).collect()))
 }
 
-#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.claims.sub, board_id = %board_id), level = "debug")]
+#[instrument(skip(state, authenticated_user), fields(user_id = %authenticated_user.id, board_id = %board_id), level = "debug")]
 async fn get_board_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
@@ -50,18 +51,16 @@ async fn get_board_handler(
 ) -> Result<Json<BoardResponse>, ApiError> {
     tracing::debug!("Fetching board with ID: {}", board_id);
 
-    let user_id = authenticated_user.claims.sub;
-
     state
         .board_service()
-        .ensure_user_can_access_board(user_id, board_id)
+        .ensure_user_can_access_board(authenticated_user.id, board_id)
         .await?;
 
     let board = state.board_service().get_board_by_id(board_id).await?;
     Ok(Json(board.into()))
 }
 
-#[instrument(skip(state, authenticated_user, pagination), fields(user_id = %authenticated_user.claims.sub, board_id = %board_id), level = "debug")]
+#[instrument(skip(state, authenticated_user, pagination), fields(user_id = %authenticated_user.id, board_id = %board_id), level = "debug")]
 async fn get_board_reports_handler(
     State(state): State<AppState>,
     authenticated_user: AuthenticatedUser,
@@ -73,11 +72,9 @@ async fn get_board_reports_handler(
         ApiError::validation(e.to_string())
     })?;
 
-    let user_id = authenticated_user.claims.sub;
-
     state
         .board_service()
-        .ensure_user_can_access_board(user_id, board_id)
+        .ensure_user_can_access_board(authenticated_user.id, board_id)
         .await?;
 
     tracing::debug!(
