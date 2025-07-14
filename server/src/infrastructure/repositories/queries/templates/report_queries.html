@@ -49,8 +49,7 @@
         url, browser_name, browser_version, os_name, created_at, updated_at)
         VALUES (
         #{entity.id},
-        #{entity.user_id},
-        #{entity.board_id},
+        #{entity.user_id}, #{entity.board_id},
         #{entity.report_type},
         #{entity.title},
         #{entity.description},

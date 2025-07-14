@@ -32,7 +32,6 @@ pub async fn count_by_board_id(rb: &dyn Executor, board_id: Uuid) -> rbatis::Res
     impled!()
 }
 
-// TODO: fix too many argument, can rbatis handle this ? By passing a struct and use struct field names in the query?
 #[html_sql("src/infrastructure/repositories/queries/templates/report_queries.html")]
 pub async fn insert_report(
     rb: &dyn Executor,

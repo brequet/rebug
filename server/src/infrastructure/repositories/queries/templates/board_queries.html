@@ -2,7 +2,7 @@
     PUBLIC "-//W3C//DTD XHTML 1.1//EN" "https://raw.githubusercontent.com/rbatis/rbatis/master/rbatis-codegen/mybatis-3-mapper.dtd">
 <mapper>
     <sql id="select_boards">
-        `SELECT
+        SELECT
         id,
         owner_id,
         name,
@@ -10,7 +10,7 @@
         is_default,
         created_at,
         updated_at
-        FROM boards `
+        FROM boards` `
     </sql>
 
     <select id="find_by_id">
@@ -49,4 +49,9 @@
         created_at,
         updated_at
     </insert>
+
+    <select id="test">
+        SELECT
+        * FROM test
+    </select>
 </mapper>
