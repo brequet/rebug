@@ -1,8 +1,11 @@
+use rbatis::rbatis::RBatis;
+use rbdc_sqlite::driver::SqliteDriver;
 use sqlx::SqlitePool;
 
 #[derive(Clone)]
 pub struct Sqlite {
     pool: SqlitePool,
+    rb: RBatis,
 }
 
 impl Sqlite {
@@ -11,10 +14,19 @@ impl Sqlite {
             .await
             .expect("Failed to create SQLite connection pool");
 
-        Ok(Self { pool: db_pool })
+        let rb = RBatis::new();
+        rb.link(SqliteDriver {}, &database_url)
+            .await
+            .expect("Failed to link RBatis with SQLite driver");
+
+        Ok(Self { pool: db_pool, rb })
     }
 
     pub fn get_pool(&self) -> SqlitePool {
         self.pool.clone()
+    }
+
+    pub fn get_rbatis(&self) -> RBatis {
+        self.rb.clone()
     }
 }

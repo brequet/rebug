@@ -160,7 +160,7 @@ impl ReportServiceInterface for ReportService {
 
         let report = self
             .report_repository
-            .get_report(id)
+            .find_by_id(id)
             .await?
             .ok_or_else(|| ReportServiceError::ReportNotFound {
                 context: format!("Failed to fetch report with ID: {}", id),
@@ -178,7 +178,7 @@ impl ReportServiceInterface for ReportService {
     ) -> ReportServiceResult<Vec<Report>> {
         let reports = self
             .report_repository
-            .get_recent_reports_by_board(board_id, limit)
+            .find_recent_reports_by_board(board_id, limit)
             .await?;
 
         tracing::debug!(
@@ -205,5 +205,6 @@ impl ReportServiceInterface for ReportService {
         let total_items = self.report_repository.count_by_board_id(board_id).await?;
 
         Ok((reports, total_items))
+        // TODO: dedicated item to wrap result with total items
     }
 }

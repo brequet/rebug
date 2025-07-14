@@ -16,9 +16,8 @@ use crate::{
     infrastructure::{
         database::sqlite::Sqlite,
         repositories::{
-            sqlite_board_repository::SqliteBoardRepository,
-            sqlite_report_repository::SqliteReportRepository,
-            sqlite_user_repository::SqliteUserRepository,
+            board_repository::SqliteBoardRepository, report_repository::SqliteReportRepository,
+            user_repository::SqliteUserRepository,
         },
         storage::file_system_storage::FileSystemStorage,
     },
@@ -38,9 +37,10 @@ pub struct ServiceContainer {
 impl ServiceContainer {
     pub async fn new(sqlite_connection: &Sqlite) -> Result<Self, Box<dyn std::error::Error>> {
         // Repository layer
-        let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_pool()));
-        let board_repository = Arc::new(SqliteBoardRepository::new(sqlite_connection.get_pool()));
-        let report_repository = Arc::new(SqliteReportRepository::new(sqlite_connection.get_pool()));
+        let user_repository = Arc::new(SqliteUserRepository::new(sqlite_connection.get_rbatis()));
+        let board_repository = Arc::new(SqliteBoardRepository::new(sqlite_connection.get_rbatis()));
+        let report_repository =
+            Arc::new(SqliteReportRepository::new(sqlite_connection.get_rbatis()));
 
         // Storage layer
         let storage_port: Arc<dyn StoragePort> = Arc::new(FileSystemStorage::new(

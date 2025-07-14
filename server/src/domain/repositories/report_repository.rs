@@ -9,9 +9,10 @@ use super::RepositoryResult;
 pub trait ReportRepository: Send + Sync {
     async fn create_report(&self, params: CreateReportParams) -> RepositoryResult<Report>;
 
-    async fn get_report(&self, id: Uuid) -> RepositoryResult<Option<Report>>;
+    async fn find_by_id(&self, id: Uuid) -> RepositoryResult<Option<Report>>;
 
-    async fn get_recent_reports_by_board(
+    async fn find_recent_reports_by_board(
+        // TODO: migrate away
         &self,
         board_id: Uuid,
         limit: usize,

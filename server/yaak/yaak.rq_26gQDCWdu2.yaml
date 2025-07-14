@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_26gQDCWdu2
 createdAt: 2025-05-20T19:46:15.982952300
-updatedAt: 2025-06-04T10:57:04.146981200
+updatedAt: 2025-07-14T14:21:30.702261900
 workspaceId: wk_uEV9dkQtcy
 folderId: fl_BnL4gQN527
 authentication: {}
@@ -10,7 +10,7 @@ authenticationType: null
 body:
   text: |-
     {
-        "email": "admin@rebug.com",
+      "email": "admin@rebug.com",
       "password": "administrator"
     }
 bodyType: application/json

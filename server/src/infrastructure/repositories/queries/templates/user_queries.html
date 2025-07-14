@@ -1,0 +1,50 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.1//EN" "https://raw.githubusercontent.com/rbatis/rbatis/master/rbatis-codegen/mybatis-3-mapper.dtd">
+<mapper>
+    <sql id="select_users">
+        `SELECT
+        id,
+        email,
+        password_hash,
+        first_name,
+        last_name,
+        role,
+        created_at,
+        updated_at
+        FROM users `
+    </sql>
+
+    <select id="find_by_id">
+        <include refid="select_users"></include>
+        WHERE id = #{id}
+    </select>
+
+    <select id="find_by_email">
+        <include refid="select_users"></include>
+        WHERE email = #{email}
+    </select>
+
+    <insert id="insert_user">
+        INSERT INTO users (id, email, password_hash, first_name, last_name, role,
+        created_at,
+        updated_at)
+        VALUES (
+        #{entity.id},
+        #{entity.email},
+        #{entity.password_hash},
+        #{entity.first_name},
+        #{entity.last_name},
+        #{entity.role},
+        #{entity.created_at},
+        #{entity.updated_at}
+        ) RETURNING
+        id,
+        email,
+        password_hash,
+        first_name,
+        last_name,
+        role,
+        created_at,
+        updated_at
+    </insert>
+</mapper>

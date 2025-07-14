@@ -16,9 +16,11 @@ use tower_http::{
 use tracing::Level;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
+const DEFAULT_TRACING_FILTER: &str = "info,rebug=trace";
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    setup_tracing();
+    init_tracing();
 
     let sqlite_connection = &Sqlite::new(APP_CONFIG.database_url.clone()).await?;
 
@@ -33,16 +35,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     start_server(router).await
 }
 
-fn setup_tracing() {
+fn init_tracing() {
     let subscriber = FmtSubscriber::builder()
         .with_env_filter(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info,rebug=trace")),
+                .unwrap_or_else(|_| EnvFilter::new(DEFAULT_TRACING_FILTER)),
         )
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("Setting default tracing subscriber failed");
+
+    fast_log::init(fast_log::Config::new().console()).expect("Failed to initialize fast_log");
 }
 
 async fn run_migrations(sqlite_connection: &Sqlite) -> Result<(), Box<dyn std::error::Error>> {

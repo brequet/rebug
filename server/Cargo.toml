@@ -12,9 +12,14 @@ bcrypt = "0.17.0"
 bytes = "1.10.1"
 chrono = { version = "0.4.41", features = ["serde"] }
 config = { version = "0.15.11", features = ["toml"] }
+fast_log = "1.7.7"
 jsonwebtoken = "9.3.1"
+log = "0.4.27"
 mime_guess = "2.0.5"
 once_cell = "1.21.3"
+rbatis = { version = "4.6.8", features = ["debug_mode"] }
+rbdc-sqlite = "4.6.0"
+rbs = "4.6.2"
 rust-embed = { version = "8.7.2", features = ["compression"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

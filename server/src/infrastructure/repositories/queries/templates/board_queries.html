@@ -1,0 +1,52 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.1//EN" "https://raw.githubusercontent.com/rbatis/rbatis/master/rbatis-codegen/mybatis-3-mapper.dtd">
+<mapper>
+    <sql id="select_boards">
+        `SELECT
+        id,
+        owner_id,
+        name,
+        description,
+        is_default,
+        created_at,
+        updated_at
+        FROM boards `
+    </sql>
+
+    <select id="find_by_id">
+        <include refid="select_boards"></include>
+        WHERE id = #{id}
+    </select>
+
+    <select id="find_by_owner_id">
+        <include refid="select_boards"></include>
+        WHERE owner_id = #{owner_id}
+    </select>
+
+    <insert id="insert_board">
+        INSERT INTO boards (
+        id,
+        owner_id,
+        name,
+        description,
+        is_default,
+        created_at,
+        updated_at
+        ) VALUES (
+        #{entity.id},
+        #{entity.owner_id},
+        #{entity.name},
+        #{entity.description},
+        #{entity.is_default},
+        #{entity.created_at},
+        #{entity.updated_at}
+        ) RETURNING
+        id,
+        owner_id,
+        name,
+        description,
+        is_default,
+        created_at,
+        updated_at
+    </insert>
+</mapper>
