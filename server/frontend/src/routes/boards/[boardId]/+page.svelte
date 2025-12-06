@@ -1,4 +1,3 @@
-<!-- src/routes/boards/[boardId]/+page.svelte -->
 <script lang="ts">
 	import BoardHeader from '$lib/components/board/BoardHeader.svelte';
 	import ReportLoader from '$lib/components/board/ReportLoader.svelte';
